@@ -1,0 +1,90 @@
+Phylum,Subphylum,Class,Subclass,Order,Suborder,Family,Subfamily,Genus,Species,ln a (intercept),b,size range min,size range max,Instar,Notes,UseThisColumnMaybe
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Daphnia,parvula,1.44,1.8,0.44,1.22,,not preserved,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Daphnia,parvula,1.08,2.16,0.44,1.22,,,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Daphnia,parvula,1.6026,3.632,0.4,1.5,,different ref,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Daphnia,retrocurva,1.4322,3.129,0.5,2,,,
+Arthropoda,Crustacea,Branchiopoda,,Cladocera,,Daphniidae,,Daphnia,longispina,1.0727,2.8915,0.6,2.35,,only in eurasia??,
+Arthropoda,Crustacea,Branchiopoda,,Cladocera,,Daphniidae,,Daphnia,longispina,1.34,2.57,,,,,
+Arthropoda,Crustacea,Branchiopoda,,Cladocera,,Daphniidae,,Daphnia,longispina,1.37,2.5567,,,,,
+Arthropoda,Crustacea,Branchiopoda,,Cladocera,,Daphniidae,,Daphnia,galeata,1.51,2.56,,,,subspecies is D. mendotae,Yes
+Arthropoda,Crustacea,Branchiopoda,,Cladocera,,Daphniidae,,Daphnia,galeata,2.64,2.54,0.6,2.2,,different ref,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Daphnia,hyalina,2.46,2.52,0.6,2.2,,?- use leydig 1860 for ref if necessary,
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Daphnia,hyalina,1.4369,2.768,0.78,2.21,,,
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Daphnia,ambigua,1.54,2.29,,,,,
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Daphnia,pulex,1.9445,2.72,,,,different refs for all except 3 and 5,
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Daphnia,pulex,1.4663,3.1932,0.95,3.4,,,
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Daphnia,pulex,1.59,2.77,,,,,
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Daphnia,pulex,2.48,2.63,0.55,1.6,,,
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Daphnia,pulex,-0.71,3.13,,,Ephippial,,
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Daphnia,pulex,3.1246,0.526,0.3,0.4,,,
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Daphnia,schodleri,2.3,3.1,1,2.5,,,
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Daphnia,magna,1.6729,2.688,0.82,4,,"same refs for 1 and 2, 4-6",Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Daphnia,magna,1.8268,2.7854,0.84,4.83,,,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Daphnia,magna,2.2,2.63,,,,,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Daphnia,magna,2.51,1.8,1.4,3.6,,,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Daphnia,magna,2.36,2.25,,,,,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Daphnia,magna,2.12,2.61,,,Ephippial,,Yes
+Arthropoda,Crustacea,Branchiopoda,,,,Daphniidae,,Ceriodaphnia,quadrangula,2.5623,3.338,0.3,0.71,,?- use Muller 1785 for ref,
+Arthropoda,Crustacea,Branchiopoda,,,,Daphniidae,,Ceriodaphnia,quadrangula,2.3266,2.26,0.28,0.6,,different refs for all 3,
+Arthropoda,Crustacea,Branchiopoda,,,,Daphniidae,,Ceriodaphnia,quadrangula,7.161,7.722,,,,,
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Ceriodaphnia,reticulata,2.83,3.15,,,,not preserved,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Ceriodaphnia,reticulata,3.0727,3.29,,,,different refs for all 3,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Ceriodaphnia,reticulata,1.9148,2.02,,,,,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Holopedidae,,Holopedium,gibberum,5.3976,2.0555,0.08,0.43,,,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Holopedidae,,Holopedium,gibberum,6.4957,3.19,3.01,3.37,,not preserved same ref as 3,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Holopedidae,,Holopedium,gibberum,6.2625,3.052,,,,not preserved  ,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Sididae,,Diaphanosoma,brachyrum,1.2894,3.039,0.4,1.2,,all different refs,
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Sididae,,Diaphanosoma,brachyrum,1.3252,2.11,,,,,
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Sididae,,Diaphanosoma,brachyrum,1.6242,3.0468,0.44,1.44,,,
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Bosminidae,,Bosmina,longirostris,2.7116,2.5294,0.28,0.54,,,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Bosminidae,,Bosmina,longirostris,3.28,3.13,,,,,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Bosminidae,,Bosmina,longirostris,4.68,4.27,,,(+) eggs,,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Bosminidae,,Bosmina,longirostris,4.9344,4.849,0.2,0.5,,different ref,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Bosminidae,,Eubosmina,longispina,2.7312,2.0665,0.44,0.95,,"**eubosmina on unh key, bosmina in downing and rigler 1984",Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Bosminidae,,Eubosmina,longispina,3.5274,3.5859,0.38,0.5,,,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Bosminidae,,Bosmina,obtusirostris,3.2359,2.928,2.64,3.22,,"might be the same as coregoni, WoRMS",
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Bosminidae,,Eubosmina,coregoni,2.7839,2.505,,,,"**eubosmina on unh key, bosmina in downing and rigler 1984",
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Chydoridae,,Chydorus,sphaericus,4.543,3.636,0.2,0.4,,different ref,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Chydoridae,,Chydorus,sphaericus,4.4935,3.93,,,,,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Chydoridae,,Chydorus,sphaericus,4.8211,4.08,,,,,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Chydoridae,,Eurycercus,,2.1,2.26,,,,2016 EPA SOP,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Leptodoridae,,Leptodora,kindti,-0.822,2.67,1,5,,,
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Polyphemidae,,Polyphemus,pediculus,2.7792,2.152,0.3,1.1,,,
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Sididae,,Sida,crystallina,2.0539,2.189,0.8,2.3,,,Yes
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Daphniidae,,Scapholeberis,kingi,2.8713,3.079,0.3,0.8,,?- scapholeberis mucronata in unh guide,
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Ilyocryptidae,,Ilyocriptus,sordidus,5.9913,7.942,0.3,0.6,,,
+Arthropoda,Crustacea,Branchiopoda,,,Cladocera,Chydoridae,,Disparalona,rostrata,3.5276,3.264,0.3,0.5,,?- but don't have them in our systems,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,,,,,,,0.6977,0.469,0.16,0.3,,(nauplii),
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Calanoida,,Diaptomidae,,Skistodiaptomus,pallidus,1.5013,1.73,0.3,1.4,,,Yes
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Calanoida,,Diaptomidae,,Leptodiaptomus,siciloides,1.05,2.46,,,,,Yes
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Calanoida,,Diaptomidae,,Diaptomus,gracilis,1.2431,2.2634,0.3,1.85,N-ad,?,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Cyclopoida,,Cyclopidae,,Cyclops,vernalis,2.2266,3.23,0.4,1.2,,?  ,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Cyclopoida,,Cyclopidae,,Cyclops,vernalis,2.4511,0.7825,1.22,1.73,CV-ad,different refs ,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Cyclopoida,,Cyclopidae,,Cyclops,scutifer,1.4919,1.985,0.14,0.73,,"same refs for 1-2, 3-5",Yes
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Cyclopoida,,Cyclopidae,,Cyclops,scutifer,1.3048,2.5,,,,,Yes
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Cyclopoida,,Cyclopidae,,Cyclops,scutifer,2.5442,2.3696,0.14,0.29,N1-N6,,Yes
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Cyclopoida,,Cyclopidae,,Cyclops,scutifer,1.2286,2.6398,0.45,1.2,C1-ad,,Yes
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Cyclopoida,,Cyclopidae,,Cyclops,scutifer,1.0866,1.5493,0.14,1.2,N1-ad,,Yes
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Cyclopoida,,Cyclopidae,,Cyclops,viridis,2.7412,1.6785,1.6,2.45,ad,?  ,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Cyclopoida,,Cyclopidae,,Cyclops,vicinus,1.4497,2.116,0.17,1.6,N-CV,?  ,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Cyclopoida,,Cyclopidae,,Cyclops,vicinus,2.0577,2.553,0.17,2.18,N-ad (female),,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Cyclopoida,,Cyclopidae,,Cyclops,vicinus,2.4342,1.9694,1.25,2.18,,,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Cyclopoida,,Cyclopidae,,Cyclops,vicinus,2.0186,1.9948,1.12,2.18,ad (female),,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Cyclopoida,,Cyclopidae,,Cyclops,strenuus,1.5386,2.3418,0.24,1.72,N-ad,?  ,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Cyclopoida,,Cyclopidae,,Cyclops,abyssorum,2.2128,2.2947,0.66,1.7,CII-ad,?  ,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Cyclopoida,,Cyclopidae,,Mesocyclops,edax,1.6602,3.968,0.3,1.5,,,Yes
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Cyclopoida,,Cyclopidae,,Mesocyclops,leuckarti,1.3035,2.49,0.3,1.1,,?- different refs  ,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Cyclopoida,,Cyclopidae,,Mesocyclops,leuckarti,1.27,2.257,0.33,1.14,C-ad,,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Calanoida,,Temoridae,,Heterocope,appendiculata,1.1356,2.996,0.36,0.99,,?- H. septentrionalis in unh guide,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Calanoida,,Temoridae,,Heterocope,appendiculata,1.4678,2.908,,,,,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Calanoida,,Temoridae,,Heterocope,saliens ,2.0365,1.8911,0.18,0.79,N1-N6,?  ,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Calanoida,,Temoridae,,Heterocope,saliens ,1.8977,2.0374,0.66,2.08,C1-ad,,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Calanoida,,Temoridae,,Heterocope,saliens ,1.8551,1.9756,0.18,2.08,N1-ad,,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Calanoida,,Diaptomidae,,Eudiaptomus,graciloides,1.6296,3.192,0.36,0.81,,?,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Calanoida,,Diaptomidae,,Eudiaptomus,gracilis,1.6097,2.529,,,,?,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Cyclopoida,,Cyclopidae,,Thermocyclops,hyalinus,1.3035,2.49,0.3,1.1,,different refs  ,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Cyclopoida,,Cyclopidae,,Thermocyclops,hyalinus,0.6772,0.8929,0.31,0.68,C-ad,,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Calanoida,,Diaptomidae,,Arctodiaptomus,spinosus,2.8519,3.652,0.32,0.6,C ,?- A. dorsalis and A. floridanus in unh guide,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Calanoida,,Diaptomidae,,Arctodiaptomus,spinosus,2.3409,2.4409,0.65,1.02,ad (male),,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Calanoida,,Diaptomidae,,Arctodiaptomus,spinosus,2.2614,3.5724,0.76,1.16,ad (female),,
+Arthropoda,Crustacea,Maxillopoda,Copepoda,Calanoida,,Diaptomidae,,Arctodiaptomus,spinosus,2.3392,2.9835,0.32,1.16,C-ad,,
