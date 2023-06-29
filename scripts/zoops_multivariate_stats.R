@@ -240,7 +240,7 @@ fig5 <- egg::ggarrange(NMDS_site, NMDS_day, NMDS_hour, nrow=1)
 ggsave(file.path(getwd(),"Summer2021-DataAnalysis/Figures/NMDS_multipanel_2v1.jpg"),
        fig5, width=5, height=3.5) 
 
-#ggsave("figures/NMDS_hours_2v1.jpg", NMDS_hour, width=5, height=2) 
+#ggsave("figures/NMDS_hours_2v1.jpg", NMDS_day, width=3, height=3.5) 
 
 #-------------------------------------------------------------------------------#
 #track hours for each campaign
