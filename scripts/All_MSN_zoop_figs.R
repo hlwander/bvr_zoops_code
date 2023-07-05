@@ -2,7 +2,8 @@
 #created 16 Oct 2022
 
 #read in libraries
-pacman::p_load(dplyr, vegan, labdsv, goeveg, rLakeAnalyzer, ggplot2,tidyr,lubridate, scales, colorblindcheck, viridis)
+pacman::p_load(dplyr, vegan, labdsv, goeveg, rLakeAnalyzer, 
+               ggplot2,tidyr,lubridate, scales, colorblindcheck, viridis)
 
 #create function to count characters starting at the end of the string
 substrEnd <- function(x, n){
@@ -15,9 +16,9 @@ stderr <- function(x) {
 }
 
 #read in zoop data from all 3 years
-zoops2019<- read.csv('output/FCR_ZooplanktonSummary2019.csv',header = TRUE)
-zoops2020<- read.csv('output/FCR_ZooplanktonSummary2020.csv',header = TRUE)
-zoops2021<- read.csv('output/FCR_ZooplanktonSummary2021.csv',header = TRUE)
+zoops2019<- read.csv(file.path(getwd(),'Summer2019-DataAnalysis/SummaryStats/FCR_ZooplanktonSummary2019.csv'),header = TRUE)
+zoops2020<- read.csv(file.path(getwd(),'Summer2020-DataAnalysis/SummaryStats/FCR_ZooplanktonSummary2020.csv'),header = TRUE)
+zoops2021<- read.csv(file.path(getwd(),'Summer2021-DataAnalysis/SummaryStats/FCR_ZooplanktonSummary2021.csv'),header = TRUE)
 
 #drop holopedium becuase only in 2019
 zoops2019 <- zoops2019[,!c(grepl("Holopedium",colnames(zoops2019)))]
@@ -116,7 +117,7 @@ zoop.repmeans <- data.frame(zoop.repmeans)
 zoop.repmeans <- zoop.repmeans[order(zoop.repmeans$Hour),]
 
 #Export all zoop data df
-#write.csv(zoop.repmeans,"output/All_MSN_zoops.csv",row.names = FALSE)
+#write.csv(zoop.repmeans,"./Summer2021-DataAnalysis/SummaryStats/All_MSN_zoops.csv",row.names = FALSE)
 
 #only select epi samples for DHM plots
 zoop_epi <- zoop.repmeans[grepl("epi",zoop.repmeans$sample_ID) |grepl("sunrise",zoop.repmeans$sample_ID) | grepl("sunset",zoop.repmeans$sample_ID) | zoop.repmeans$site_no=="BVR_l",]
@@ -134,7 +135,7 @@ zoop_DHM_long <- df1[,c(1:4,27,28)]
 zoop_DHM_long$value.SE <- df2$value.SE
 
 #Export DHM csv
-#write.csv(zoop_DHM_long,"output/All_MSN_DHM.csv",row.names = FALSE)
+#write.csv(zoop_DHM_long,"./Summer2021-DataAnalysis/SummaryStats/All_MSN_DHM.csv",row.names = FALSE)
 
 #reset DHM df so can only look at density
 zoop_DHM_long <- NA
@@ -196,7 +197,7 @@ ggplot(subset(zoop_DHM_long, metric %in% c("Cladocera_density_NopL","Copepoda_de
   scale_color_manual("",values=c("#008585","#9BBAA0","#F2E2B0","#DEA868","#C7522B"), labels=c("10-11 Jul 2019","24-25 Jul 2019","12-13 Aug 2020","15-16 Jun 2021","7-8 Jul 2021"), guide=guide_legend(order=1)) + 
   geom_line()+ ylab("Density (Individuals/L)") + scale_fill_manual("",values=c("#CCCCCC","white"), guide = "none")+
   geom_errorbar(aes(ymin=value-value.SE, ymax=value+value.SE), width=.2,position=position_dodge(.9))
-#ggsave("figures/BVR_MSNs_taxa_density.jpg", width=5, height=4) 
+ggsave(file.path(getwd(),"Summer2021-DataAnalysis/Figures/BVR_MSNs_taxa_density.jpg"), width=5, height=4) 
 
 ggplot(subset(zoop_DHM_long, metric %in% c("Cladocera_PercentOfTotal","Copepoda_PercentOfTotal","Rotifera_PercentOfTotal")), #removing calanoids because they are super low %
                 aes(Hour,value, color=as.factor(MSN))) + 
@@ -211,7 +212,7 @@ ggplot(subset(zoop_DHM_long, metric %in% c("Cladocera_PercentOfTotal","Copepoda_
   scale_color_manual("",values=c("#008585","#9BBAA0","#F2E2B0","#DEA868","#C7522B"), labels=c("10-11 Jul 2019","24-25 Jul 2019","12-13 Aug 2020","15-16 Jun 2021","7-8 Jul 2021"), guide=guide_legend(order=1)) + 
   geom_line()+ ylab("% Density") + scale_fill_manual("",values=c("#CCCCCC","white"), guide = "none")+ 
   geom_errorbar(aes(ymin=value-value.SE, ymax=value+value.SE), width=.2,position=position_dodge(.9))
-#ggsave("figures/BVR_MSNs_taxa_percent_density.jpg", width=5, height=4) 
+ggsave(file.path(getwd(),"Summer2021-DataAnalysis/Figures/BVR_MSNs_taxa_percent_density.jpg"), width=5, height=4) 
 
 range(zoop_DHM_long$value[zoop_DHM_long$metric=="Copepoda_PercentOfTotal"]) # 77.1%, 68.9%, 85.9%
 
@@ -251,7 +252,7 @@ ggplot(zoop_dens_stand, aes(Hour,value_max_std, color=as.factor(MSN))) +
                      labels=c("10-11 Jul 2019","24-25 Jul 2019","12-13 Aug 2020","15-16 Jun 2021","7-8 Jul 2021"), guide=guide_legend(order=1)) + 
   geom_line()+ ylab("density / max dens") + 
   scale_fill_manual("",values=c("#CCCCCC","white"), guide = "none")
-#ggsave("figures/BVR_MSNs_taxa_percent_density_over_max_std.jpg", width=5, height=4) 
+ggsave(file.path(getwd(),"Summer2021-DataAnalysis/Figures/BVR_MSNs_taxa_percent_density_over_max_std.jpg"), width=5, height=4) 
 
 
 mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Cladocera_density_NopL"])
@@ -310,9 +311,9 @@ ggplot(subset(zoop_DHM_long, metric %in% c("Cladocera_density_NopL","Copepoda_de
 # DVM calcs for epi and hypo density across all 5 campaigns
 
 #read in all 3 DVM tables from 2019-2021
-DVM_2019 <- read.csv('output/DVM_2019_zoops.csv',header = TRUE)
-DVM_2020 <- read.csv('output/DVM_2020_zoops.csv',header = TRUE) %>% select(-X)
-DVM_2021 <- read.csv('output/DVM_2021_zoops.csv',header = TRUE) %>% select(-X)
+DVM_2019 <- read.csv(file.path(getwd(),'Summer2019-DataAnalysis/SummaryStats/DVM_2019_zoops.csv'),header = TRUE)
+DVM_2020 <- read.csv(file.path(getwd(),'Summer2020-DataAnalysis/SummaryStats/DVM_2020_zoops.csv'),header = TRUE) %>% select(-X)
+DVM_2021 <- read.csv(file.path(getwd(),'Summer2021-DataAnalysis/SummaryStats/DVM_2021_zoops.csv'),header = TRUE) %>% select(-X)
 
 #merge all zoop files
 DVM_all <- rbind(DVM_2019,DVM_2020,DVM_2021)
@@ -370,7 +371,7 @@ ggplot(subset(DVM, metric %in% c("Cladocera_density_NopL","Cyclopoida_density_No
                                   axis.text.x=element_text(size=7,family="Times"), plot.title = element_text(hjust = 0.5)) + ylab("Density (individual/L)") +
   theme(legend.position = "bottom", legend.margin = margin(0, 1, 2, 1), legend.title = element_text(size=10),legend.key.size = unit(0.3,"cm"),
         legend.box="vertical", legend.box.spacing = unit(0.1,"cm"),legend.text = element_text(size=8),axis.text.y = element_text(size=10, family="Times"))
-#ggsave("figures/BVR_epimetahypo_density_MSN1.jpg", width=5, height=4) 
+#ggsave(file.path(getwd(),"Summer2021-DataAnalysis/Figures/BVR_epimetahypo_density_MSN1.jpg"), width=5, height=4) 
 
 
 ggplot(subset(DVM_percent, metric %in% c("Cladocera_density_NopL","Cyclopoida_density_NopL","Calanoida_density_NopL","Rotifera_density_NopL") &
@@ -387,7 +388,7 @@ ggplot(subset(DVM_percent, metric %in% c("Cladocera_density_NopL","Cyclopoida_de
                                   axis.text.x=element_text(size=7,family="Times"), plot.title = element_text(hjust = 0.5)) + ylab("Density (individual/L)") +
   theme(legend.position = "bottom", legend.margin = margin(0, 1, 2, 1), legend.title = element_text(size=10),legend.key.size = unit(0.3,"cm"),
         legend.box="vertical", legend.box.spacing = unit(0.1,"cm"),legend.text = element_text(size=8),axis.text.y = element_text(size=10, family="Times"))
-#ggsave("figures/BVR_epimetahypo_percent_density_MSN5.jpg", width=5, height=4) 
+ggsave(file.path(getwd(),"Summer2021-DataAnalysis/Figures/BVR_epimetahypo_percent_density_MSN5.jpg"), width=5, height=4) 
 # DVM for MSN 1 - cyclopoids and calanoids, MSN 2 - cladocera and cyclopoids, 
       #MSN 3 - cladocerans and cyclopoids (reverse DVM) and rotifers,
       #BUT, nothing for MSN 4/5 
@@ -480,5 +481,5 @@ ggplot(subset(zoop_size_DHM_long, metric %in% c("CladoceraMeanSize_mm","Copepoda
                               "15-16 Jun 2021","7-8 Jul 2021"), guide=guide_legend(order=1)) + 
   geom_line()+ ylab("Size (mm)") + scale_fill_manual("",values=c("#CCCCCC","white"), guide = "none")+
   geom_errorbar(aes(ymin=value-value.SE, ymax=value+value.SE), width=.2,position=position_dodge(.9))
-#ggsave("figures/BVR_MSNs_taxa_size.jpg", width=5, height=4) 
+#ggsave(file.path(getwd(),"Summer2021-DataAnalysis/Figures/BVR_MSNs_taxa_size.jpg"), width=5, height=4) 
 

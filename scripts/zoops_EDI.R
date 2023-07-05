@@ -199,6 +199,148 @@ zoopbiom$DateTime <- as.POSIXct(paste(zoopbiom$collect_date, zoopbiom$Hour),
 #add collection method
 zoopbiom$CollectionMethod <- ifelse(grepl("schind", zoopbiom$sample_ID), "Schindler", "Tow")
 
+#add start and end depths
+zoopbiom$StartDepth_m <- ifelse((grepl("sunset", zoopbiom$sample_ID) |
+                                  grepl("sunrise", zoopbiom$sample_ID) |
+                                   grepl("epi", zoopbiom$sample_ID)) &
+                                  grepl("B_pel", zoopbiom$sample_ID) &
+                                  !grepl("F", zoopbiom$sample_ID), 4, 999)
+
+zoopbiom$StartDepth_m <- ifelse(grepl("B_mac", zoopbiom$sample_ID) |
+                                grepl("B_dam", zoopbiom$sample_ID), 2, zoopbiom$StartDepth_m)
+
+zoopbiom$StartDepth_m <- ifelse(grepl("B_pel", zoopbiom$sample_ID) &
+                                  !(grepl("sunset", zoopbiom$sample_ID) |
+                                   grepl("sunrise", zoopbiom$sample_ID) |
+                                   grepl("oxy", zoopbiom$sample_ID) |
+                                   grepl("epi", zoopbiom$sample_ID) |
+                                   grepl("schind", zoopbiom$sample_ID)), 10, zoopbiom$StartDepth_m)
+  
+zoopbiom$StartDepth_m <- ifelse(grepl("schind", zoopbiom$sample_ID), 
+                                substr(zoopbiom$sample_ID,nchar(zoopbiom$sample_ID)-7,nchar(zoopbiom$sample_ID)-5), 
+                                zoopbiom$StartDepth_m)
+
+#now replace the 0.0 with 10
+zoopbiom$StartDepth_m <- ifelse(zoopbiom$StartDepth_m=="0.0",10,zoopbiom$StartDepth_m)
+
+#if sample name ends in m, pull that depth
+zoopbiom$StartDepth_m <- ifelse(substrEnd(zoopbiom$sample_ID,1)=="m",
+                                substrEnd(zoopbiom$sample_ID,5),
+                                zoopbiom$StartDepth_m)
+
+#now fix the weird subsetting issues
+zoopbiom$StartDepth_m <- ifelse(zoopbiom$StartDepth_m=="_3.5m", 3.5,
+                         ifelse(zoopbiom$StartDepth_m=="_9.0m" |
+                                  zoopbiom$StartDepth_m=="21_9m" |
+                                  zoopbiom$StartDepth_m=="22_9m", 9,
+                         ifelse(zoopbiom$StartDepth_m=="_1.5m", 1.5,
+                         ifelse(zoopbiom$StartDepth_m=="_3.0m", 3,
+                         ifelse(zoopbiom$StartDepth_m=="_8.0m" | 
+                                  zoopbiom$StartDepth_m=="19_8m", 8,
+                         ifelse(zoopbiom$StartDepth_m=="_2.0m", 2,
+                         ifelse(zoopbiom$StartDepth_m=="_2.5m", 2.5,
+                         ifelse(zoopbiom$StartDepth_m=="9_10m" |
+                                  zoopbiom$StartDepth_m=="0_10m" |
+                                  zoopbiom$StartDepth_m=="1_10m", 10,
+                         ifelse(zoopbiom$StartDepth_m=="_4.0m", 4,
+                         ifelse(zoopbiom$StartDepth_m=="_6.0m", 6,
+                         ifelse(zoopbiom$StartDepth_m=="_4.5m", 4.5,
+                         ifelse(zoopbiom$StartDepth_m=="0_11m", 11,
+                         ifelse(zoopbiom$StartDepth_m=="11.5m", 11.5,
+                                zoopbiom$StartDepth_m)))))))))))))
+
+#make all depths numeric
+zoopbiom$StartDepth_m <- as.numeric(zoopbiom$StartDepth_m)
+
+#and now do the last ~50 samples manually
+zoopbiom$StartDepth_m[zoopbiom$sample_ID %in% c("F01Jul22_noon_epi_rep1",
+                                                "F01Jul22_noon_epi_rep2",
+                                                "F11Sep20_noon_epi")] <- 2.2
+
+zoopbiom$StartDepth_m[zoopbiom$sample_ID %in% c("F01Jul22_midnight_epi_rep1",
+                                                "F01Jul22_midnight_epi_rep2",
+                                                "F15Sep20_noon_epi")] <- 2.4
+
+zoopbiom$StartDepth_m[zoopbiom$sample_ID %in% c("F10Sep20_midnight_epi")] <- 2.5
+
+zoopbiom$StartDepth_m[zoopbiom$sample_ID %in% c("F28Jun20_midnight_epi",
+                                                "F29Jun20_noon_epi")] <- 2.6
+
+zoopbiom$StartDepth_m[zoopbiom$sample_ID %in% c("F14Sep20_midnight_epi")] <- 2.7
+
+zoopbiom$StartDepth_m[zoopbiom$sample_ID %in% c("F30Sep20_noon_epi")] <- 4
+
+zoopbiom$StartDepth_m[zoopbiom$sample_ID %in% c("F29Jun20_noon_oxy")] <- 3.4
+
+zoopbiom$StartDepth_m[zoopbiom$sample_ID %in% c("F27Jul20_noon_epi")] <- 3.6
+
+zoopbiom$StartDepth_m[zoopbiom$sample_ID %in% c("F20Jul20_noon_epi")] <- 3.7
+
+zoopbiom$StartDepth_m[zoopbiom$sample_ID %in% c("F08Jun20_noon_epi")] <- 4.2
+
+zoopbiom$StartDepth_m[zoopbiom$sample_ID %in% c("F10Jun21_noon_epi_rep1",
+                                                "F10Jun21_noon_epi_rep2")] <- 4.3
+
+zoopbiom$StartDepth_m[zoopbiom$sample_ID %in% c("F10Jun21_midnight_epi_rep1",
+                                                "F10Jun21_midnight_epi_rep2")] <- 4.4
+
+zoopbiom$StartDepth_m[zoopbiom$sample_ID %in% c("B_pel_08Jul21_midnight_oxy_rep1",
+                                                "B_pel_08Jul21_midnight_oxy_rep2")] <- 5.2
+
+zoopbiom$StartDepth_m[zoopbiom$sample_ID %in% c("B_pel_07Jul21_noon_oxy_rep1",
+                                                "B_pel_07Jul21_noon_oxy_rep2",
+                                                "B_pel_08Jul21_noon_oxy_rep1",
+                                                "B_pel_08Jul21_noon_oxy_rep2")] <- 5.3
+
+zoopbiom$StartDepth_m[zoopbiom$sample_ID %in% c("B_pel_10Jul19_noon_oxy", 
+                                                "B_pel_11Jul19_midnight_oxy",
+                                                "B_pel_11Jul19_noon_oxy")] <- 5.5
+
+zoopbiom$StartDepth_m[zoopbiom$sample_ID %in% c("B_pel_16Jun21_midnight_oxy_rep1", 
+                                                "B_pel_16Jun21_midnight_oxy_rep2")] <- 6.3
+
+zoopbiom$StartDepth_m[zoopbiom$sample_ID %in% c("B_pel_15Jun21_noon_oxy_rep1", 
+                                                "B_pel_15Jun21_noon_oxy_rep2")] <- 6.6
+
+zoopbiom$StartDepth_m[zoopbiom$sample_ID %in% c("B_pel_16Jun21_noon_oxy_rep1", 
+                                                "B_pel_16Jun21_noon_oxy_rep2")] <- 6.8
+
+zoopbiom$StartDepth_m[zoopbiom$sample_ID %in% c("F01Jul22_noon_rep1", 
+                                                "F01Jul22_noon_rep2",
+                                                "F01Jul22_midnight_rep1",
+                                                "F01Jul22_midnight_rep2",
+                                                "F10Jun21_noon_rep1",
+                                                "F10Jun21_noon_rep2",
+                                                "F10Jun21_midnight_rep1",
+                                                "F10Jun21_midnight_rep2",
+                                                "F11Sep20_noon",
+                                                "F10Sep20_midnight",
+                                                "F29Jun20_noon_rep1",
+                                                "F29Jun20_noon_rep2",
+                                                "F28Jun20_midnight",
+                                                "F14Sep20_midnight",
+                                                "F15Sep20_noon",
+                                                "F08Jun20_noon",
+                                                "F30Sep20_noon",
+                                                "F27Jul20_noon",
+                                                "F20Jul20_noon")] <- 9
+
+zoopbiom$StartDepth_m[zoopbiom$sample_ID %in% c("B_pel_08Jul21_midnight_rep1", 
+                                                "B_pel_08Jul21_midnight_rep2",
+                                                "B_pel_08Jul21_noon_rep1",
+                                                "B_pel_08Jul21_noon_rep2",
+                                                "B_pel_07Jul21_noon_rep1",
+                                                "B_pel_07Jul21_noon_rep2",
+                                                "B_pel_15Jun21_noon_rep1",
+                                                "B_pel_15Jun21_noon_rep2",
+                                                "B_pel_16Jun21_midnight_rep1",
+                                                "B_pel_16Jun21_midnight_rep2",
+                                                "B_pel_16Jun21_noon_rep1",
+                                                "B_pel_16Jun21_noon_rep2")] <- 10
+
+#end depth
+zoopbiom$EndDepth_m <- ifelse(zoopbiom$CollectionMethod=="Tow",0, zoopbiom$StartDepth_m)
+
 #drop unnecessary cols
 zoopbiom <- zoopbiom |> select(-c(sample_ID, Project, site_no, collect_date, 
                                   Hour, MarksInOcularMicrometer_Width_No., 
@@ -206,7 +348,7 @@ zoopbiom <- zoopbiom |> select(-c(sample_ID, Project, site_no, collect_date,
                                   
 
 #change order of cols
-zoopbiom <- zoopbiom |> select(Reservoir, Site, DateTime, Rep,
+zoopbiom <- zoopbiom |> select(Reservoir, Site, DateTime, StartDepth_m, EndDepth_m, Rep,
                                CollectionMethod, Subsample, LowestTaxonomicLevelOfID,
                                TaxaID, Nauplius, ObjectiveMagnification, 
                                MarksInOcularMicrometer_No.)
