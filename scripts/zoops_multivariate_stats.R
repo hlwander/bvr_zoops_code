@@ -125,7 +125,9 @@ zoop_euc <- as.matrix(vegdist(zoop_temporal_dens_avg_trans, method='euclidean'))
 #zoop_bray <- as.matrix(vegdist(zoop_temporal_dens_avg_trans, method='bray'))
 
 #scree plot to choose dimension #
+#jpeg("figures/scree.jpg") 
 dimcheckMDS(zoop_euc, distance = "bray", k = 6, trymax = 20, autotransform = TRUE)
+#dev.off()
 
 set.seed(3)
 
@@ -237,8 +239,7 @@ NMDS_hour <- hours$plot + geom_point() + theme_bw() + geom_path() + ylab(NULL) +
                              '4am','5am','6am','7am','12pm'))
 
 fig5 <- egg::ggarrange(NMDS_site, NMDS_day, NMDS_hour, nrow=1)
-ggsave(file.path(getwd(),"Summer2021-DataAnalysis/Figures/NMDS_multipanel_2v1.jpg"),
-       fig5, width=5, height=3.5) 
+#ggsave("figures/NMDS_multipanel_2v1.jpg",fig5, width=5, height=3.5) 
 
 #ggsave("figures/NMDS_hours_2v1.jpg", NMDS_day, width=3, height=3.5) 
 
