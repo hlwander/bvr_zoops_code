@@ -195,7 +195,7 @@ NMDS_day <- days$plot + geom_point() + theme_bw() + geom_path() + ylab(NULL) +
         plot.margin = unit(c(0,-0.1,0,-0.1), 'lines'),
         panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
         legend.key.width =unit(0.1,"line")) + 
-        annotate("text", x=-0.05, y=0.7, label= "b: sampling campaigns", 
+        annotate("text", x=-0.13, y=0.7, label= "b: sampling days", 
                  fontface = "italic", size = 3) +
         guides(fill="none", color = guide_legend(ncol=2)) +
         scale_fill_manual("",values=c("#008585","#89B199","#EFECBF","#DB9B5A","#C7522B"))+
@@ -362,8 +362,8 @@ disp_box <- ggboxplot(disp_df, x = "group", y = "value",
 pair_box <- ggboxplot(pair_df, x = "group", y = "value", 
           fill = "group", palette = c("#A4C6B8", "#81858B", "#5E435D"),
           order = c("site_pair", "day_pair", "hour_pair"),
-          ylab = "Pairwise", xlab = "") +
-  scale_x_discrete(labels = c("sites", "sampling \n\ campaigns", "hours of \n\ the day")) +
+          ylab = "Location", xlab = "") +
+  scale_x_discrete(labels = c("sites", "sampling \n\ days", "hours of \n\ the day")) +
   theme(text = element_text(size=7),
         plot.margin = unit(c(-0.5,0,0,0), 'lines')) +
   annotate("text",label=c("b","a","c"), x=c(1.1,2.1,3.1),
