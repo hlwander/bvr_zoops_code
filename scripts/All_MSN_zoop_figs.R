@@ -16,9 +16,9 @@ stderr <- function(x) {
 }
 
 #read in zoop data from all 3 years
-zoops2019<- read.csv(file.path(getwd(),'Summer2019-DataAnalysis/SummaryStats/FCR_ZooplanktonSummary2019.csv'),header = TRUE)
-zoops2020<- read.csv(file.path(getwd(),'Summer2020-DataAnalysis/SummaryStats/FCR_ZooplanktonSummary2020.csv'),header = TRUE)
-zoops2021<- read.csv(file.path(getwd(),'Summer2021-DataAnalysis/SummaryStats/FCR_ZooplanktonSummary2021.csv'),header = TRUE)
+zoops2019<- read.csv('output/FCR_ZooplanktonSummary2019.csv',header = TRUE)
+zoops2020<- read.csv('output/FCR_ZooplanktonSummary2020.csv',header = TRUE)
+zoops2021<- read.csv('output/FCR_ZooplanktonSummary2021.csv',header = TRUE)
 
 #drop holopedium becuase only in 2019
 zoops2019 <- zoops2019[,!c(grepl("Holopedium",colnames(zoops2019)))]
@@ -197,7 +197,7 @@ ggplot(subset(zoop_DHM_long, metric %in% c("Cladocera_density_NopL","Copepoda_de
   scale_color_manual("",values=c("#008585","#9BBAA0","#F2E2B0","#DEA868","#C7522B"), labels=c("10-11 Jul 2019","24-25 Jul 2019","12-13 Aug 2020","15-16 Jun 2021","7-8 Jul 2021"), guide=guide_legend(order=1)) + 
   geom_line()+ ylab("Density (Individuals/L)") + scale_fill_manual("",values=c("#CCCCCC","white"), guide = "none")+
   geom_errorbar(aes(ymin=value-value.SE, ymax=value+value.SE), width=.2,position=position_dodge(.9))
-ggsave(file.path(getwd(),"Summer2021-DataAnalysis/Figures/BVR_MSNs_taxa_density.jpg"), width=5, height=4) 
+#ggsave("figures/BVR_MSNs_taxa_density.jpg", width=5, height=4) 
 
 ggplot(subset(zoop_DHM_long, metric %in% c("Cladocera_PercentOfTotal","Copepoda_PercentOfTotal","Rotifera_PercentOfTotal")), #removing calanoids because they are super low %
                 aes(Hour,value, color=as.factor(MSN))) + 
@@ -212,7 +212,7 @@ ggplot(subset(zoop_DHM_long, metric %in% c("Cladocera_PercentOfTotal","Copepoda_
   scale_color_manual("",values=c("#008585","#9BBAA0","#F2E2B0","#DEA868","#C7522B"), labels=c("10-11 Jul 2019","24-25 Jul 2019","12-13 Aug 2020","15-16 Jun 2021","7-8 Jul 2021"), guide=guide_legend(order=1)) + 
   geom_line()+ ylab("% Density") + scale_fill_manual("",values=c("#CCCCCC","white"), guide = "none")+ 
   geom_errorbar(aes(ymin=value-value.SE, ymax=value+value.SE), width=.2,position=position_dodge(.9))
-ggsave(file.path(getwd(),"Summer2021-DataAnalysis/Figures/BVR_MSNs_taxa_percent_density.jpg"), width=5, height=4) 
+#ggsave("figures/BVR_MSNs_taxa_percent_density.jpg", width=5, height=4) 
 
 range(zoop_DHM_long$value[zoop_DHM_long$metric=="Copepoda_PercentOfTotal"]) # 77.1%, 68.9%, 85.9%
 
@@ -250,9 +250,9 @@ ggplot(zoop_dens_stand, aes(Hour,value_max_std, color=as.factor(MSN))) +
   scale_x_datetime(expand = c(0,0),labels = date_format("%H-%M",tz="EST5EDT"))+
   scale_color_manual("",values=c("#008585","#9BBAA0","#F2E2B0","#DEA868","#C7522B"), 
                      labels=c("10-11 Jul 2019","24-25 Jul 2019","12-13 Aug 2020","15-16 Jun 2021","7-8 Jul 2021"), guide=guide_legend(order=1)) + 
-  geom_line()+ ylab("density / max dens") + 
+  geom_line()+ ylab("Normalized density") + 
   scale_fill_manual("",values=c("#CCCCCC","white"), guide = "none")
-ggsave(file.path(getwd(),"Summer2021-DataAnalysis/Figures/BVR_MSNs_taxa_percent_density_over_max_std.jpg"), width=5, height=4) 
+#ggsave("figures/BVR_MSNs_taxa_percent_density_over_max_std.jpg", width=5, height=4) 
 
 
 mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Cladocera_density_NopL"])
