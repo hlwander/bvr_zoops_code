@@ -250,7 +250,7 @@ ggplot(zoop_dens_stand, aes(Hour,value_max_std, color=as.factor(MSN))) +
   scale_x_datetime(expand = c(0,0),labels = date_format("%H-%M",tz="EST5EDT"))+
   scale_color_manual("",values=c("#008585","#9BBAA0","#F2E2B0","#DEA868","#C7522B"), 
                      labels=c("10-11 Jul 2019","24-25 Jul 2019","12-13 Aug 2020","15-16 Jun 2021","7-8 Jul 2021"), guide=guide_legend(order=1)) + 
-  geom_line()+ ylab("Normalized density") + 
+  geom_line()+ ylab("Standardized density") + 
   scale_fill_manual("",values=c("#CCCCCC","white"), guide = "none")
 #ggsave("figures/BVR_MSNs_taxa_percent_density_over_max_std.jpg", width=5, height=4) 
 
