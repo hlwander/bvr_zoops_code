@@ -472,7 +472,7 @@ day_box <- ggboxplot(within_day_dist, x = "group", y = "dist",
                 axis.text.y = element_blank(), axis.ticks.y = element_blank()) +
           annotate("text",label=c("b","b","a","b","b"), x=c(1.2,2.2,3.2,4.2,5.2), size=4,
               y=c(0.41, 0.39, 0.5, 0.41, 0.42)) +
-          annotate("text", x=2.8, y=1, label= "b: sampling campaigns",
+          annotate("text", x=2.2, y=1, label= "b: sampling days",
                     fontface = "italic", size=3) +
           guides (fill = FALSE)
 
