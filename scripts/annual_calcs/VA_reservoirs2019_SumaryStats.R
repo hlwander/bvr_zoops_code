@@ -373,6 +373,7 @@ ZoopFinal[c(paste(taxaOfInterest,"Count_n",sep=""),paste(taxaOfInterest,"_Percen
 ZoopFinal$INT<-as.character(ZoopFinal$INT)
 
 #Export the final Zoop table
+dir.create("output", showWarnings = FALSE)
 write.csv(ZoopFinal,paste("output/FCR_ZooplanktonSummary",year,".csv",sep=""),row.names = FALSE)
 
 
