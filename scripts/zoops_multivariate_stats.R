@@ -5,6 +5,23 @@
 pacman::p_load(dplyr, vegan, labdsv, goeveg, rLakeAnalyzer, ggplot2,tidyr,
                viridis, egg, ggordiplots, splancs, ggpubr, FSA, rcompanion, ggrepel)
 
+# MEL comment: ggordiplots would not load for me
+# Warning messages:
+# 1: package ‘ggordiplots’ is not available for this version of R
+# 
+# A version of this package for your version of R might be available elsewhere,
+# see the ideas at
+# https://cran.r-project.org/doc/manuals/r-patched/R-admin.html#Installing-packages 
+# 2: 'BiocManager' not available.  Could not check Bioconductor.
+# 
+# Please use `install.packages('BiocManager')` and then retry. 
+# 3: In p_install(package, character.only = TRUE, ...) : 
+#   4: In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+#                   there is no package called ‘ggordiplots’
+#                 5: In pacman::p_load(dplyr, vegan, labdsv, goeveg, rLakeAnalyzer, ggplot2,  :
+#                                        Failed to install/load:
+#                                        ggordiplots
+
 #function to count characters starting at the end of the string
 substrEnd <- function(x, n){
   substr(x, nchar(x)-n+1, nchar(x))
@@ -357,7 +374,7 @@ disp_box <- ggboxplot(disp_df, x = "group", y = "value",
            y=c(mean(disp_df$value[disp_df$group=="site_disp"]) + sd(disp_df$value[disp_df$group=="site_disp"]),
                mean(disp_df$value[disp_df$group=="day_disp"]) + sd(disp_df$value[disp_df$group=="day_disp"]),
                mean(disp_df$value[disp_df$group=="hour_disp"]) + sd(disp_df$value[disp_df$group=="hour_disp"]))) +
-  guides(fill = FALSE) 
+  guides(fill = "none") #MEL comment: I got a warning here that this should be changed from FALSE to "none" as of ggplot 3.3.4 - check here and throughout? 
 
 pair_box <- ggboxplot(pair_df, x = "group", y = "value", 
           fill = "group", palette = c("#A4C6B8", "#81858B", "#5E435D"),
@@ -547,6 +564,7 @@ kw_results_disp <- data.frame("Group" = c("Littoral", "Pelagic", "10-11 Jul 2019
 #------------------------------------------------------------------------------#
 #pull in driver data --> can't use ysi or fp because only have 2 or 3 casts out of 5
 
+# MEL comment: environmental data is not provided in this repo! will need to download from EDI
 chem <- read.csv('~/Documents/VirginiaTech/research/Reservoirs/Data/DataAlreadyUploadedToEDI/EDIProductionFiles/MakeEMLChemistry/2022/chemistry_2013_2022.csv') %>% 
   mutate(DateTime = as.Date(DateTime)) %>%
   filter(Reservoir =="BVR" & Site==50 & 
