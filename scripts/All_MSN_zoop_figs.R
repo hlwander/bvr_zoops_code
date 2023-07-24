@@ -1,6 +1,9 @@
 #Zoop density change over 24hrs for all 5 MSNs
 #created 16 Oct 2022
 
+# MEL comment: can you add in annotation so we know which figures/supp figures the various
+# ggplots correspond to? thanks!
+
 #read in libraries
 pacman::p_load(dplyr, vegan, labdsv, goeveg, rLakeAnalyzer, 
                ggplot2,tidyr,lubridate, scales, colorblindcheck, viridis)
@@ -311,9 +314,9 @@ ggplot(subset(zoop_DHM_long, metric %in% c("Cladocera_density_NopL","Copepoda_de
 # DVM calcs for epi and hypo density across all 5 campaigns
 
 #read in all 3 DVM tables from 2019-2021
-DVM_2019 <- read.csv(file.path(getwd(),'Summer2019-DataAnalysis/SummaryStats/DVM_2019_zoops.csv'),header = TRUE)
-DVM_2020 <- read.csv(file.path(getwd(),'Summer2020-DataAnalysis/SummaryStats/DVM_2020_zoops.csv'),header = TRUE) %>% select(-X)
-DVM_2021 <- read.csv(file.path(getwd(),'Summer2021-DataAnalysis/SummaryStats/DVM_2021_zoops.csv'),header = TRUE) %>% select(-X)
+DVM_2019 <- read.csv(file.path(getwd(),'output/DVM_2019_zoops.csv'),header = TRUE)
+DVM_2020 <- read.csv(file.path(getwd(),'output/DVM_2020_zoops.csv'),header = TRUE) %>% select(-X)
+DVM_2021 <- read.csv(file.path(getwd(),'output/DVM_2021_zoops.csv'),header = TRUE) %>% select(-X)
 
 #merge all zoop files
 DVM_all <- rbind(DVM_2019,DVM_2020,DVM_2021)
@@ -388,7 +391,7 @@ ggplot(subset(DVM_percent, metric %in% c("Cladocera_density_NopL","Cyclopoida_de
                                   axis.text.x=element_text(size=7,family="Times"), plot.title = element_text(hjust = 0.5)) + ylab("Density (individual/L)") +
   theme(legend.position = "bottom", legend.margin = margin(0, 1, 2, 1), legend.title = element_text(size=10),legend.key.size = unit(0.3,"cm"),
         legend.box="vertical", legend.box.spacing = unit(0.1,"cm"),legend.text = element_text(size=8),axis.text.y = element_text(size=10, family="Times"))
-ggsave(file.path(getwd(),"Summer2021-DataAnalysis/Figures/BVR_epimetahypo_percent_density_MSN5.jpg"), width=5, height=4) 
+#ggsave(file.path(getwd(),"Summer2021-DataAnalysis/Figures/BVR_epimetahypo_percent_density_MSN5.jpg"), width=5, height=4) 
 # DVM for MSN 1 - cyclopoids and calanoids, MSN 2 - cladocera and cyclopoids, 
       #MSN 3 - cladocerans and cyclopoids (reverse DVM) and rotifers,
       #BUT, nothing for MSN 4/5 
