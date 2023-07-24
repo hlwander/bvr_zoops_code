@@ -61,7 +61,15 @@ zoop.repmeans <- zoop %>% select(sample_ID,site_no,collect_date,Hour, ZoopDensit
                   Copepoda_PercentOfTotal, Copepoda_density_NopL, Copepoda_BiomassConcentration_ugpL, Copepoda_totalbiomass_ug,
                   nauplius_PercentOfTotal, nauplius_density_NopL, nauplius_BiomassConcentration_ugpL, nauplius_totalbiomass_ug) %>%
                   group_by(sample_ID, site_no, Hour, collect_date) %>%
-                  summarise_at(vars(ZoopDensity_No.pL:nauplius_totalbiomass_ug,), funs(rep.mean=mean, rep.SE=stderr))
+                  summarise_at(vars(ZoopDensity_No.pL:nauplius_totalbiomass_ug,), funs(rep.mean=mean, rep.SE=stderr)) #CHECK WARNING HERE!
+#'`funs()` was deprecated in dplyr 0.8.0.
+#'Please use a list of either functions or lambdas:
+
+# Simple named list: list(mean = mean, median = median)
+
+# Auto named with `tibble::lst()`: tibble::lst(mean, median)
+
+# Using lambdas list(~ mean(., trim = .2), ~ median(., na.rm = TRUE))
 
 #get hour into posixct for graphing
 zoop.repmeans$Hour <- strptime(paste0(as.character(zoop.repmeans$collect_date), zoop.repmeans$Hour),format="%Y-%m-%d %H:%M")
@@ -221,5 +229,5 @@ BVR.DVM.calcs.long$DateTime <- substr(BVR.DVM.calcs.long$DateTime,1,nchar(BVR.DV
 BVR.DVM.calcs.long$value[is.nan(BVR.DVM.calcs.long$value)] <- 0
 
 #export 2021 dvm stats
-write.csv(BVR.DVM.calcs.long, "output/SummaryStats/DVM_2021_zoops.csv")
+write.csv(BVR.DVM.calcs.long, "output/DVM_2021_zoops.csv")
 
