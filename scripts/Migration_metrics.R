@@ -214,9 +214,6 @@ names(metric_taxa) <- c(unique(migration_long$metric))
 migration_long$metric <- factor(migration_long$metric, levels = c(
   "ZoopDensity_No.pL",unique(migration_long$metric)[1:13]))
 
-#create text df
-text_df <- data.frame(y=c(0.4, -0.4), x = c(6,6), n = c("Normal Migration", "Reverse Migration"))
-
 #change facet labels
 metric_taxa <-c("1", "2", "3", "a: cladocerans", "a: cladocerans",
                 "b: copepods","b: copepods","8","9","10","11",
@@ -245,7 +242,7 @@ ggplot(subset(migration_long, grepl("density",metric, ignore.case=T) &
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
         legend.key.width =unit(0.7,"line")) + guides(fill="none", color='none') +
   facet_wrap(~metric, labeller = labeller(metric=metric_taxa)) + ylab("Density migration metric") +
-  geom_text(aes(x=5.9, y=c(rep(0,28),0.4,-0.4), label=c(rep(NA,28),"Normal \nMigration", "Reverse \nMigration")), 
+  geom_text(aes(x=5.9, y=c(rep(0,28),0.4,-0.4), label=c(rep(NA,28),"Typical \nMigration", "Reverse \nMigration")), 
             hjust = 0, size = 3, color="black") + coord_cartesian(xlim = c(1, 5), clip = 'off')
 #ggsave("figures/BVR_MSNs_migration_metrics_dens_3taxa.jpg", width=5, height=4) 
 
