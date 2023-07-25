@@ -6,26 +6,13 @@
   #also re-calculated total biomass by scaling biomass of measured zoops to total count
 #19Jul2020 - changed taxa biomass calcs from biomass of measured zoops *(measured zoops/total count) to measured zoops *(total count/ measured zoops)
   #also changed total biomass calc becasue previous way was skewed towards larger taxa (becuase I typically measure more large taxa due to greater length variability); new way adds ug from 5 main taxa and then divides by volume of each sample
-#22Jul2020 - added in net efficincy to calculate density and biomass concentrations ( count * 1/NE; lines 139,340,342,358)
+#22Jul2020 - added in net efficincy to calculate density and biomass concentrations ( count * 1/NE; lines 139,349,351,367)
 
 ##This runs the code for zooplankton files to summarize and do calculations
 #It will upload two zooplankton files from the template
 #Summarize data and then output a file that can be merged with other lake data
-#########################################
 
 #######################START OF READING IN DATA#######################################
-###Function to get the median if odd number in a column, or one entry below median if even number####
-median.zoop<-function(vector){
-  #Remove nas and then sort
-  vector2<-vector[!is.na(vector)]
-  vector2<-sort(vector2)
-  #If the vector contains an odd number of entries, return the median
-  if(length(vector2)%%2==1){return(median(vector2))}else{
-    return(vector2[length(vector2)/2]) #If the vector is even #, return the entry immediately below the median
-  }
-}
-
-###############################End of function
 
 #Read in the csv file that contains all the taxa from the zooplankton key that we use:####
 #http://cfb.unh.edu/cfbkey/html/index.html

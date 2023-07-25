@@ -5,21 +5,8 @@
     #includes samples collected at macrophyes (BVR_l), dam (BVR_d) and pelagic site (BVR_50_p for epi tows collected during MSN ONLY; BVR_50 for full water column tows and tows outside of 24-hour campaigns)
     #samples collected from at noon (x1), midnight (x1), sunset (x4), and sunrise (x4)
 
-#libarries
-pacman::p_load(plyr,plotrix,lubridate,dplyr,ggplot2,scales,tidyr,viridis)
-
 #read in zoop summary csv
 zoop<- read.csv('output/FCR_ZooplanktonSummary2019.csv',header = TRUE)
-
-#create function to count characters starting at the end of the string
-substrEnd <- function(x, n){
-  substr(x, nchar(x)-n+1, nchar(x))
-}
-
-#Calculates the standard error####
-stderr <- function(x) {
-  sd(x,na.rm=TRUE)/sqrt(length(na.omit(x)))
-}
 
 #make sure sample_ID is class character
 zoop$sample_ID<- as.character(zoop$sample_ID)
@@ -134,12 +121,6 @@ SE.hypo.calcs.dens <- zoop[zoop$sample_ID=="B_pel_11Jul19_midnight" |zoop$sample
 matchingcols.dens<- match(substr(colnames(BVR_pelagic_DVM_vol_calculated[,c(1:4,6:11)]),1,14),substr(colnames(SE.hypo.calcs.dens),1,14))
 SE.hypo.calcs.dens<- SE.hypo.calcs.dens[,matchingcols.dens]
 
-#not sure if this is right, but calculating SE of difference between epi mean and hypo mean
-SE.diffMean<- function(x,y){
-  sqrt((sd(x,na.rm=TRUE)^2/length(na.omit(x))) + 
-         (sd(y,na.rm=TRUE)^2/length(na.omit(y))))
-}
-  
 #initialize df
 BVR.DVM.calcs<- data.frame("Hour"=unique(BVR_pelagic_DVM_raw$Hour))
   
@@ -186,9 +167,6 @@ for(i in 1:length(SEonly)){
                                                                                        SE.hypo.calcs.dens[SE.hypo.calcs.dens$sample_ID=="B_pel_11Jul19_midnight_epi",paste0(Percentdens)[j]])
   }
     
-#reorder BVR.DVM.calcs so order matches BVR.DVM.calcs.SE
-#BVR.DVM.calcs<- BVR.DVM.calcs[,c(1:22,26,23,27,24,28,25,29)]
-
 #wide to long for both dfs separately
 BVR.DVM.calcs.long <-  BVR.DVM.calcs %>%
     gather(metric,value, ZoopDensity_No.pL_rep.mean_epi:nauplius_density_NopL_rep.mean_hypo_percent_density) %>%

@@ -4,21 +4,8 @@
 #Summarize data and then output a file that can be merged with other lake data
 
 ##make sure to drop BVR_schind and BVR_trap samples because these are NOT tows!!!!!
-#########################################
 
 #######################START OF READING IN DATA#######################################
-###Function to get the median if odd number in a column, or one entry below median if even number####
-median.zoop<-function(vector){
-  #Remove nas and then sort
-  vector2<-vector[!is.na(vector)]
-  vector2<-sort(vector2)
-  #If the vector contains an odd number of entries, return the median
-  if(length(vector2)%%2==1){return(median(vector2))}else{
-    return(vector2[length(vector2)/2]) #If the vector is even #, return the entry immediately below the median
-  }
-}
-
-###############################End of function
 
 #change working directory
 #setwd(file.path(getwd(),"Summer2021-DataAnalysis"))

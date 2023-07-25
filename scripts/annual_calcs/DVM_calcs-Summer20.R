@@ -5,21 +5,8 @@
     #includes samples collected at macrophyes (BVR_l) and pelagic site (BVR_50_p for epi tows collected during MSN ONLY; BVR_50 for full water column tows and tows outside of 24-hour campaigns)
     #samples collected from noon (x1), midnight (x1), sunset (x4), and sunrise (x4)
 
-#read in libraries
-pacman::p_load(plyr,plotrix,lubridate,dplyr,ggplot2,scales,tidyr,viridis)
-
 #read in zoop summary csv
 zoop<- read.csv('output/FCR_ZooplanktonSummary2020.csv',header = TRUE)
-
-#create function to count characters starting at the end of the string
-substrEnd <- function(x, n){
-  substr(x, nchar(x)-n+1, nchar(x))
-}
-
-#Calculates the standard error####
-stderr <- function(x) {
-  sd(x,na.rm=TRUE)/sqrt(length(na.omit(x)))
-}
 
 #make sure sample_ID is class character
 zoop$sample_ID<- as.character(zoop$sample_ID)
@@ -70,15 +57,7 @@ zoop.repmeans <- zoop %>% select(sample_ID,site_no,collect_date,Hour, Volume_L, 
                                  Copepoda_density_NopL, Copepoda_BiomassConcentration_ugpL, CopepodaCount_n, Copepoda_PercentOfTotal, Copepoda_totalbiomass_ug,
                                  nauplius_density_NopL, nauplius_BiomassConcentration_ugpL, naupliusCount_n, nauplius_PercentOfTotal, nauplius_totalbiomass_ug) %>%
   group_by(sample_ID, site_no, collect_date, Hour) %>%
-  summarise_at(vars(Volume_L:nauplius_totalbiomass_ug,), funs(rep.mean=mean, rep.SE=stderr)) #CHECK WARNING HERE!!
-#'`funs()` was deprecated in dplyr 0.8.0.
-#'Please use a list of either functions or lambdas:
-
-# Simple named list: list(mean = mean, median = median)
-
-# Auto named with `tibble::lst()`: tibble::lst(mean, median)
-
-# Using lambdas list(~ mean(., trim = .2), ~ median(., na.rm = TRUE))
+  summarise_at(vars(Volume_L:nauplius_totalbiomass_ug,), list(rep.mean=mean, rep.SE=stderr)) #CHECK WARNING HERE!!
 
 #get hour into posixct for graphing
 zoop.repmeans$Hour <- strptime(paste0(as.character(zoop.repmeans$collect_date), zoop.repmeans$Hour),format="%Y-%m-%d %H:%M")
@@ -166,12 +145,6 @@ for(j in 1:length(unique(BVR.DVM.calcs$Hour))){
 
 #initialize df
 BVR.DVM.calcs.SE<- data.frame("Hour"=unique(BVR_pelagic_DVM_raw$Hour))
-
-#not sure if this is right, but calculating SE of difference between epi mean and hypo mean
-SE.diffMean<- function(x,y){
-  sqrt((sd(x,na.rm=TRUE)^2/length(na.omit(x))) + 
-         (sd(y,na.rm=TRUE)^2/length(na.omit(y))))
-}
 
 #pull only noon/midnight samples
 DVM_samples_raw <- zoop[(substrEnd(zoop$sample_ID,4)=="noon" | substrEnd(zoop$sample_ID,5)=="night" | substrEnd(zoop$sample_ID,8)=="noon_epi" | substrEnd(zoop$sample_ID,9)=="night_epi") & zoop$site_no!="BVR_l",]

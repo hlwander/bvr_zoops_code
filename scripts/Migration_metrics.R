@@ -1,15 +1,6 @@
 #Script to calculate DVM and DHM metrics
 #Created 5Dec2022
 
-#read in libraries
-pacman::p_load(dplyr, vegan, labdsv, goeveg, rLakeAnalyzer, ggplot2,tidyr,lubridate, 
-               scales, colorblindcheck, RColorBrewer)
-
-#Calculates the standard error####
-stderr <- function(x) {
-  sd(x,na.rm=TRUE)/sqrt(length(na.omit(x)))
-}
-
 #read in DHM csv
 all_DHM <- read.csv("output/All_MSN_DHM.csv")
 
@@ -201,7 +192,7 @@ migration_long <- metrics_avg[,c(1,2,5,6)]
 migration_long$SE <- metrics_se$value
   
 #export migration metrics
-#write.csv(migration_long,"./output/migration_metrics.csv",row.names = FALSE)
+#write.csv(migration_long,"/output/migration_metrics.csv",row.names = FALSE)
 
 #-------------------------------------------------------------------------------#
 
@@ -220,7 +211,7 @@ metric_taxa <-c("1", "2", "3", "a: cladocerans", "a: cladocerans",
                 "c: rotifers","c: rotifers","14")
 names(metric_taxa) <- c(unique(migration_long$metric))
 
-#plot migration metrics
+#plot migration metrics --> Figure 9
 ggplot(subset(migration_long, grepl("density",metric, ignore.case=T) & 
                 metric %in% c("Cladocera_density_NopL","Copepoda_density_NopL","Rotifera_density_NopL")), 
               aes(x=as.factor(MSN), y=value, fill=as.factor(MSN), shape=migration)) + 
@@ -246,26 +237,36 @@ ggplot(subset(migration_long, grepl("density",metric, ignore.case=T) &
             hjust = 0, size = 3, color="black") + coord_cartesian(xlim = c(1, 5), clip = 'off')
 #ggsave("figures/BVR_MSNs_migration_metrics_dens_3taxa.jpg", width=5, height=4) 
 
+#Figure S9
 ggplot(subset(migration_long, grepl("biomass",metric, ignore.case = TRUE) &
                 metric %in% c("Cladocera_BiomassConcentration_ugpL","Copepoda_BiomassConcentration_ugpL","Rotifera_BiomassConcentration_ugpL")), 
-       aes(x=MSN, y=value, color=metric, shape=migration)) + 
-  geom_point(position=position_dodge(.9)) + theme_bw() + geom_hline(yintercept = 0, linetype="dotted")+
-  scale_shape_manual("",values = c(1, 19), labels = c("DHM","DVM")) +
-  geom_errorbar(aes(ymin=value-SE, ymax=value+SE), width=.2,position=position_dodge(.9)) +
+       aes(x=as.factor(MSN), y=value, fill=as.factor(MSN), shape=migration)) +
+  scale_shape_manual("",values = c(24,21), labels = c("DHM","DVM")) + xlab("") +
+  scale_x_discrete(breaks=c("1","2","3","4","5"),
+                   labels=c("10-11 Jul 2019", "24-25 Jul 2019", "12-13 Aug 2020",
+                            "15-16 Jun 2021", "7-8 Jul 2021")) +
+  geom_errorbar(aes(ymin=value-SE, ymax=value+SE, color=as.factor(MSN)), width=.4,position=position_dodge(.9), linewidth = 0.8) +
+  geom_point(position=position_dodge(.9), size=2) + theme_bw() + geom_hline(yintercept = 0, linetype="dotted")+
+  scale_fill_manual("",values=c("#008585","#89B199","#EFECBF","#DB9B5A","#C7522B"))+
+  scale_color_manual("",values=c("#008585","#89B199","#EFECBF","#DB9B5A","#C7522B"))+
   theme(text = element_text(size=8), axis.text = element_text(size=7, color="black"), 
         legend.background = element_blank(), legend.key = element_blank(), 
         legend.key.height=unit(0.3,"line"), 
-        axis.text.x = element_text(vjust = 0.5, hjust=1), 
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1), 
         strip.background = element_rect(fill = "transparent"), 
+        plot.margin = unit(c(0,3,0,0), 'lines'),
         legend.position = c(0.92,0.94), legend.spacing = unit(-0.5, 'cm'),
-        panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
-        legend.key.width =unit(0.7,"line")) + guides(color="none") +
-  scale_color_manual("",values=c("#088f84","#ccae8f","#a61737"))+
-  facet_wrap(~metric, labeller = labeller(metric=metric_taxa)) + ylab("Biomass migration metric")
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+        legend.key.width =unit(0.7,"line")) + guides(fill="none", color='none') +
+  facet_wrap(~metric, labeller = labeller(metric=metric_taxa)) + ylab("Biomass migration metric") +
+geom_text(aes(x=5.9, y=c(rep(0,28),0.4,-0.4), label=c(rep(NA,28),"Typical \nMigration", "Reverse \nMigration")), 
+          hjust = 0, size = 3, color="black") + coord_cartesian(xlim = c(1, 5), clip = 'off')
 #ggsave("figures/BVR_MSNs_migration_metrics_biom_3taxa.jpg", width=5, height=4) 
 
 #-------------------------------------------------------------------------------
 #create df with proportion of total zoops (both density and biomass) over time
+
+library(plyr)
 
 #now calculate the proportion in each habitat
 Hourly_prop <- plyr::ddply(all_DHM, c("metric", "MSN", "Hour","DateTime"), function(x) {
@@ -278,146 +279,4 @@ Hourly_prop <- plyr::ddply(all_DHM, c("metric", "MSN", "Hour","DateTime"), funct
 #export proportion df
 #write.csv(Hourly_prop,"output/Hourly_proportions_pelvslit.csv",row.names = FALSE)
 
-#-------------------------------------------------------------------------------
-#plot migration metric vs PAR to see if sunny/cloudy days affect migration metric
-
-#first, read in ctd
-inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/200/13/27ceda6bc7fdec2e7d79a6e4fe16ffdf" 
-infile1 <- tempfile()
-try(download.file(inUrl1,infile1))
-
-# MEL comment: is this data actually used in manuscript? if not, would remove
-# if it IS used, we need to figure out a reliable way of downloading it, at a minimum
-# the timeout needs to be extended; here are the errors I got below:
-# 
-# sh: 1: curl: not found
-# Error in download.file(inUrl1, infile1, method = "curl") : 
-#   'curl' call had nonzero exit status
-# In addition: Warning message:
-#   In system(paste("curl", paste(extra, collapse = " "), shQuote(url),  :
-#                     error in running command
-#                   Error in download.file(inUrl1, infile1) : 
-#                     download from 'https://pasta.lternet.edu/package/data/eml/edi/200/13/27ceda6bc7fdec2e7d79a6e4fe16ffdf' failed
-#                   In addition: Warning messages:
-#                     1: In download.file(inUrl1, infile1) :
-#                     downloaded length 0 != reported length 0
-#                   2: In download.file(inUrl1, infile1) :
-#                     URL 'https://pasta.lternet.edu/package/data/eml/edi/200/13/27ceda6bc7fdec2e7d79a6e4fe16ffdf': Timeout of 60 seconds was reached
-# if (is.na(file.size(infile1))) download.file(inUrl1,infile1,method="auto")
-
-
-dt1 <-read.csv(infile1,header=F 
-               ,skip=1
-               ,sep=","  
-               , col.names=c(
-                 "Reservoir",     
-                 "Site",     
-                 "DateTime",     
-                 "Depth_m",     
-                 "Temp_C",     
-                 "DO_mgL",     
-                 "DOsat_percent",     
-                 "Cond_uScm",     
-                 "SpCond_uScm",     
-                 "Chla_ugL",     
-                 "Turbidity_NTU",     
-                 "pH",     
-                 "ORP_mV",     
-                 "PAR_umolm2s",     
-                 "DescRate_ms",     
-                 "Flag_DateTime",     
-                 "Flag_Temp_C",     
-                 "Flag_DO_mgL",     
-                 "Flag_DOsat_percent",     
-                 "Flag_Cond_uScm",     
-                 "Flag_SpCond_uScm",     
-                 "Flag_Chla_ugL",     
-                 "Flag_Turbidity_NTU",     
-                 "Flag_pH",     
-                 "Flag_ORP_mV",     
-                 "Flag_PAR_umolm2s",     
-                 "Flag_DescRate_ms"    ), check.names=TRUE)
-
-unlink(infile1)
-
-#next filter just BVR PAR data from 0.1m
-par_bvr = dt1%>%
-  mutate(Date = as.Date(DateTime))%>%
-  filter(Depth_m >= 0.1 & Depth_m <= 0.11,
-         Site == 50,
-         Reservoir=="BVR",
-         Date %in% c(as.Date("2019-07-10"), as.Date("2019-07-11"),  as.Date("2019-07-24"),
-                          as.Date("2019-07-25"), as.Date("2020-08-12"), as.Date("2020-08-13"),
-                          as.Date("2021-06-15"), as.Date("2021-06-16"), as.Date("2021-07-07"),
-                          as.Date("2021-07-08")))
-
-#average surface PARs by date
-avg_par_bvr <- par_bvr %>% group_by(as.Date(DateTime)) %>% 
-  summarise(avg_par = mean(PAR_umolm2s))
-
-#add msn col and do a more hacky avg
-avg_par_bvr$msn <- c(1,1,2,2,3,4)
-
-avg_par_bvr <- avg_par_bvr %>% group_by(msn) %>%
-  summarise(avg_par = mean(avg_par))
-
-#plot migration metric vs par
-plot(migration_df$DVM_avg[migration_df$metric=="ZoopDensity_No.pL"] ~
-       c(avg_par_bvr$avg_par,NA), pch=19, 
-     xlab = "PAR (ummolm2s)", 
-     ylab = "DVM metric")
-
-plot(migration_df$DHM_avg[migration_df$metric=="ZoopDensity_No.pL"] ~
-       c(avg_par_bvr$avg_par,NA), pch=19,
-     xlab = "PAR (ummolm2s)", 
-     ylab = "DHM metric")
-
-#hmm potential inverse relationship between migration metric and PAR??
-
-#------------------------------------------------------------------------------#
-#read in secchi 
-inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/198/11/81f396b3e910d3359907b7264e689052" 
-infile1 <- tempfile()
-try(download.file(inUrl1,infile1))
-if (is.na(file.size(infile1))) download.file(inUrl1,infile1,method="auto")
-
-dt1 <-read.csv(infile1,header=F 
-               ,skip=1
-               ,sep=","  
-               , col.names=c(
-                 "Reservoir",     
-                 "Site",     
-                 "DateTime",     
-                 "Secchi_m",     
-                 "Flag_DateTime",     
-                 "Flag_Secchi_m"    ), check.names=TRUE)
-
-unlink(infile1)
-
-#create df for secchi data
-secchi_bvr = dt1 %>% 
-  mutate(Date = as.Date(DateTime))%>%
-  filter(Site == 50,
-         Reservoir=="BVR",
-         Date %in% c(as.Date("2019-07-10"), as.Date("2019-07-11"),  as.Date("2019-07-24"),
-                     as.Date("2019-07-25"), as.Date("2020-08-12"), as.Date("2020-08-13"),
-                     as.Date("2021-06-15"), as.Date("2021-06-16"), as.Date("2021-07-07"),
-                     as.Date("2021-07-08"))) %>%
-  select(Date,Secchi_m)
-
-#add the day 5 secchi (calculated using zoop rope at pelagic site)
-secchi_bvr <- data.frame("msn" = c(1,2,3,4,5),
-                         "secchi_m" = c(secchi_bvr$Secchi_m, 1.8))
-
-#now plot
-plot(migration_df$DVM_avg[migration_df$metric=="Rotifera_density_NopL"] ~
-       secchi_bvr$secchi_m, pch=19, 
-     xlab = "Secchi (m)", 
-     ylab = "DVM metric")
-
-plot(migration_df$DHM_avg[migration_df$metric=="Rotifera_density_NopL"] ~
-       secchi_bvr$secchi_m, pch=19,
-     xlab = "Secchi (m)", 
-     ylab = "DHM metric")
-#cool! positive relationship between migration metric and secchi 
-#normal migration with high water clarity and reverse for lower water clarity
+detach('package:plyr')

@@ -1,36 +1,6 @@
 #multivariate stats for 2019 - 2021 zoop data
 #created 25Nov2021
 
-#read in libraries
-pacman::p_load(dplyr, vegan, labdsv, goeveg, rLakeAnalyzer, ggplot2,tidyr,
-               viridis, egg, ggordiplots, splancs, ggpubr, FSA, rcompanion, ggrepel)
-
-# MEL comment: ggordiplots would not load for me
-# Warning messages:
-# 1: package ‘ggordiplots’ is not available for this version of R
-# 
-# A version of this package for your version of R might be available elsewhere,
-# see the ideas at
-# https://cran.r-project.org/doc/manuals/r-patched/R-admin.html#Installing-packages 
-# 2: 'BiocManager' not available.  Could not check Bioconductor.
-# 
-# Please use `install.packages('BiocManager')` and then retry. 
-# 3: In p_install(package, character.only = TRUE, ...) : 
-#   4: In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
-#                   there is no package called ‘ggordiplots’
-#                 5: In pacman::p_load(dplyr, vegan, labdsv, goeveg, rLakeAnalyzer, ggplot2,  :
-#                                        Failed to install/load:
-#                                        ggordiplots
-
-#function to count characters starting at the end of the string
-substrEnd <- function(x, n){
-  substr(x, nchar(x)-n+1, nchar(x))
-}
-
-#function to find the closest value in a df
-closest<-function(x,y){
-  x[which(abs(x-y)==min(abs(x-y)))] }
-
 #read in zoop data from all 3 years
 zoops2019<- read.csv('output/FCR_ZooplanktonSummary2019.csv',header = TRUE)
 zoops2020<- read.csv('output/FCR_ZooplanktonSummary2020.csv',header = TRUE)
@@ -374,7 +344,7 @@ disp_box <- ggboxplot(disp_df, x = "group", y = "value",
            y=c(mean(disp_df$value[disp_df$group=="site_disp"]) + sd(disp_df$value[disp_df$group=="site_disp"]),
                mean(disp_df$value[disp_df$group=="day_disp"]) + sd(disp_df$value[disp_df$group=="day_disp"]),
                mean(disp_df$value[disp_df$group=="hour_disp"]) + sd(disp_df$value[disp_df$group=="hour_disp"]))) +
-  guides(fill = "none") #MEL comment: I got a warning here that this should be changed from FALSE to "none" as of ggplot 3.3.4 - check here and throughout? 
+  guides(fill = "none") 
 
 pair_box <- ggboxplot(pair_df, x = "group", y = "value", 
           fill = "group", palette = c("#A4C6B8", "#81858B", "#5E435D"),
@@ -387,7 +357,7 @@ pair_box <- ggboxplot(pair_df, x = "group", y = "value",
            y=c(mean(pair_df$value[pair_df$group=="site_pair"]) + sd(pair_df$value[pair_df$group=="site_pair"]),
                mean(pair_df$value[pair_df$group=="day_pair"]) + sd(pair_df$value[pair_df$group=="day_pair"]),
                mean(pair_df$value[pair_df$group=="hour_pair"]) + sd(pair_df$value[pair_df$group=="hour_pair"]))) +
-  guides(fill = FALSE) 
+  guides(fill = "none") 
 
 among_scales <- egg::ggarrange(disp_box, pair_box, nrow=2)
 #ggsave("figures/among_variability_boxplots.jpg",among_scales, width=3, height=4) 
@@ -564,9 +534,44 @@ kw_results_disp <- data.frame("Group" = c("Littoral", "Pelagic", "10-11 Jul 2019
 #------------------------------------------------------------------------------#
 #pull in driver data --> can't use ysi or fp because only have 2 or 3 casts out of 5
 
-# MEL comment: environmental data is not provided in this repo! will need to download from EDI
-chem <- read.csv('~/Documents/VirginiaTech/research/Reservoirs/Data/DataAlreadyUploadedToEDI/EDIProductionFiles/MakeEMLChemistry/2022/chemistry_2013_2022.csv') %>% 
-  mutate(DateTime = as.Date(DateTime)) %>%
+#chem
+inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/199/11/509f39850b6f95628d10889d66885b76" 
+infile1 <- tempfile()
+try(download.file(inUrl1,infile1, timeout = max(300, getOption("timeout"))))
+
+chem <-read.csv(infile1,header=F 
+               ,skip=1
+               ,sep=","  
+               , col.names=c(
+                 "Reservoir",     
+                 "Site",     
+                 "DateTime",     
+                 "Depth_m",     
+                 "Rep",     
+                 "TN_ugL",     
+                 "TP_ugL",     
+                 "NH4_ugL",     
+                 "NO3NO2_ugL",     
+                 "SRP_ugL",     
+                 "DOC_mgL",     
+                 "DIC_mgL",     
+                 "DC_mgL",     
+                 "DN_mgL",     
+                 "Flag_DateTime",     
+                 "Flag_TN_ugL",     
+                 "Flag_TP_ugL",     
+                 "Flag_NH4_ugL",     
+                 "Flag_NO3NO2_ugL",     
+                 "Flag_SRP_ugL",     
+                 "Flag_DOC_mgL",     
+                 "Flag_DIC_mgL",     
+                 "Flag_DC_mgL",     
+                 "Flag_DN_mgL"    ), check.names=TRUE)
+
+unlink(infile1)
+
+chem <- chem |>
+  mutate(DateTime = as.Date(DateTime)) |>
   filter(Reservoir =="BVR" & Site==50 & 
            DateTime %in% c(as.Date("2019-07-10"), as.Date("2019-07-11"), as.Date("2019-07-24"),
                            as.Date("2019-07-25"), as.Date("2020-08-12"), as.Date("2020-08-13"),
@@ -582,9 +587,27 @@ chem$msn <- ifelse(chem$DateTime=="2019-07-10" | chem$DateTime=="2019-07-11","1"
 #average across msn and depth
 chem_avg <- chem %>% group_by(Reservoir, Depth_m, msn) %>% summarise(across(everything(), list(mean)))
 
+#--------------------------------------#
+#Secchi
+inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/198/11/81f396b3e910d3359907b7264e689052" 
+infile1 <- tempfile()
+try(download.file(inUrl1,infile1,timeout = max(300, getOption("timeout"))))
 
-secchi <- read.csv('~/Documents/VirginiaTech/research/Reservoirs/Data/DataAlreadyUploadedToEDI/EDIProductionFiles/MakeEMLYSI_PAR_secchi/2022/Data/Secchi_depth_2013-2022.csv') %>% 
-  mutate(DateTime = as.Date(DateTime)) %>%
+secchi <-read.csv(infile1,header=F 
+               ,skip=1
+               ,sep=","  
+               , col.names=c(
+                 "Reservoir",     
+                 "Site",     
+                 "DateTime",     
+                 "Secchi_m",     
+                 "Flag_DateTime",     
+                 "Flag_Secchi_m"    ), check.names=TRUE)
+
+unlink(infile1)
+
+secchi <- secchi |>
+  mutate(DateTime = as.Date(DateTime)) |>
   filter(Reservoir =="BVR" & Site==50 & 
            DateTime %in% c(as.Date("2019-07-10"), as.Date("2019-07-11"), as.Date("2019-07-24"),
                            as.Date("2019-07-25"), as.Date("2020-08-12"), as.Date("2020-08-13"),
@@ -594,34 +617,79 @@ secchi <- read.csv('~/Documents/VirginiaTech/research/Reservoirs/Data/DataAlread
 #add secchi for 5th MSN - 1.8m
 secchi[5,] <- c("BVR",50,"2021-07-08",1.8,0,0)
 
-ctd<- read.csv('~/Documents/VirginiaTech/research/BVR_GLM/bvr_glm/field_data/CTD_final_2013_2022.csv') %>% 
-  mutate(DateTime = as.Date(DateTime)) %>%
+#--------------------------------------#
+#ctd
+inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/200/13/27ceda6bc7fdec2e7d79a6e4fe16ffdf" 
+infile1 <- tempfile()
+try(download.file(inUrl1,infile1, timeout = max(300, getOption("timeout"))))
+
+ctd <-read.csv(infile1,header=F 
+               ,skip=1
+               ,sep=","  
+               , col.names=c(
+                 "Reservoir",     
+                 "Site",     
+                 "DateTime",     
+                 "Depth_m",     
+                 "Temp_C",     
+                 "DO_mgL",     
+                 "DOsat_percent",     
+                 "Cond_uScm",     
+                 "SpCond_uScm",     
+                 "Chla_ugL",     
+                 "Turbidity_NTU",     
+                 "pH",     
+                 "ORP_mV",     
+                 "PAR_umolm2s",     
+                 "DescRate_ms",     
+                 "Flag_DateTime",     
+                 "Flag_Temp_C",     
+                 "Flag_DO_mgL",     
+                 "Flag_DOsat_percent",     
+                 "Flag_Cond_uScm",     
+                 "Flag_SpCond_uScm",     
+                 "Flag_Chla_ugL",     
+                 "Flag_Turbidity_NTU",     
+                 "Flag_pH",     
+                 "Flag_ORP_mV",     
+                 "Flag_PAR_umolm2s",     
+                 "Flag_DescRate_ms"    ), check.names=TRUE)
+
+unlink(infile1)
+
+ctd<- ctd |>
+  mutate(DateTime = as.Date(DateTime)) |>
   filter(Reservoir =="BVR" & 
            DateTime %in% c(as.Date("2019-07-10"), as.Date("2019-07-11"), as.Date("2019-07-24"),
                            as.Date("2019-07-25"), as.Date("2020-08-12"), as.Date("2020-08-13"),
                            as.Date("2021-06-15"), as.Date("2021-06-16"), as.Date("2021-07-07"), 
                            as.Date("2021-07-08"), as.Date("2021-07-12"))) #ctd cast from 4 days after MSN 5
 
+library(plyr)
+
 #select every 0.5m from casts
-ctd_final_temp <- ctd %>%
-  dplyr::mutate(rdepth = plyr::round_any(Depth_m, 0.5)) %>% 
-  dplyr::group_by(DateTime, rdepth, Reservoir, Site) %>%
-  dplyr::summarise(value = mean(Temp_C)) %>% 
+ctd_final_temp <- ctd |>
+  dplyr::mutate(rdepth = plyr::round_any(Depth_m, 0.5)) |>
+  dplyr::group_by(DateTime, rdepth, Reservoir, Site) |>
+  dplyr::summarise(value = mean(Temp_C)) |>
   dplyr::rename(depth = rdepth) 
 
 #do the same for DO values now
-ctd_final_DO <- ctd %>%
-  dplyr::mutate(rdepth = plyr::round_any(Depth_m, 0.5)) %>% 
-  dplyr::group_by(DateTime, rdepth, Reservoir, Site) %>%
-  dplyr::summarise(value = mean(DO_mgL)) %>% 
+ctd_final_DO <- ctd |>
+  dplyr::mutate(rdepth = plyr::round_any(Depth_m, 0.5)) |>
+  dplyr::group_by(DateTime, rdepth, Reservoir, Site) |>
+  dplyr::summarise(value = mean(DO_mgL)) |>
   dplyr::rename(depth = rdepth) 
 
+detach('package:plyr')
 
 #calculate thermocline depth and oxycline depth by date
-ctd_thermo_depth <- ctd_final_temp %>% group_by(DateTime) %>% filter(depth > 0) %>% 
+ctd_thermo_depth <- ctd_final_temp |> group_by(DateTime) |> 
+  filter(depth > 0) |>
   mutate(therm_depth = thermo.depth(value,depth))
 
-ctd_oxy_depth <- ctd_final_DO %>% group_by(DateTime) %>% filter(depth > 0) %>% 
+ctd_oxy_depth <- ctd_final_DO %>% group_by(DateTime) |>
+  filter(depth > 0) |>
   mutate(oxy_depth = thermo.depth(value,depth))
 
 #add msn # 
@@ -639,7 +707,7 @@ depths = c(0.1, seq(1, 10, by = 1))
 ctd.final<-data.frame() 
 
 for (i in 1:length(depths)){
-  ctd_layer <- ctd %>% group_by(DateTime) %>% slice(which.min(abs(as.numeric(Depth_m) - depths[i])))
+  ctd_layer <- ctd |> group_by(DateTime) |> slice(which.min(abs(as.numeric(Depth_m) - depths[i])))
   # Bind each of the data layers together.
   ctd.final = bind_rows(ctd.final, ctd_layer)
 }
@@ -654,7 +722,8 @@ ctd.final$msn <- ifelse(ctd.final$DateTime=="2019-07-10" | ctd.final$DateTime=="
                                       ifelse(ctd.final$DateTime=="2021-06-15" | ctd.final$DateTime=="2021-06-16","4","5"))))
 
 #average across msn and depth
-ctd.final_avg <- ctd.final %>% group_by(Reservoir, Depth_m, msn) %>% summarise(across(everything(), list(mean)))
+ctd.final_avg <- ctd.final |> group_by(Reservoir, Depth_m, msn) |> 
+  summarise(across(everything(), list(mean)))
 
 #make an environmental driver df
 msn_drivers <- data.frame("groups" = as.character(1:5), #epi is 0.1m, hypo is 10m - avg for both noons of msn when available

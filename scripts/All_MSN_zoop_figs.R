@@ -1,23 +1,6 @@
 #Zoop density change over 24hrs for all 5 MSNs
 #created 16 Oct 2022
 
-# MEL comment: can you add in annotation so we know which figures/supp figures the various
-# ggplots correspond to? thanks!
-
-#read in libraries
-pacman::p_load(dplyr, vegan, labdsv, goeveg, rLakeAnalyzer, 
-               ggplot2,tidyr,lubridate, scales, colorblindcheck, viridis)
-
-#create function to count characters starting at the end of the string
-substrEnd <- function(x, n){
-  substr(x, nchar(x)-n+1, nchar(x))
-}
-
-#Calculates the standard error####
-stderr <- function(x) {
-  sd(x,na.rm=TRUE)/sqrt(length(na.omit(x)))
-}
-
 #read in zoop data from all 3 years
 zoops2019<- read.csv('output/FCR_ZooplanktonSummary2019.csv',header = TRUE)
 zoops2020<- read.csv('output/FCR_ZooplanktonSummary2020.csv',header = TRUE)
@@ -120,7 +103,7 @@ zoop.repmeans <- data.frame(zoop.repmeans)
 zoop.repmeans <- zoop.repmeans[order(zoop.repmeans$Hour),]
 
 #Export all zoop data df
-#write.csv(zoop.repmeans,"./Summer2021-DataAnalysis/SummaryStats/All_MSN_zoops.csv",row.names = FALSE)
+write.csv("output/All_MSN_zoops.csv",row.names = FALSE)
 
 #only select epi samples for DHM plots
 zoop_epi <- zoop.repmeans[grepl("epi",zoop.repmeans$sample_ID) |grepl("sunrise",zoop.repmeans$sample_ID) | grepl("sunset",zoop.repmeans$sample_ID) | zoop.repmeans$site_no=="BVR_l",]
@@ -138,7 +121,7 @@ zoop_DHM_long <- df1[,c(1:4,27,28)]
 zoop_DHM_long$value.SE <- df2$value.SE
 
 #Export DHM csv
-write.csv(zoop_DHM_long,"./output/All_MSN_DHM.csv",row.names = FALSE)
+write.csv(zoop_DHM_long,"/output/All_MSN_DHM.csv",row.names = FALSE)
 
 #reset DHM df so can only look at density
 zoop_DHM_long <- NA
@@ -183,10 +166,8 @@ names(metric_taxa) <- c(unique(zoop_DHM_long$metric))
 sites <- c("Pelagic","Littoral")
 names(sites) <- c("BVR_50","BVR_l")
 
-#cb_friendly_2 <- c("#8C510A", "#BF812D","#DFC27D", "#C7EAE5", "#35978F")
-
 #------------------------------------------------------------------------------#
-#Figure for zoop density for each MSN 24-hours 
+#Figure for zoop density for each MSN 24-hours --> Figure S4
 ggplot(subset(zoop_DHM_long, metric %in% c("Cladocera_density_NopL","Copepoda_density_NopL","Rotifera_density_NopL")),
                 aes(Hour,value, color=as.factor(MSN))) + 
   geom_rect(aes(xmin=as.POSIXct("2022-10-15 11:30:00"),xmax=as.POSIXct("2022-10-15 20:41:00"), ymin=-Inf, ymax= Inf, fill= "Noon"),color=NA) +
@@ -202,23 +183,6 @@ ggplot(subset(zoop_DHM_long, metric %in% c("Cladocera_density_NopL","Copepoda_de
   geom_errorbar(aes(ymin=value-value.SE, ymax=value+value.SE), width=.2,position=position_dodge(.9))
 #ggsave("figures/BVR_MSNs_taxa_density.jpg", width=5, height=4) 
 
-ggplot(subset(zoop_DHM_long, metric %in% c("Cladocera_PercentOfTotal","Copepoda_PercentOfTotal","Rotifera_PercentOfTotal")), #removing calanoids because they are super low %
-                aes(Hour,value, color=as.factor(MSN))) + 
-  geom_rect(aes(xmin=as.POSIXct("2022-10-15 11:30:00"),xmax=as.POSIXct("2022-10-15 20:41:00"), ymin=-Inf, ymax= Inf, fill= "Noon"),color=NA) +
-  geom_rect(aes(xmin=as.POSIXct("2022-10-15 20:42:00"),xmax=as.POSIXct("2022-10-16 06:10:00"), ymin=-Inf, ymax= Inf, fill= "Midnight"),color=NA) +
-  geom_rect(aes(xmin=as.POSIXct("2022-10-16 06:11:00"),xmax=as.POSIXct("2022-10-16 12:30:00"), ymin=-Inf, ymax= Inf, fill= "Noon"),color=NA) +
-  geom_point(size=2) + theme_bw() + facet_grid(site_no~metric,scales="free_y",labeller = labeller(metric=metric_taxa, site_no=sites)) + xlab("")+ coord_cartesian(clip = 'off') +
-  theme(text = element_text(size=8), axis.text = element_text(size=7, color="black"), legend.background = element_blank(), legend.key = element_blank(), legend.key.height=unit(0.3,"line"),
-        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), strip.background = element_rect(fill = "transparent"), legend.position = c(0.1,0.44), legend.spacing = unit(-0.5, 'cm'),
-        panel.grid.major = element_blank(),panel.grid.minor = element_blank(), legend.key.width =unit(0.7,"line"))+ scale_x_datetime(expand = c(0,0),labels = date_format("%H-%M",tz="EST5EDT")) +
-  scale_x_datetime(expand = c(0,0),labels = date_format("%H-%M",tz="EST5EDT"))+
-  scale_color_manual("",values=c("#008585","#9BBAA0","#F2E2B0","#DEA868","#C7522B"), labels=c("10-11 Jul 2019","24-25 Jul 2019","12-13 Aug 2020","15-16 Jun 2021","7-8 Jul 2021"), guide=guide_legend(order=1)) + 
-  geom_line()+ ylab("% Density") + scale_fill_manual("",values=c("#CCCCCC","white"), guide = "none")+ 
-  geom_errorbar(aes(ymin=value-value.SE, ymax=value+value.SE), width=.2,position=position_dodge(.9))
-#ggsave("figures/BVR_MSNs_taxa_percent_density.jpg", width=5, height=4) 
-
-range(zoop_DHM_long$value[zoop_DHM_long$metric=="Copepoda_PercentOfTotal"]) # 77.1%, 68.9%, 85.9%
-
 #-------------------------------------------------------------------------------#
 #new df to standardize density among taxa and days
 zoop_dens_stand <- data.frame(subset(zoop_DHM_long, metric %in% c("Cladocera_density_NopL","Copepoda_density_NopL","Rotifera_density_NopL")))
@@ -227,10 +191,7 @@ zoop_dens_stand <- data.frame(subset(zoop_DHM_long, metric %in% c("Cladocera_den
 zoop_dens_stand <- zoop_dens_stand %>% group_by(metric, MSN) %>%
   mutate(value_max_std = value / max(value))
 
-#change facet labels
-#metric_taxa <-c("cladocerans","rotifers","copepods")
-#names(metric_taxa) <- c(unique(zoop_dens_stand$metric))
-
+#Manuscript Figure 4
 ggplot(zoop_dens_stand, aes(Hour,value_max_std, color=as.factor(MSN))) + 
   geom_rect(aes(xmin=as.POSIXct("2022-10-15 11:30:00"),xmax=as.POSIXct("2022-10-15 20:41:00"), 
                 ymin=-Inf, ymax= Inf, fill= "Noon"),color=NA) +
@@ -257,7 +218,7 @@ ggplot(zoop_dens_stand, aes(Hour,value_max_std, color=as.factor(MSN))) +
   scale_fill_manual("",values=c("#CCCCCC","white"), guide = "none")
 #ggsave("figures/BVR_MSNs_taxa_percent_density_over_max_std.jpg", width=5, height=4) 
 
-
+#numbers in results text
 mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Cladocera_density_NopL"])
 mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Copepoda_density_NopL"])
 mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Rotifera_density_NopL"])
@@ -293,108 +254,6 @@ mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Rotifera_density_Nop
 mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Cladocera_density_NopL" & !zoop_dens_stand$hr %in% night])
 mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Copepoda_density_NopL" & !zoop_dens_stand$hr %in% night])
 mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Rotifera_density_NopL" & !zoop_dens_stand$hr %in% night])
-
-#-------------------------------------------------------------------------------------#
-#looking at each MSN separately to look for evidence of DHM
-ggplot(subset(zoop_DHM_long, metric %in% c("Cladocera_density_NopL","Copepoda_density_NopL","Rotifera_density_NopL") &
-                MSN==5 & site_no=="BVR_l"), aes(Hour,value)) + 
-  geom_rect(aes(xmin=as.POSIXct("2022-10-15 11:30:00"),xmax=as.POSIXct("2022-10-15 20:41:00"), ymin=-Inf, ymax= Inf, fill= "Noon"),color=NA) +
-  geom_rect(aes(xmin=as.POSIXct("2022-10-15 20:42:00"),xmax=as.POSIXct("2022-10-16 06:10:00"), ymin=-Inf, ymax= Inf, fill= "Midnight"),color=NA) +
-  geom_rect(aes(xmin=as.POSIXct("2022-10-16 06:11:00"),xmax=as.POSIXct("2022-10-16 12:30:00"), ymin=-Inf, ymax= Inf, fill= "Noon"),color=NA) +
-  geom_point(size=2) + theme_bw() + facet_grid(~metric,scales="free_y",labeller = labeller(metric=metric_taxa)) + xlab("")+ coord_cartesian(clip = 'off') +
-  theme(text = element_text(size=8), axis.text = element_text(size=7, color="black"), legend.background = element_blank(), legend.key = element_blank(), legend.key.height=unit(0.3,"line"),
-        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), strip.background = element_rect(fill = "transparent"), legend.position = c(0.1,0.92), legend.spacing = unit(-0.5, 'cm'),
-        panel.grid.major = element_blank(),panel.grid.minor = element_blank(), legend.key.width =unit(0.7,"line"))+ scale_x_datetime(expand = c(0,0),labels = date_format("%H-%M",tz="EST5EDT")) +
-  geom_line()+ ylab("Density (Individuals/L)") + scale_fill_manual("",values=c("#CCCCCC","white"), guide = "none")+
-  geom_errorbar(aes(ymin=value-value.SE, ymax=value+value.SE), width=.2,position=position_dodge(.9))
-#take-homes: DHM for rotifers on MSN #1,3, cyclopoids on MSN #2, cladocerans do not
-#side note that MSN #5 is weird becuase there are basically no clads/copes and rotifer patterns are weird??
-
-#-------------------------------------------------------------------------------------#
-# DVM calcs for epi and hypo density across all 5 campaigns
-
-#read in all 3 DVM tables from 2019-2021
-DVM_2019 <- read.csv(file.path(getwd(),'output/DVM_2019_zoops.csv'),header = TRUE)
-DVM_2020 <- read.csv(file.path(getwd(),'output/DVM_2020_zoops.csv'),header = TRUE) %>% select(-X)
-DVM_2021 <- read.csv(file.path(getwd(),'output/DVM_2021_zoops.csv'),header = TRUE) %>% select(-X)
-
-#merge all zoop files
-DVM_all <- rbind(DVM_2019,DVM_2020,DVM_2021)
-
-#get datetime column into right format
-DVM_all$date <- format(as.POSIXct(DVM_all$DateTime,format="%m-%d-%Y"), format="%Y-%m-%d %H:%M")
-#convert to posixct date format
-DVM_all$date<- as.Date(DVM_all$date, format="%Y-%m-%d %H:%M")
-
-#change second noon for each MSN to noon2
-DVM_all$Hour <- ifelse(DVM_all$Hour=="noon" & (DVM_all$date=="2019-07-11" | 
-                                                 DVM_all$date=="2019-07-25" |
-                                                 DVM_all$date=="2020-08-13" |
-                                                 DVM_all$date=="2021-06-16" |
-                                                 DVM_all$date=="2021-07-08"), "noon2", DVM_all$Hour)
-
-
-#split up into percents df and dens/biom df
-DVM_percent <- DVM_all[grepl("percent", DVM_all$metric),]
-  
-DVM <- DVM_all[!grepl("percent", DVM_all$metric),]
-
-#drop _rep.mean_epi or _rep_mean_hypo from all metric names
-DVM$metric <- ifelse(DVM$WaterColumn=="epilimnion",
-                         substr(DVM$metric,1,nchar(DVM$metric)-13), 
-                         substr(DVM$metric,1,nchar(DVM$metric)-14))
-
-#same for percent df #FIX sampleid and watercolumn discrepancy
-DVM_percent$metric <- ifelse(as.factor(DVM_percent$WaterColumn)=="epilimnion",
-                     substr(DVM_percent$metric,1,nchar(DVM_percent$metric)-29), 
-                     substr(DVM_percent$metric,1,nchar(DVM_percent$metric)-30))
-                         
-#set negative values to 0
-DVM_percent$value[DVM_percent$value < 0] <- 0
-
-
-MSN1 <- c("2019-07-10","2019-07-11")
-MSN2 <- c("2019-07-24","2019-07-25")
-MSN3 <- c("2020-08-12","2020-08-13")
-MSN4 <- c("2021-06-15","2021-06-16")
-MSN5 <- c("2021-07-07","2021-07-08")
-
-
-ggplot(subset(DVM, metric %in% c("Cladocera_density_NopL","Cyclopoida_density_NopL","Calanoida_density_NopL","Rotifera_density_NopL") &
-                date %in% as.Date(MSN3)), aes(x=WaterColumn, y=value, fill=Taxa)) +
-  geom_bar(aes(fill=Taxa, group=WaterColumn), stat="identity", position=position_dodge(),show.legend = TRUE) + theme_bw() +
-  geom_rect(data=subset(DVM, metric %in% c("Cladocera_density_NopL","Cyclopoida_density_NopL","Calanoida_density_NopL","Rotifera_density_NopL") &
-                     date %in% as.Date(MSN3) & Hour %in% c("midnight")), 
-            aes(fill=Hour),xmin=-Inf ,xmax = Inf, ymin = -Inf, ymax = Inf, fill = 'black', alpha = 0.053,inherit.aes = FALSE) +
-  facet_grid(~Taxa+Hour, scales= 'free') + #labeller=as_labeller(function(variable,value){c("","","","","Noon")})
-  theme(strip.text.y = element_text(size = 10,margin = margin(0, -0.01, 0,0.1, "cm")),strip.background = element_blank(), plot.margin = margin(2.8,0,2,0,unit = "cm")) + 
-  scale_x_discrete(name="", labels=rep(c("epi","hypo"),16)) + labs(title=MSN1[1]) + 
-  scale_fill_manual(values=viridis(6),labels=c("Calanoida", "Cladocera", "Cyclopoida","Rotifera")) +
-  geom_hline(yintercept=0) +theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
-                                  axis.text.x=element_text(size=7,family="Times"), plot.title = element_text(hjust = 0.5)) + ylab("Density (individual/L)") +
-  theme(legend.position = "bottom", legend.margin = margin(0, 1, 2, 1), legend.title = element_text(size=10),legend.key.size = unit(0.3,"cm"),
-        legend.box="vertical", legend.box.spacing = unit(0.1,"cm"),legend.text = element_text(size=8),axis.text.y = element_text(size=10, family="Times"))
-#ggsave(file.path(getwd(),"Summer2021-DataAnalysis/Figures/BVR_epimetahypo_density_MSN1.jpg"), width=5, height=4) 
-
-
-ggplot(subset(DVM_percent, metric %in% c("Cladocera_density_NopL","Cyclopoida_density_NopL","Calanoida_density_NopL","Rotifera_density_NopL") &
-                date %in% as.Date(MSN5)), aes(x=WaterColumn, y=value, fill=Taxa)) +
-  geom_bar(aes(fill=Taxa, group=WaterColumn), stat="identity", position=position_dodge(),show.legend = TRUE) + theme_bw() +
-  geom_rect(data=subset(DVM, metric %in% c("Cladocera_density_NopL","Cyclopoida_density_NopL","Calanoida_density_NopL","Rotifera_density_NopL") &
-                          date %in% as.Date(MSN5) & Hour %in% c("midnight")), 
-            aes(fill=Hour),xmin=-Inf ,xmax = Inf, ymin = -Inf, ymax = Inf, fill = 'black', alpha = 0.053,inherit.aes = FALSE) +
-  facet_grid(~Taxa+Hour, scales= 'free') + #labeller=as_labeller(function(variable,value){c("","","","","Noon")})
-  theme(strip.text.y = element_text(size = 10,margin = margin(0, -0.01, 0,0.1, "cm")),strip.background = element_blank(), plot.margin = margin(2.8,0,2,0,unit = "cm")) + 
-  scale_x_discrete(name="", labels=rep(c("epi","hypo"),16)) + labs(title=MSN5[1]) + 
-  scale_fill_manual(values=viridis(6),labels=c("Calanoida", "Cladocera", "Cyclopoida","Rotifera")) +
-  geom_hline(yintercept=0) +theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
-                                  axis.text.x=element_text(size=7,family="Times"), plot.title = element_text(hjust = 0.5)) + ylab("Density (individual/L)") +
-  theme(legend.position = "bottom", legend.margin = margin(0, 1, 2, 1), legend.title = element_text(size=10),legend.key.size = unit(0.3,"cm"),
-        legend.box="vertical", legend.box.spacing = unit(0.1,"cm"),legend.text = element_text(size=8),axis.text.y = element_text(size=10, family="Times"))
-#ggsave(file.path(getwd(),"Summer2021-DataAnalysis/Figures/BVR_epimetahypo_percent_density_MSN5.jpg"), width=5, height=4) 
-# DVM for MSN 1 - cyclopoids and calanoids, MSN 2 - cladocera and cyclopoids, 
-      #MSN 3 - cladocerans and cyclopoids (reverse DVM) and rotifers,
-      #BUT, nothing for MSN 4/5 
 
 #-------------------------------------------------------------------------------------#
 # create new df for avg size
@@ -458,7 +317,7 @@ size_taxa <-c("Total","Daphniidae","Copepoda","Calanoida",
                 "Monostyla", "Lecane")
 names(size_taxa) <- c(unique(zoop_size_DHM_long$metric))
 
-#plot
+#Figure S4
 ggplot(subset(zoop_size_DHM_long, metric %in% c("CladoceraMeanSize_mm","CopepodaMeanSize_mm","RotiferaMeanSize_mm")),
        aes(Hour,value, color=as.factor(MSN))) + 
   geom_rect(aes(xmin=as.POSIXct("2022-10-15 11:30:00"),xmax=as.POSIXct("2022-10-15 20:41:00"), 
