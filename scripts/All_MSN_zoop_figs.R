@@ -138,7 +138,7 @@ zoop_DHM_long <- df1[,c(1:4,27,28)]
 zoop_DHM_long$value.SE <- df2$value.SE
 
 #Export DHM csv
-#write.csv(zoop_DHM_long,"./Summer2021-DataAnalysis/SummaryStats/All_MSN_DHM.csv",row.names = FALSE)
+write.csv(zoop_DHM_long,"./output/All_MSN_DHM.csv",row.names = FALSE)
 
 #reset DHM df so can only look at density
 zoop_DHM_long <- NA
