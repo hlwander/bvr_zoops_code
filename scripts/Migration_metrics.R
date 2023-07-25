@@ -284,8 +284,26 @@ Hourly_prop <- plyr::ddply(all_DHM, c("metric", "MSN", "Hour","DateTime"), funct
 #first, read in ctd
 inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/200/13/27ceda6bc7fdec2e7d79a6e4fe16ffdf" 
 infile1 <- tempfile()
-try(download.file(inUrl1,infile1,method="curl"))
-if (is.na(file.size(infile1))) download.file(inUrl1,infile1,method="auto")
+try(download.file(inUrl1,infile1))
+
+# MEL comment: is this data actually used in manuscript? if not, would remove
+# if it IS used, we need to figure out a reliable way of downloading it, at a minimum
+# the timeout needs to be extended; here are the errors I got below:
+# 
+# sh: 1: curl: not found
+# Error in download.file(inUrl1, infile1, method = "curl") : 
+#   'curl' call had nonzero exit status
+# In addition: Warning message:
+#   In system(paste("curl", paste(extra, collapse = " "), shQuote(url),  :
+#                     error in running command
+#                   Error in download.file(inUrl1, infile1) : 
+#                     download from 'https://pasta.lternet.edu/package/data/eml/edi/200/13/27ceda6bc7fdec2e7d79a6e4fe16ffdf' failed
+#                   In addition: Warning messages:
+#                     1: In download.file(inUrl1, infile1) :
+#                     downloaded length 0 != reported length 0
+#                   2: In download.file(inUrl1, infile1) :
+#                     URL 'https://pasta.lternet.edu/package/data/eml/edi/200/13/27ceda6bc7fdec2e7d79a6e4fe16ffdf': Timeout of 60 seconds was reached
+# if (is.na(file.size(infile1))) download.file(inUrl1,infile1,method="auto")
 
 
 dt1 <-read.csv(infile1,header=F 
@@ -360,7 +378,7 @@ plot(migration_df$DHM_avg[migration_df$metric=="ZoopDensity_No.pL"] ~
 #read in secchi 
 inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/198/11/81f396b3e910d3359907b7264e689052" 
 infile1 <- tempfile()
-try(download.file(inUrl1,infile1,method="curl"))
+try(download.file(inUrl1,infile1))
 if (is.na(file.size(infile1))) download.file(inUrl1,infile1,method="auto")
 
 dt1 <-read.csv(infile1,header=F 

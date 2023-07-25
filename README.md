@@ -4,8 +4,9 @@ Analysis and figure generation code for assessing spatial and temporal variabili
 
 # Instructions to reproduce figures and analyses:
 
-1.  Run `VA_reservoirs2019_SummaryStats.R`, `VA_reservoirs2020_SummaryStats.R`, and `VA_reservoirs2021_SummaryStats.R` in the `scripts/annual_calcs` folder to generate summary statistics (i.e., density and biomass) for each zooplankton sample
-2.  Run `DVM_calcs-Summer19.R`, `DVM_calcs-Summer20.R`, and `DVM_calcs-Summer21.R` in the `scripts/annual_calcs` folder to calculate hypolimnetic density and biomass from full and epilimnetic zooplankton tows
-3.  Run `All_MSN_zoop_figs.R` in the `scripts` folder to create the zooplankton normalized density figure in the manuscript (Fig. 3) and some additional SI density figs (Figs. SX-Y)
-4.  Run `zoops_multivariate_stats.R` in the `scripts` folder to perform NMDS on zooplankton data, calculate metrics of variability (dispersion and pairwise), and create NMDS plots (Figs. 4-7, Figs. SX-Y)
-5.  Run `Migration_metrics.R` in the `scripts` folder to calculate metrics of DVM and DHM and generate Fig. 8
+1.  Run `install.R` to install and load the pacman package.
+2.  Run `VA_reservoirs2019_SummaryStats.R`, `VA_reservoirs2020_SummaryStats.R`, and `VA_reservoirs2021_SummaryStats.R` in the `scripts/annual_calcs` folder to generate summary statistics (i.e., density and biomass) for each zooplankton sample
+3.  Run `DVM_calcs-Summer19.R`, `DVM_calcs-Summer20.R`, and `DVM_calcs-Summer21.R` in the `scripts/annual_calcs` folder to calculate hypolimnetic density and biomass from full and epilimnetic zooplankton tows
+4.  Run `All_MSN_zoop_figs.R` in the `scripts` folder to create the zooplankton normalized density figure in the manuscript (Fig. 3) and some additional SI density figs (Figs. SX-Y)
+5.  Run `zoops_multivariate_stats.R` in the `scripts` folder to perform NMDS on zooplankton data, calculate metrics of variability (dispersion and pairwise), and create NMDS plots (Figs. 4-7, Figs. SX-Y)
+6.  Run `Migration_metrics.R` in the `scripts` folder to calculate metrics of DVM and DHM and generate Fig. 8
