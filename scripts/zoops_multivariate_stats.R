@@ -111,7 +111,7 @@ zoop_lit_dens_trans <- hellinger(zoop_lit_dens)
 zoop_euc <- as.matrix(vegdist(zoop_temporal_dens_avg_trans, method='euclidean'))
 #zoop_bray <- as.matrix(vegdist(zoop_temporal_dens_avg_trans, method='bray'))
 
-#scree plot to choose dimension #
+#scree plot to choose dimension # (Figure S2)
 #jpeg("figures/scree.jpg") 
 dimcheckMDS(zoop_euc, distance = "bray", k = 6, trymax = 20, autotransform = TRUE)
 #dev.off()
@@ -445,7 +445,7 @@ site_box <- ggboxplot(within_site_dist, x = "group", y = "dist",
                     y=c(0.59, 0.435)) +
            annotate("text", x=1.3, y=1, label= "a: sites",
                     fontface = "italic", size=3) +
-           guides (fill = FALSE)
+           guides (fill = "none")
 
 day_box <- ggboxplot(within_day_dist, x = "group", y = "dist", 
               fill = "group", palette = c("#008585", "#9BBAA0", "#F2E2B0","#DEA868","#C7522B"),
@@ -461,7 +461,7 @@ day_box <- ggboxplot(within_day_dist, x = "group", y = "dist",
               y=c(0.41, 0.39, 0.5, 0.41, 0.42)) +
           annotate("text", x=2.2, y=1, label= "b: sampling days",
                     fontface = "italic", size=3) +
-          guides (fill = FALSE)
+          guides (fill = "none")
 
 hour_box <- ggboxplot(within_hour_dist, x = "group", y = "dist", 
                       fill = "group", palette = hcl.colors(11,"sunset"),
@@ -476,7 +476,7 @@ hour_box <- ggboxplot(within_hour_dist, x = "group", y = "dist",
                  axis.text.y = element_blank(), axis.ticks.y = element_blank()) +
            annotate("text", x=2.7, y=1, label= "c: hours of the day",
                     fontface = "italic", size=3) +
-           guides (fill = FALSE)
+           guides (fill = "none")
 
 within_scales <- egg::ggarrange(site_box, day_box, hour_box, nrow=1, widths = c(0.9,2.2,4))
 #ggsave("figures/within_variability_boxplots.jpg", within_scales, width=5, height=4) 
@@ -679,9 +679,41 @@ ctd_final_DO <- ctd |>
   dplyr::mutate(rdepth = plyr::round_any(Depth_m, 0.5)) |>
   dplyr::group_by(DateTime, rdepth, Reservoir, Site) |>
   dplyr::summarise(value = mean(DO_mgL)) |>
-  dplyr::rename(depth = rdepth) 
+  dplyr::rename(depth = rdepth) |>
+  dplyr::group_by(Reservoir,Site, DateTime) |>
+  dplyr::mutate(oxy = min(depth[value<=2], na.rm=TRUE))
 
 detach('package:plyr')
+
+depths <- ctd_final_DO$oxy[(ctd_final_DO$DateTime=="2019-07-10" | 
+                              ctd_final_DO$DateTime=="2019-07-24" |
+                              ctd_final_DO$DateTime=="2020-08-12" | 
+                              ctd_final_DO$DateTime=="2021-06-16" | 
+                              ctd_final_DO$DateTime=="2021-07-12") & 
+                              ctd_final_DO$Reservoir=="BVR" & 
+                              ctd_final_DO$Site==50 & ctd_final_DO$depth>0]
+
+
+#oxygen plots for all 5 MSNs (Figure S1)
+ggplot(subset(ctd_final_DO, depth > 0 & Reservoir=="BVR" & Site==50 & 
+                DateTime %in% c(as.Date("2019-07-10"), as.Date("2019-07-24"),
+                as.Date("2020-08-12"), as.Date("2021-06-16"), as.Date("2021-07-12"))), 
+       aes(value,depth,color=as.factor(DateTime))) + 
+  geom_rect(aes(xmin=-Inf, xmax=Inf, ymin= depths, ymax=Inf), fill="red",alpha=0.03) +
+  scale_color_manual("",values=c("#008585","#9BBAA0","#F2E2B0","#DEA868","#C7522B"), guide="none") +  
+  xlab("DO (mg/L)") + ylab("Depth (m)") +
+  ylim(10,0) + geom_point() + geom_path() + 
+  theme_bw() + facet_wrap(~DateTime, ncol=5) +
+  theme(text = element_text(size=8), axis.text = element_text(size=6, color="black"), 
+        legend.position = c(0.76,0.02), legend.background = element_blank(),
+        legend.direction = "horizontal", legend.title = element_text(size = 4.5),
+        panel.grid.minor = element_blank(), legend.key=element_rect(fill=NA),
+        plot.margin = unit(c(0,0.05,0,0), "cm"),legend.key.size = unit(0.5, "lines"),
+        panel.grid.major = element_blank(), axis.text.y = element_text(size=6),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=6), 
+        legend.text  = element_text(size = 4.5), panel.spacing=unit(0, "cm")) 
+#ggsave(file.path(getwd(),"Summer2021-DataAnalysis/Figures/DO_profiles.jpg"), width=4, height=3) 
+
 
 #calculate thermocline depth and oxycline depth by date
 ctd_thermo_depth <- ctd_final_temp |> group_by(DateTime) |> 
@@ -839,7 +871,7 @@ msn_drivers_long$NMDS2 <- ifelse(msn_drivers_long$groups==1, days$df_mean.ord$y[
                                                ifelse(msn_drivers_long$groups==4, days$df_mean.ord$y[4],
                                                       days$df_mean.ord$y[5]))))
 
-#multipanel plot
+#multipanel plot (Figure S7)
 driver_NMDS <- ggplot(data=msn_drivers_long, aes(NMDS2, value, color=groups)) + geom_point() +
                       facet_wrap(~variable, scales = "free_y") +
                       scale_color_manual("",values=c("#008585","#9BBAA0","#F2E2B0","#DEA868","#C7522B"), 

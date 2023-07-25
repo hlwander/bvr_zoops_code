@@ -1,15 +1,6 @@
 #new ordination w/o 2019 MSNs so we can look at both hourly + annual/MSN drivers of variability
 #12Jun2023
 
-#read in libraries
-pacman::p_load(dplyr, vegan, labdsv, goeveg, rLakeAnalyzer, ggplot2,tidyr,
-               viridis, egg, ggordiplots, splancs, ggpubr, FSA, rcompanion, ggrepel)
-
-#function to count characters starting at the end of the string
-substrEnd <- function(x, n){
-  substr(x, nchar(x)-n+1, nchar(x))
-}
-
 #read in zoop data from all 3 years
 zoops2020<- read.csv('output/FCR_ZooplanktonSummary2020.csv',header = TRUE)
 zoops2021<- read.csv('output/FCR_ZooplanktonSummary2021.csv',header = TRUE)
@@ -125,111 +116,6 @@ set.seed(3)
 NMDS_temporal_avg_bray <- metaMDS(zoop_euc, distance='bray', k=4, trymax=20, autotransform=FALSE, pc=FALSE, plot=FALSE)
 NMDS_temporal_avg_bray$stress
 
-#-------------------------------------------------------------------------------#
-#                                 NMDS ms figs                                  #
-#-------------------------------------------------------------------------------#
-
-ord <- ordiplot(NMDS_temporal_avg_bray,display = c('sites','species'),choices = c(1,2),type = "n")
-sites <- gg_ordiplot(ord, zoop_avg$site, kind = "ehull", 
-                     ellipse=FALSE, hull = TRUE, plot = FALSE, pt.size=0.9) 
-
-NMDS_site <- sites$plot + geom_point() + theme_bw() + 
-  geom_polygon(data = sites$df_hull, aes(x = x, y = y, fill = Group), alpha=0.2) +
-  geom_point(data=sites$df_mean.ord, aes(x, y), 
-             color="black", pch=21, size=2, fill=c("#882255","#3399CC")) +
-  # xlim(c(-0.63, 0.6)) + ylim(c(-0.7,0.64)) +
-  #scale_x_continuous(labels=c('-0.4', '-0.2', '0.0', '0.2', '')) +
-  theme(text = element_text(size=7), axis.text = element_text(size=7, color="black"), 
-        legend.background = element_blank(), 
-        legend.key.height=unit(0.3,"line"),
-        legend.key = element_blank(),
-        legend.box.margin=margin(-10,-10,-10,-10),
-        legend.margin=margin(-0,-0,-0,-0),
-        legend.direction = "horizontal",
-        axis.text.x = element_text(vjust = 0.5), 
-        axis.ticks.x = element_line(colour = c(rep("black",4), "transparent")), 
-        strip.background = element_rect(fill = "transparent"), 
-        legend.position = "top", legend.spacing = unit(-0.5, 'cm'),
-        plot.margin = unit(c(0,-0.1,0,0), 'lines'),
-        panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
-        legend.key.width =unit(0.1,"line")) + guides(fill="none") +
-  annotate("text", x=-0.27, y=0.4, label= "a: sites", 
-           fontface = "italic", size = 3) +
-  scale_fill_manual("",values=c("#882255","#3399CC"))+
-  scale_color_manual("",values=c("#882255","#3399CC"),
-                     label=c('littoral','pelagic')) 
-
-days <- gg_ordiplot(ord, zoop_avg$groups, kind = "ehull", 
-                    ellipse=FALSE, hull = TRUE, plot = FALSE, pt.size=0.9) 
-
-NMDS_day <- days$plot + geom_point() + theme_bw() + geom_path() + ylab(NULL) +
-  geom_polygon(data = days$df_hull, aes(x = x, y = y, fill = Group), alpha=0.2) +
-  geom_point(data=days$df_mean.ord, aes(x, y), 
-             color="black", pch=21, size=2, 
-             fill=c("#EFECBF","#DB9B5A","#C7522B")) +
-  # xlim(c(-0.63, 0.6)) + ylim(c(-0.7,0.64)) +
-#  scale_x_continuous(labels=c('-0.4', '-0.2', '0.0', '0.2', '')) +
-  theme(text = element_text(size=7), axis.text = element_text(size=7, color="black"), 
-        legend.background = element_blank(), 
-        legend.key.height=unit(0.3,"line"), 
-        legend.key = element_blank(),
-        legend.box.margin=margin(-10,-10,-10,-10),
-        legend.margin=margin(-0,-0,-0,-0),
-        legend.direction = "horizontal",
-        axis.text.x = element_text(vjust = 0.5), 
-        axis.ticks.x = element_line(colour = c(rep("black",4), "transparent")), 
-        axis.text.y=element_blank(),
-        axis.ticks.y = element_blank(),
-        strip.background = element_rect(fill = "transparent"), 
-        legend.position = "top", legend.spacing = unit(-0.5, 'cm'),
-        plot.margin = unit(c(0,-0.1,0,-0.1), 'lines'),
-        panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
-        legend.key.width =unit(0.1,"line")) + 
-  annotate("text", x=-0.05, y=0.4, label= "b: sampling campaigns", 
-           fontface = "italic", size = 3) +
-  guides(fill="none", color = guide_legend(ncol=2)) +
-  scale_fill_manual("",values=c("#EFECBF","#DB9B5A","#C7522B"))+
-  scale_color_manual("",values=c("#EFECBF","#DB9B5A","#C7522B"),
-                     label=c('12-13 Aug 2020','15-16 Jun 2021', '7-8 Jul 2021'))
-
-
-hours <- gg_ordiplot(ord, zoop_avg$order, kind = "ehull", 
-                     ellipse=FALSE, hull = TRUE, plot = FALSE, pt.size=0.9) 
-#order hours properly
-hours$df_hull$Group <- factor(hours$df_hull$Group, levels = c(unique(hours$df_hull$Group)))
-
-NMDS_hour <- hours$plot + geom_point() + theme_bw() + geom_path() + ylab(NULL) +
-  geom_polygon(data = hours$df_hull, aes(x = x, y = y, fill = Group), alpha=0.2) +
-  geom_point(data=hours$df_mean.ord, aes(x, y), 
-             color="black", pch=21, size=2, fill=hcl.colors(11,"sunset")) +
-  #scale_x_continuous(labels=c('-0.4', '-0.2', '0.0', '0.2', '')) +
-  theme(text = element_text(size=7), axis.text = element_text(size=7, color="black"), 
-        legend.background = element_blank(), 
-        legend.key.height=unit(0.3,"line"), 
-        legend.key = element_blank(),
-        legend.box.margin=margin(-10,-10,-10,-10),
-        legend.margin=margin(-0,-0,-0,-0),
-        legend.direction = "horizontal",
-        axis.text.x = element_text(vjust = 0.5), 
-        axis.ticks.x = element_line(colour = c(rep("black",4), "transparent")), 
-        axis.text.y=element_blank(),
-        axis.ticks.y = element_blank(),
-        strip.background = element_rect(fill = "transparent"), 
-        legend.position = "top", legend.spacing = unit(-0.5, 'cm'),
-        plot.margin = unit(c(0,0,0,-0.1), 'lines'),
-        panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
-        legend.key.width =unit(0.1,"line")) + guides(fill="none") +
-  annotate("text", x=-0.1, y=0.4, label= "c: hours of the day",
-           fontface = "italic", size=3) +
-  scale_fill_manual("",values=hcl.colors(11,"sunset"))+
-  scale_color_manual("",values=hcl.colors(11,"sunset"),
-                     label=c('12pm','6pm','7pm','8pm','9pm','12am',
-                             '4am','5am','6am','7am','12pm'))
-
-fig5 <- egg::ggarrange(NMDS_site, NMDS_day, NMDS_hour, nrow=1)
-#ggsave("figures/NMDS_multipanel_2v1.jpg", fig5, width=5, height=3) 
-
-
 #------------------------------------------------------------------------------#
 #now read in daily thermistor data
 
@@ -286,21 +172,7 @@ sensors_avg_long$NMDS2 <- ifelse(sensors_avg_long$order==1, hours$df_ord$y[hours
                                                                                          ifelse(sensors_avg_long$order==10, hours$df_ord$y[hours$df_ord$Group==10][c(2,4,6)],
                                                                                                 hours$df_ord$y[hours$df_ord$Group==11][c(2,4,6)]))))))))))
 
-#multipanel plot
-hourly_driver_NMDS <- ggplot(data=sensors_avg_long, aes(NMDS2, value, color=as.factor(hour))) + geom_point() +
-  facet_wrap(~variable, scales = "free_y") +
-  scale_color_manual("Hour",values=hcl.colors(11,"sunset"), 
-                     labels=c("12pm", "6pm", "7pm", "8pm", "9pm", "12am", 
-                              "4am", "5am", "6am", "7am", "12pm"), guide=guide_legend(order=1)) +
-  theme(text = element_text(size=5), axis.text = element_text(size=4, color="black"), 
-        legend.background = element_blank(), legend.key = element_blank(), 
-        legend.key.height=unit(0.3,"line"),
-        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), 
-        strip.background = element_rect(fill = "transparent"), legend.position = "top", 
-        legend.spacing = unit(-0.5, 'cm'), panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(), legend.key.width =unit(0.7,"line"))
-#ggsave("figures/hourly_driver_vs_NMDS2.jpg", hourly_driver_NMDS, width=3, height=3) 
-
+#multipanel plot (Figure S8)
 hourly_driver_NMDS_byday <- ggplot(data=sensors_avg_long, aes(NMDS2, value, color=as.factor(groups))) + geom_point() +
   facet_wrap(~variable, scales = "free_y") +
   scale_color_manual("Sampling Campaign",values=c("#F2E2B0","#DEA868","#C7522B"), 

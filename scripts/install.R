@@ -6,7 +6,7 @@ library(pacman)
 #read in libraries
 pacman::p_load(dplyr, vegan, labdsv, goeveg, rLakeAnalyzer, 
                ggplot2,tidyr,lubridate, scales, colorblindcheck, 
-               viridis, RColorBrewer, plotrix, BiocManager,
+               viridis, RColorBrewer, plotrix, BiocManager, ggpubr,
                remotes, egg, splancs, FSA, rcompanion, ggrepel)
 
 remotes::install_github("jfq3/ggordiplots")
