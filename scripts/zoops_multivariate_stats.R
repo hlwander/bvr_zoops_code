@@ -1,6 +1,8 @@
 #multivariate stats for 2019 - 2021 zoop data
 #created 25Nov2021
 
+source("scripts/install.R")
+
 #read in zoop data from all 3 years
 zoops2019<- read.csv('output/FCR_ZooplanktonSummary2019.csv',header = TRUE)
 zoops2020<- read.csv('output/FCR_ZooplanktonSummary2020.csv',header = TRUE)

@@ -1,6 +1,6 @@
 #Install packages
 
-install.packages("pacman")
+if (!require('pacman')) install.packages('pacman')
 library(pacman)
 
 #read in libraries
@@ -9,7 +9,7 @@ pacman::p_load(dplyr, vegan, labdsv, goeveg, rLakeAnalyzer,
                viridis, RColorBrewer, plotrix, BiocManager, ggpubr,
                remotes, egg, splancs, FSA, rcompanion, ggrepel)
 
-remotes::install_github("jfq3/ggordiplots")
+if (!require('ggordiplots')) remotes::install_github("jfq3/ggordiplots")
 
 #------------------------------------------------------------------#
 #functions

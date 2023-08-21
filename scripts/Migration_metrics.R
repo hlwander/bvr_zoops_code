@@ -1,6 +1,8 @@
 #Script to calculate DVM and DHM metrics
 #Created 5Dec2022
 
+source("scripts/install.R")
+
 #read in DHM csv
 all_DHM <- read.csv("output/All_MSN_DHM.csv")
 

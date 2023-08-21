@@ -1,6 +1,8 @@
 #Zoop density change over 24hrs for all 5 MSNs
 #created 16 Oct 2022
 
+source("scripts/install.R")
+
 #read in zoop data from all 3 years
 zoops2019<- read.csv('output/FCR_ZooplanktonSummary2019.csv',header = TRUE)
 zoops2020<- read.csv('output/FCR_ZooplanktonSummary2020.csv',header = TRUE)
