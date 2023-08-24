@@ -194,7 +194,7 @@ migration_long <- metrics_avg[,c(1,2,5,6)]
 migration_long$SE <- metrics_se$value
   
 #export migration metrics
-#write.csv(migration_long,"/output/migration_metrics.csv",row.names = FALSE)
+#write.csv(migration_long,"output/migration_metrics.csv",row.names = FALSE)
 
 #-------------------------------------------------------------------------------#
 

@@ -759,6 +759,9 @@ ctd.final$msn <- ifelse(ctd.final$DateTime=="2019-07-10" | ctd.final$DateTime=="
 ctd.final_avg <- ctd.final |> group_by(Reservoir, Depth_m, msn) |> 
   summarise(across(everything(), list(mean)))
 
+#read in migration metrics
+migration_metrics <- read.csv("output/migration_metrics.csv",header=T)
+
 #make an environmental driver df
 msn_drivers <- data.frame("groups" = as.character(1:5), #epi is 0.1m, hypo is 10m - avg for both noons of msn when available
                           "epi_temp" = c(ctd.final_avg$Temp_C_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==1],
@@ -812,7 +815,19 @@ msn_drivers <- data.frame("groups" = as.character(1:5), #epi is 0.1m, hypo is 10
                                             mean(ctd_thermo_depth$therm_depth[ctd_thermo_depth$msn==3]),
                                             mean(ctd_thermo_depth$therm_depth[ctd_thermo_depth$msn==4]),
                                             mean(ctd_thermo_depth$therm_depth[ctd_thermo_depth$msn==5])),
-                          "hypoxic_depth" = c(6.5, 5.5, 3.5, 6.5, 5)) #don't think I can do this bc we don't trust 2021 ctd data ugh
+                          "Cladocera_DVM" = c(migration_metrics$value[migration_metrics$metric=="Cladocera_density_NopL" & 
+                                                                        migration_metrics$migration=="DVM_avg"]),
+                          "Copepoda_DVM" = c(migration_metrics$value[migration_metrics$metric=="Copepoda_density_NopL" & 
+                                                                       migration_metrics$migration=="DVM_avg"]),
+                          "Rotifera_DVM" = c(migration_metrics$value[migration_metrics$metric=="Rotifera_density_NopL" & 
+                                                                       migration_metrics$migration=="DVM_avg"]),
+                          "Cladocera_DHM" = c(migration_metrics$value[migration_metrics$metric=="Cladocera_density_NopL" & 
+                                                                        migration_metrics$migration=="DHM_avg"]),
+                          "Copepoda_DHM" = c(migration_metrics$value[migration_metrics$metric=="Copepoda_density_NopL" & 
+                                                                       migration_metrics$migration=="DHM_avg"]),
+                          "Rotifera_DHM" = c(migration_metrics$value[migration_metrics$metric=="Rotifera_density_NopL" & 
+                                                                       migration_metrics$migration=="DHM_avg"]))
+                          #"hypoxic_depth" = c(6.5, 5.5, 3.5, 6.5, 5)) #don't think I can do this bc we don't trust 2021 ctd data ugh
 
 
 
@@ -823,7 +838,7 @@ zoops_plus_drivers <- left_join(zoop_avg, msn_drivers)
 fit_env <- envfit(ord$sites, zoops_plus_drivers[,c(15:25)])
 
 #pull out vectors
-scores <- as.data.frame(scores(fit_env, display = "vectors"))
+scores <- data.frame((fit_env$vectors)$arrows, (fit_env$vectors)$r, (fit_env$vectors)$pvals)
 scores <- cbind(scores, env = rownames(scores))
 
 #plot drivers w/ NMDS
@@ -888,3 +903,39 @@ driver_NMDS <- ggplot(data=msn_drivers_long, aes(NMDS2, value, color=groups)) + 
                           panel.grid.minor = element_blank(), legend.key.width =unit(0.7,"line"))
 #ggsave("figures/driver_vs_NMDS2.jpg", driver_NMDS, width=3, height=3) 
 
+#-----------------------------------------------------------------------------------------------
+#migration metrics across taxa vs dispersion to better link migration and variability (Fig. S10)
+
+#add dispersion for sampling days to df
+msn_drivers$disp <- c(mean(within_day_dist$dist[within_day_dist$group=="day1"]),
+                      mean(within_day_dist$dist[within_day_dist$group=="day2"]),
+                      mean(within_day_dist$dist[within_day_dist$group=="day3"]),
+                      mean(within_day_dist$dist[within_day_dist$group=="day4"]),
+                      mean(within_day_dist$dist[within_day_dist$group=="day5"]))
+
+
+migration_drivers <- msn_drivers %>% pivot_longer(cols = Cladocera_DVM:Rotifera_DHM, names_to = "variable")
+
+#add NMDS2 col
+migration_drivers$NMDS2 <- ifelse(migration_drivers$groups==1, days$df_mean.ord$y[1],
+                                 ifelse(migration_drivers$groups==2, days$df_mean.ord$y[2],
+                                        ifelse(migration_drivers$groups==3, days$df_mean.ord$y[3],
+                                               ifelse(migration_drivers$groups==4, days$df_mean.ord$y[4],
+                                                      days$df_mean.ord$y[5]))))
+
+migration_vs_disp <- ggplot(data=migration_drivers, aes(disp, value, color=groups)) + geom_point() +
+  facet_wrap(~variable, scales = "free_y") + ylab("Migration metric") +
+  scale_color_manual("",values=c("#008585","#9BBAA0","#F2E2B0","#DEA868","#C7522B"), 
+                     labels=c("10-11 Jul 2019","24-25 Jul 2019","12-13 Aug 2020",
+                              "15-16 Jun 2021","7-8 Jul 2021"), guide=guide_legend(order=1)) +
+  guides(color = guide_legend(nrow=2,byrow=TRUE)) +
+  theme(text = element_text(size=6), axis.text = element_text(size=5, color="black"), 
+        legend.background = element_blank(), legend.key = element_blank(), 
+        legend.key.height=unit(0.3,"line"),
+        legend.margin=margin(0,0,0,0),
+        legend.box.margin=margin(-4,-4,-4,-4),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), 
+        strip.background = element_rect(fill = "transparent"), legend.position = "top", 
+        legend.spacing = unit(-0.5, 'cm'), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), legend.key.width =unit(0.7,"line")) 
+#ggsave("figures/migration_metrics_vs_dispersion.jpg", migration_vs_disp, width=3, height=3) 
