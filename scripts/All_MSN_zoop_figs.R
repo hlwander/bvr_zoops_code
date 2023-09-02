@@ -8,9 +8,6 @@ zoops2019<- read.csv('output/FCR_ZooplanktonSummary2019.csv',header = TRUE)
 zoops2020<- read.csv('output/FCR_ZooplanktonSummary2020.csv',header = TRUE)
 zoops2021<- read.csv('output/FCR_ZooplanktonSummary2021.csv',header = TRUE)
 
-#drop holopedium becuase only in 2019
-zoops2019 <- zoops2019[,!c(grepl("Holopedium",colnames(zoops2019)))]
-
 #combine all zoop datasets
 zoop <- rbind(zoops2019,zoops2020,zoops2021)
 
@@ -123,7 +120,7 @@ zoop_DHM_long <- df1[,c(1:4,27,28)]
 zoop_DHM_long$value.SE <- df2$value.SE
 
 #Export DHM csv
-write.csv(zoop_DHM_long,"/output/All_MSN_DHM.csv",row.names = FALSE)
+write.csv(zoop_DHM_long,"output/All_MSN_DHM.csv",row.names = FALSE)
 
 #reset DHM df so can only look at density
 zoop_DHM_long <- NA
@@ -345,5 +342,5 @@ ggplot(subset(zoop_size_DHM_long, metric %in% c("CladoceraMeanSize_mm","Copepoda
                               "15-16 Jun 2021","7-8 Jul 2021"), guide=guide_legend(order=1)) + 
   geom_line()+ ylab("Size (mm)") + scale_fill_manual("",values=c("#CCCCCC","white"), guide = "none")+
   geom_errorbar(aes(ymin=value-value.SE, ymax=value+value.SE), width=.2,position=position_dodge(.9))
-#ggsave(file.path(getwd(),"Summer2021-DataAnalysis/Figures/BVR_MSNs_taxa_size.jpg"), width=5, height=4) 
+#ggsave("figures/BVR_MSNs_taxa_size.jpg", width=5, height=4) 
 

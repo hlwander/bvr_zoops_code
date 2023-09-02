@@ -56,8 +56,8 @@ all_DHM_noon2 <- all_DHM[all_DHM$Hour=="noon2" | all_DHM$Hour=="midnight",]
 
 #-------------------------------------------------------------------------------
 #read in DVM annual csvs
-DVM_2021 <- read.csv("output/DVM_2021_zoops.csv") |> select(-X)
-DVM_2020 <- read.csv("output/DVM_2020_zoops.csv") |> select(-X)
+DVM_2021 <- read.csv("output/DVM_2021_zoops.csv") 
+DVM_2020 <- read.csv("output/DVM_2020_zoops.csv") 
 DVM_2019 <- read.csv("output/DVM_2019_zoops.csv") 
 
 #combine annual DVM dfs
