@@ -9,7 +9,7 @@
 #Load packages and functions
 source("scripts/install.R")
 
-#list of years to loop throug
+#list of years to loop through
 year <- c(2019, 2020, 2021)
 
 for(i in 1:length(year)){
@@ -63,9 +63,6 @@ zoop <- zoop[substrEnd(zoop$sample_ID,2)!="20",]
 
 #drop schindler samples
 zoop <- zoop[!zoop$sample_ID %in%  which(grepl("schind",zoop$sample_ID)),]
-  
-#drop the 06-29 samples (these were test samples)
-zoop <- zoop[substrEnd(zoop$sample_ID,4)!="filt",]
 
 ##### Create new df to combine reps over 24 hours
 zoop.repmeans <- zoop %>% select(sample_ID,site_no,collect_date,Hour, 
