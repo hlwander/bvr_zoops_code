@@ -183,11 +183,11 @@ ggplot(subset(zoop_DHM_long, metric %in% c("Cladocera_density_NopL","Copepoda_de
 #ggsave("figures/BVR_MSNs_taxa_density.jpg", width=5, height=4) 
 
 #-------------------------------------------------------------------------------#
-#new df to standardize density among taxa and days
+#new df to standardize density among taxa for ALL days
 zoop_dens_stand <- data.frame(subset(zoop_DHM_long, metric %in% c("Cladocera_density_NopL","Copepoda_density_NopL","Rotifera_density_NopL")))
 
 #calculate % density of max within a day for each taxa as x / max
-zoop_dens_stand <- zoop_dens_stand %>% group_by(metric, MSN) %>%
+zoop_dens_stand <- zoop_dens_stand %>% group_by(metric) %>%
   mutate(value_max_std = value / max(value))
 
 #Manuscript Figure 4
@@ -200,7 +200,7 @@ ggplot(zoop_dens_stand, aes(Hour,value_max_std, color=as.factor(MSN))) +
                 ymin=-Inf, ymax= Inf, fill= "Noon"),color=NA) +
   geom_point(size=2) + theme_bw() + facet_grid(site_no~metric,scales="free_y",
                                                labeller = labeller(metric=metric_taxa, site_no=sites)) +
-  xlab("")+ coord_cartesian(clip = 'off') +
+  xlab("Hour")+ coord_cartesian(clip = 'off') +
   theme(text = element_text(size=8), axis.text = element_text(size=7, color="black"), 
         legend.background = element_blank(), legend.key = element_blank(), 
         legend.key.height=unit(0.3,"line"),
