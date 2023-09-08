@@ -370,11 +370,14 @@ zoopbiom <- zoopbiom |> select(-c(sample_ID, Project, site_no, collect_date,
                                   MarksInOcularMicrometer_Height_No., Initials, Notes))
                                   
 
+#add ocular mag column
+zoopbiom$OcularMagnification <- "10x"
+
 #change order of cols
 zoopbiom <- zoopbiom |> select(Reservoir, Site, DateTime, StartDepth_m, EndDepth_m, Rep,
                                CollectionMethod, Subsample, LowestTaxonomicLevelOfID,
-                               TaxaID, Nauplius, ObjectiveMagnification, 
-                               MarksInOcularMicrometer_No.)
+                               TaxaID, Nauplius, ObjectiveMagnification,
+                               OcularMagnification, MarksInOcularMicrometer_No.)
 
 #export density file
 write.csv(zoopbiom, 'output/EDI_zoop_raw_biom_2019-2022.csv', row.names = FALSE)
