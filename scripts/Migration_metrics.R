@@ -239,7 +239,7 @@ ggplot(subset(migration_long, grepl("density",metric, ignore.case=T) &
             hjust = 0, size = 3, color="black") + coord_cartesian(xlim = c(1, 5), clip = 'off')
 #ggsave("figures/BVR_MSNs_migration_metrics_dens_3taxa.jpg", width=5, height=4) 
 
-#Figure S9
+#Figure S10
 ggplot(subset(migration_long, grepl("biomass",metric, ignore.case = TRUE) &
                 metric %in% c("Cladocera_BiomassConcentration_ugpL","Copepoda_BiomassConcentration_ugpL","Rotifera_BiomassConcentration_ugpL")), 
        aes(x=as.factor(MSN), y=value, fill=as.factor(MSN), shape=migration)) +

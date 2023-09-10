@@ -171,7 +171,7 @@ BVR_pelagic_DVM_percent <- BVR_pelagic_DVM_percent[
 BVR.DVM.calcs<- data.frame("Hour"=unique(BVR_pelagic_DVM_raw$Hour))
   
 #averaged from 2020+2021 data
-bvr_neteff<- 0.04112955
+bvr_neteff<- 0.02056477
 
 #for loop to fill out epi vs hypo calcs 
 #hypo density and biomass calculated by subtracting epi raw zoop # from full zoop # and then dividing by the (full volume - epi volume) 

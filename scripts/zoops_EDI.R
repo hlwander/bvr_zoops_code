@@ -32,6 +32,13 @@ all_zoops <- all_zoops[,!c(grepl("Percent", colnames(all_zoops)) |
 #drop the total zoop dens/biomass cols
 all_zoops <- all_zoops[ ,-c(14:17)]
 
+#add rep column
+all_zoops$Rep <- ifelse(substrEnd(all_zoops$sample_ID,4)=="rep1" |
+                          substrEnd(all_zoops$sample_ID,4)=="rep2" | 
+                          substrEnd(all_zoops$sample_ID,4)=="rep3"| 
+                          substrEnd(all_zoops$sample_ID,4)=="rep4",
+                        substrEnd(all_zoops$sample_ID,1),1)
+
 #now convert from wide to long for dens
 all_zoops_dens <- all_zoops |> 
   pivot_longer(cols = colnames(all_zoops[grepl("density", colnames(all_zoops))]), 
@@ -54,7 +61,7 @@ all_zoops_biom <- all_zoops |>
                values_to = "Biomass_ugL") 
 
 #combine dfs
-all_zoops_final <- all_zoops_dens[,c(1:6, 77, 78)]
+all_zoops_final <- all_zoops_dens[,c(1:6, 77:79)]
 all_zoops_final$MeanLength_mm <- all_zoops_size$MeanLength_mm
 all_zoops_final$MeanWeight_ug <- all_zoops_weight$MeanWeight_ug
 all_zoops_final$Biomass_ugL <- all_zoops_biom$Biomass_ugL
@@ -89,7 +96,7 @@ all_zoops_final <- all_zoops_final |> select(-c(sample_ID, Project, site_no,
 
 #change order of cols
 all_zoops_final <- all_zoops_final |> select(Reservoir, Site, DateTime, 
-                                             StartDepth_m, EndDepth_m,
+                                             StartDepth_m, EndDepth_m, Rep,
                                              CollectionMethod, Taxon, 
                                              Density_IndPerL, MeanLength_mm,
                                              MeanWeight_ug, Biomass_ugL)
@@ -111,6 +118,20 @@ all_zoops_final$Biomass_ugL <- ifelse(all_zoops_final$Density_IndPerL!=0 &
 all_zoops_final$Flag_Length <- ifelse(is.na(all_zoops_final$MeanLength_mm), 1, 0)
 all_zoops_final$Flag_Weight <- ifelse(is.na(all_zoops_final$MeanWeight_ug), 1, 0)
 all_zoops_final$Flag_Biomass <- ifelse(is.na(all_zoops_final$Biomass_ugL), 1, 0)
+
+#order by reservoir, site, date, then collection method
+all_zoops_final <- all_zoops_final |> 
+  arrange(Reservoir, DateTime, Site, CollectionMethod)
+
+#add convert datetime to character while keeping the 00 hour for midnight samples
+all_zoops_final$DateTime <- 
+  ifelse(hour(all_zoops_final$DateTime)==0,
+    paste0(as.Date(all_zoops_final$DateTime), " 00:00:01"),
+    as.character(all_zoops_final$DateTime))
+
+#convert back to posixct
+all_zoops_final$DateTime <- as.POSIXct(all_zoops_final$DateTime,
+                                       format = "%Y-%m-%d %H:%M:%S", tz = "EST")
 
 #export file 
 write.csv(all_zoops_final, 'output/EDI_zoop_taxa_2019-2022.csv', row.names = FALSE)

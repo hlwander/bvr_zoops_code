@@ -66,6 +66,10 @@ Tow_totalCount_final <- Tow_totalCount_final[which(
 Epi_tow_totalCount_final <- Epi_tow_totalCount_final[which(
   Epi_tow_totalCount_final$collect_date %in% Schindler_totalCount$collect_date),]
 
+#multiply # of zoops by 2 bc each schindler trap is only ~0.5m
+Schindler_totalCount$Zooplankton_No. <-
+  Schindler_totalCount$Zooplankton_No. * 2
+
 #add a column for rep
 Schindler_totalCount$Rep <- substrEnd(Schindler_totalCount$sample_ID,1)
 
@@ -190,7 +194,7 @@ Density.neteff_paired$Actual_dens <-
       Density.neteff_epi$Apparent_dens / 
       Density.neteff_epi$Actual_dens
 
-  #add depths for epi net efficiencies
+  #add depths for epi net efficiency
   Density.neteff_epi$Depth_m <- Schindler_totalCount_epi_final$DepthOfTow_m
   
 #Going to take the average net efficiency across both reps because values are super close to each other
