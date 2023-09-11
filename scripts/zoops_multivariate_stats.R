@@ -272,7 +272,7 @@ points(NMDS_temporal_avg_bray$points[(zoop_avg$groups=="3" &
 #step 1: use Euclidean distance matrix from transformed community data (zoop_euc)
 
 #order zoop epi tows by hour, MSN, and site
-zoop_epi_tows <- zoop_epi_tows %>% dplyr::arrange(site, groups, order)
+zoop_epi_tows <- zoop_epi_tows |> dplyr::arrange(site, groups, order)
 
 #convert ED matrix back into distance structure for next steps
 zoop_euc <- vegdist(zoop_temporal_dens_avg_trans, method='euclidean', 
@@ -302,8 +302,8 @@ for (i in 1:500){
   ord_sub <- sample(unique(zoop_epi_tows$order), 2)
   groups_sub <-  sample(unique(zoop_epi_tows$groups), 2)
   
-  zoop_sub <-  zoop_epi_tows %>% group_by(order) %>% 
-               filter(order %in% c(ord_sub), groups %in% c(groups_sub)) %>%
+  zoop_sub <-  zoop_epi_tows |> group_by(order) |> 
+               filter(order %in% c(ord_sub), groups %in% c(groups_sub)) |>
                slice_sample(n=10)
   
   #only select data cols
@@ -339,9 +339,9 @@ for (i in 1:500){
 #Kruskal-wallis test to determine if group means are significant
 
 #first convert wide to long
-disp_df <- var_results[,grepl("disp",colnames(var_results))] %>%  
+disp_df <- var_results[,grepl("disp",colnames(var_results))] |>  
   pivot_longer(everything(), names_to="group")
-pair_df <- var_results[,grepl("pair",colnames(var_results))] %>%  
+pair_df <- var_results[,grepl("pair",colnames(var_results))] |> 
   pivot_longer(everything(), names_to="group")
 
 #now kw test
@@ -998,7 +998,7 @@ msn_drivers$disp <- c(mean(within_day_dist$dist[within_day_dist$group=="day1"]),
                       mean(within_day_dist$dist[within_day_dist$group=="day5"]))
 
 
-migration_drivers <- msn_drivers %>% 
+migration_drivers <- msn_drivers |>  
   pivot_longer(cols = Cladocera_DVM:Rotifera_DHM, names_to = "variable")
 
 #add NMDS2 col
