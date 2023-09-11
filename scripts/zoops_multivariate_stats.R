@@ -395,21 +395,6 @@ pair_box <- ggboxplot(pair_df, x = "group", y = "value",
 among_scales <- egg::ggarrange(disp_box, pair_box, nrow=2)
 #ggsave("figures/among_variability_boxplots.jpg",among_scales, width=3, height=4) 
 
-#calculate the range of all dispersion and pairwise values
-range(disp_df$value[disp_df$group=="site_disp"])[2] - 
-  range(disp_df$value[disp_df$group=="site_disp"])[1]
-range(disp_df$value[disp_df$group=="day_disp"])[2] - 
-  range(disp_df$value[disp_df$group=="day_disp"])[1]
-range(disp_df$value[disp_df$group=="hour_disp"])[2] - 
-  range(disp_df$value[disp_df$group=="hour_disp"])[1]
-
-range(pair_df$value[pair_df$group=="site_pair"])[2] - 
-  range(pair_df$value[pair_df$group=="site_pair"])[1]
-range(pair_df$value[pair_df$group=="day_pair"])[2] - 
-  range(pair_df$value[pair_df$group=="day_pair"])[1]
-range(pair_df$value[pair_df$group=="hour_pair"])[2] - 
-  range(pair_df$value[pair_df$group=="hour_pair"])[1]
-
 #create table for kw test results
 kw_results <- data.frame("Variability" = c(" ", "Dispersion", " ", " ", "Location", " "),
                          "Scale" = rep(c("Sites", "Sampling campaigns", "Hours of the day"),2),
