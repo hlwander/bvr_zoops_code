@@ -14,3 +14,7 @@ Analysis and figure generation code for assessing spatial and temporal variabili
 8.  Run `2020-2021_NMDS.R` to create the hourly driver multipanel figure using 2020-2021 zooplankton data (Fig. S8).
 
 Note that `zoops_EDI.R` script was used to get zooplankton data into the correct format for publication on EDI (LINK HERE).
+
+## Data availability
+
+Zooplankton data used in this analysis are published to the EDI data repository (link here). Coversions are in the conversions folder, etc.
