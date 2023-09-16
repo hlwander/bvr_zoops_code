@@ -791,12 +791,18 @@ ggplot(subset(ctd_final_DO, depth > 0 & Reservoir=="BVR" & Site==50 &
   xlab("DO (mg/L)") + ylab("Depth (m)") +
   ylim(10,0) + geom_point() + geom_path() + 
   theme_bw() + facet_wrap(~DateTime, ncol=5) +
-  theme(text = element_text(size=8), axis.text = element_text(size=6, color="black"), 
-        legend.position = c(0.76,0.02), legend.background = element_blank(),
-        legend.direction = "horizontal", legend.title = element_text(size = 4.5),
-        panel.grid.minor = element_blank(), legend.key=element_rect(fill=NA),
-        plot.margin = unit(c(0,0.05,0,0), "cm"),legend.key.size = unit(0.5, "lines"),
-        panel.grid.major = element_blank(), axis.text.y = element_text(size=6),
+  theme(text = element_text(size=8), 
+        axis.text = element_text(size=6, color="black"), 
+        legend.position = c(0.76,0.02), 
+        legend.background = element_blank(),
+        legend.direction = "horizontal", 
+        legend.title = element_text(size = 4.5),
+        panel.grid.minor = element_blank(), 
+        legend.key=element_rect(fill=NA),
+        plot.margin = unit(c(0,0.05,0,0), "cm"),
+        legend.key.size = unit(0.5, "lines"),
+        panel.grid.major = element_blank(), 
+        axis.text.y = element_text(size=6),
         axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=6), 
         legend.text  = element_text(size = 4.5), panel.spacing=unit(0, "cm")) 
 #ggsave("figures/DO_profiles.jpg"), width=4, height=3) 
@@ -1038,20 +1044,26 @@ migration_drivers$NMDS2 <- ifelse(migration_drivers$groups==1, days$df_mean.ord$
                                                       days$df_mean.ord$y[5]))))
 
 migration_vs_disp <- ggplot(data=migration_drivers, aes(disp, value, color=groups)) + 
-  geom_point() + facet_wrap(~variable, scales = "free_y") + ylab("Migration metric") +
+  geom_point() + 
+  facet_wrap(~variable, scales = "free_y") + 
+  ylab("Migration metric") +
   scale_color_manual("",values=c("#008585","#9BBAA0","#F2E2B0","#DEA868","#C7522B"), 
                      labels=c("10-11 Jul 2019","24-25 Jul 2019","12-13 Aug 2020",
                               "15-16 Jun 2021","7-8 Jul 2021"), 
                      guide=guide_legend(order=1)) +
   guides(color = guide_legend(nrow=2,byrow=TRUE)) +
-  theme(text = element_text(size=6), axis.text = element_text(size=5, color="black"), 
-        legend.background = element_blank(), legend.key = element_blank(), 
+  theme(text = element_text(size=6), 
+        axis.text = element_text(size=5, color="black"), 
+        legend.background = element_blank(), 
+        legend.key = element_blank(), 
         legend.key.height=unit(0.3,"line"),
         legend.margin=margin(0,0,0,0),
         legend.box.margin=margin(-4,-4,-4,-4),
         axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), 
         strip.background = element_rect(fill = "transparent"), 
         legend.position = "top", 
-        legend.spacing = unit(-0.5, 'cm'), panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(), legend.key.width =unit(0.7,"line")) 
+        legend.spacing = unit(-0.5, 'cm'), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), 
+        legend.key.width =unit(0.7,"line")) 
 #ggsave("figures/migration_metrics_vs_dispersion.jpg", migration_vs_disp, width=3, height=3) 

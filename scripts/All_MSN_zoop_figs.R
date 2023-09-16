@@ -20,7 +20,8 @@ zoop$site_no[zoop$site_no=="BVR_50_p"] <- "BVR_50"
 #merge collect_date and hour in a new column
 zoop$date<- paste(zoop$collect_date,zoop$Hour,sep=" ")
 #get times into date format (character here)
-zoop$date<- format(as.POSIXct(zoop$date,format="%Y-%m-%d %H:%M"), format="%Y-%m-%d %H:%M:%S")
+zoop$date<- format(as.POSIXct(zoop$date,format="%Y-%m-%d %H:%M"), 
+                   format="%Y-%m-%d %H:%M:%S")
 #convert to posixct date format
 zoop$date<- as.POSIXct(zoop$date, format="%Y-%m-%d %H:%M")
 
@@ -28,18 +29,27 @@ zoop$date<- as.POSIXct(zoop$date, format="%Y-%m-%d %H:%M")
 zoop<- arrange(zoop,zoop$site_no,zoop$date)
 
 #pull rep # off as new column
-zoop$rep <- ifelse(substrEnd(zoop$sample_ID,4)=="rep1" |substrEnd(zoop$sample_ID,4)=="rep2" | substrEnd(zoop$sample_ID,4)=="rep3"| substrEnd(zoop$sample_ID,4)=="rep4",
+zoop$rep <- ifelse(substrEnd(zoop$sample_ID,4)=="rep1" |
+                     substrEnd(zoop$sample_ID,4)=="rep2" | 
+                     substrEnd(zoop$sample_ID,4)=="rep3" | 
+                     substrEnd(zoop$sample_ID,4)=="rep4",
                    substrEnd(zoop$sample_ID,1),NA)
 
 #drop rep# from sample ID
-zoop$sample_ID <- ifelse(substrEnd(zoop$sample_ID,4)=="rep1" |substrEnd(zoop$sample_ID,4)=="rep2" | substrEnd(zoop$sample_ID,4)=="rep3" | substrEnd(zoop$sample_ID,4)=="rep4",
-                         substr(zoop$sample_ID,1,nchar(zoop$sample_ID)-5),zoop$sample_ID)
+zoop$sample_ID <- ifelse(substrEnd(zoop$sample_ID,4)=="rep1" |
+                           substrEnd(zoop$sample_ID,4)=="rep2" |
+                           substrEnd(zoop$sample_ID,4)=="rep3" |
+                           substrEnd(zoop$sample_ID,4)=="rep4",
+                         substr(zoop$sample_ID, 1, nchar(zoop$sample_ID)-5),
+                         zoop$sample_ID)
 
 #drop 20um samples
 zoop <- zoop[!substrEnd(zoop$sample_ID,2)=="20",]
 
 #get hour into character format for grouping
-zoop$Hour <- format(round(strptime(paste0(zoop$collect_date, zoop$Hour), format="%Y-%m-%d %H:%M"),units="hours"),format="%H:%M")
+zoop$Hour <- format(round(strptime(paste0(zoop$collect_date, zoop$Hour), 
+                                   format="%Y-%m-%d %H:%M"),units="hours"),
+                    format="%H:%M")
 #manually change hour of some samples (rounding problems)
 zoop$Hour[grepl("midnight",zoop$sample_ID,ignore.case = TRUE)] <- "00:00"
 zoop$Hour[grepl("noon",zoop$sample_ID,ignore.case = TRUE)] <- "12:00"
@@ -61,7 +71,11 @@ zoop$Hour[grepl("sunset_h4",zoop$sample_ID,ignore.case = TRUE) |
             grepl("sunset_epi_h4",zoop$sample_ID,ignore.case = TRUE)] <- "21:00"
 
 #drop schindler samples and only select BVR_50 epi samples
-zoop <- zoop[substrEnd(zoop$site_no,6)!="schind" & zoop$site_no!="BVR_d" & zoop$site_no!="BVR_dam" & zoop$site_no!="BVR_trap" & zoop$site_no!="FCR_50",]
+zoop <- zoop[substrEnd(zoop$site_no,6)!="schind" & 
+               zoop$site_no!="BVR_d" & 
+               zoop$site_no!="BVR_dam" & 
+               zoop$site_no!="BVR_trap" & 
+               zoop$site_no!="FCR_50",]
 
 ##### Create new df to combine reps over 24 hours
 zoop.repmeans <- zoop %>% select(sample_ID,site_no,collect_date,Hour, ZoopDensity_No.pL, BiomassConcentration_ugpL,
@@ -77,19 +91,25 @@ zoop.repmeans <- zoop %>% select(sample_ID,site_no,collect_date,Hour, ZoopDensit
 #merge collect_date and hour in a new column
 zoop.repmeans$datetime<- paste(zoop.repmeans$collect_date,zoop.repmeans$Hour,sep=" ")
 #get times into date format (character here)
-zoop.repmeans$datetime<- format(as.POSIXct(zoop.repmeans$datetime,format="%Y-%m-%d %H:%M"), format="%Y-%m-%d %H:%M:%S")
+zoop.repmeans$datetime<- format(as.POSIXct(zoop.repmeans$datetime,format="%Y-%m-%d %H:%M"), 
+                                format="%Y-%m-%d %H:%M:%S")
 #convert to posixct date format
 zoop.repmeans$datetime<- as.POSIXct(zoop.repmeans$datetime, format="%Y-%m-%d %H:%M")
 
-zoop.repmeans$dates <- ifelse(zoop.repmeans$collect_date=="2019-07-10" | zoop.repmeans$collect_date=="2019-07-24"| 
-                                zoop.repmeans$collect_date=="2020-08-12" | zoop.repmeans$collect_date=="2021-06-15" |
-                                zoop.repmeans$collect_date=="2021-07-07","2022-10-15","2022-10-16")
+zoop.repmeans$dates <- ifelse(zoop.repmeans$collect_date=="2019-07-10" | 
+                                zoop.repmeans$collect_date=="2019-07-24"| 
+                                zoop.repmeans$collect_date=="2020-08-12" | 
+                                zoop.repmeans$collect_date=="2021-06-15" |
+                                zoop.repmeans$collect_date=="2021-07-07",
+                              "2022-10-15",
+                              "2022-10-16")
 
 #only select hour and then add arbitrary dates for plotting
 zoop.repmeans$Hour <- format(zoop.repmeans$Hour, format='%H:%M')
 
 #combine hour and date
-zoop.repmeans$Hour <- strptime(paste0(as.character(zoop.repmeans$dates), zoop.repmeans$Hour),format="%Y-%m-%d %H:%M")
+zoop.repmeans$Hour <- strptime(paste0(as.character(zoop.repmeans$dates), zoop.repmeans$Hour),
+                               format="%Y-%m-%d %H:%M")
 zoop.repmeans$Hour <- as.POSIXct(zoop.repmeans$Hour)
 
 #make sure zoop.repmeans is a dataframe
@@ -102,18 +122,20 @@ zoop.repmeans <- zoop.repmeans[order(zoop.repmeans$Hour),]
 write.csv("output/All_MSN_zoops.csv",row.names = FALSE)
 
 #only select epi samples for DHM plots
-zoop_epi <- zoop.repmeans[grepl("epi",zoop.repmeans$sample_ID) |grepl("sunrise",zoop.repmeans$sample_ID) | grepl("sunset",zoop.repmeans$sample_ID) | zoop.repmeans$site_no=="BVR_l",]
+zoop_epi <- zoop.repmeans[grepl("epi",zoop.repmeans$sample_ID) |
+                            grepl("sunrise",zoop.repmeans$sample_ID) | 
+                            grepl("sunset",zoop.repmeans$sample_ID) | 
+                            zoop.repmeans$site_no=="BVR_l",]
 
 #convert new dfs from tibble to dataframe 
 zoop_DHM <- data.frame(zoop_epi)
 
-#convert df from wide to long (kinda hacky way bc having problems doing this)
+#convert df from wide to long
 df1 <- zoop_DHM %>% gather(metric,value,ZoopDensity_No.pL_rep.mean:nauplius_BiomassConcentration_ugpL_rep.mean)
 df2 <- zoop_DHM %>% gather(metric.SE,value.SE, ZoopDensity_No.pL_rep.SE:nauplius_BiomassConcentration_ugpL_rep.SE)
 
 ##cut and paste to merge df
 zoop_DHM_long <- df1[,c(1:4,27,28)]
-#zoop_DHM_long$metric.SE <- df2$metric.SE #use this as a check to make sure rows match up
 zoop_DHM_long$value.SE <- df2$value.SE
 
 #Export DHM csv
@@ -136,13 +158,12 @@ SE <- c("ZoopDensity_No.pL_rep.SE","Cladocera_density_NopL_rep.SE", "Cladocera_P
 #remove biomass too
 zoop_DHM <- zoop_DHM[,-c(which(grepl("ugpL",colnames(zoop_DHM))))]
 
-#convert df from wide to long (kinda hacky way bc having problems doing this)
+#convert df from wide to long
 df1 <- zoop_DHM %>% gather(metric,value,all_of(variables))
 df2 <- zoop_DHM %>% gather(metric.SE,value.SE, all_of(SE))
 
 #cut and paste to merge df
 zoop_DHM_long <- df1[,c(1:4,18,20:21)]
-#zoop_DHM_long$metric.SE <- df2$metric.SE #use this as a check to make sure rows match up
 zoop_DHM_long$value.SE <- df2$value.SE
 
 #drop _rep.mean from all metric names
@@ -166,15 +187,33 @@ names(sites) <- c("BVR_50","BVR_l")
 #Figure for zoop density for each MSN 24-hours --> Figure S4
 ggplot(subset(zoop_DHM_long, metric %in% c("Cladocera_density_NopL","Copepoda_density_NopL","Rotifera_density_NopL")),
                 aes(Hour,value, color=as.factor(MSN))) + 
-  geom_rect(aes(xmin=as.POSIXct("2022-10-15 11:30:00"),xmax=as.POSIXct("2022-10-15 20:41:00"), ymin=-Inf, ymax= Inf, fill= "Noon"),color=NA) +
-  geom_rect(aes(xmin=as.POSIXct("2022-10-15 20:42:00"),xmax=as.POSIXct("2022-10-16 06:10:00"), ymin=-Inf, ymax= Inf, fill= "Midnight"),color=NA) +
-  geom_rect(aes(xmin=as.POSIXct("2022-10-16 06:11:00"),xmax=as.POSIXct("2022-10-16 12:30:00"), ymin=-Inf, ymax= Inf, fill= "Noon"),color=NA) +
-  geom_point(size=2) + theme_bw() + facet_grid(site_no~metric,scales="free_y",labeller = labeller(metric=metric_taxa, site_no=sites)) + xlab("")+ coord_cartesian(clip = 'off') +
-  theme(text = element_text(size=8), axis.text = element_text(size=7, color="black"), legend.background = element_blank(), legend.key = element_blank(), legend.key.height=unit(0.3,"line"),
-        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), strip.background = element_rect(fill = "transparent"), legend.position = c(0.1,0.92), legend.spacing = unit(-0.5, 'cm'),
-        panel.grid.major = element_blank(),panel.grid.minor = element_blank(), legend.key.width =unit(0.7,"line"))+ scale_x_datetime(expand = c(0,0),labels = date_format("%H-%M",tz="EST5EDT")) +
+  geom_rect(aes(xmin=as.POSIXct("2022-10-15 11:30:00"),xmax=as.POSIXct("2022-10-15 20:41:00"), 
+                ymin=-Inf, ymax= Inf, fill= "Noon"),color=NA) +
+  geom_rect(aes(xmin=as.POSIXct("2022-10-15 20:42:00"),xmax=as.POSIXct("2022-10-16 06:10:00"), 
+                ymin=-Inf, ymax= Inf, fill= "Midnight"),color=NA) +
+  geom_rect(aes(xmin=as.POSIXct("2022-10-16 06:11:00"),xmax=as.POSIXct("2022-10-16 12:30:00"), 
+                ymin=-Inf, ymax= Inf, fill= "Noon"),color=NA) +
+  geom_point(size=2) + 
+  theme_bw() + 
+  facet_grid(site_no~metric,scales="free_y",labeller = labeller(metric=metric_taxa, site_no=sites)) + 
+  xlab("")+ 
+  coord_cartesian(clip = 'off') +
+  theme(text = element_text(size=8), 
+        axis.text = element_text(size=7, color="black"), 
+        legend.background = element_blank(), 
+        legend.key = element_blank(), 
+        legend.key.height=unit(0.3,"line"),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), 
+        strip.background = element_rect(fill = "transparent"), 
+        legend.position = c(0.1,0.92), 
+        legend.spacing = unit(-0.5, 'cm'),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), 
+        legend.key.width =unit(0.7,"line"))+ 
+  scale_x_datetime(expand = c(0,0),labels = date_format("%H-%M",tz="EST5EDT")) +
   scale_color_manual("",values=c("#008585","#9BBAA0","#F2E2B0","#DEA868","#C7522B"), labels=c("10-11 Jul 2019","24-25 Jul 2019","12-13 Aug 2020","15-16 Jun 2021","7-8 Jul 2021"), guide=guide_legend(order=1)) + 
-  geom_line()+ ylab("Density (Individuals/L)") + scale_fill_manual("",values=c("#CCCCCC","white"), guide = "none")+
+  geom_line()+ ylab("Density (Individuals/L)") + 
+  scale_fill_manual("",values=c("#CCCCCC","white"), guide = "none")+
   geom_errorbar(aes(ymin=value-value.SE, ymax=value+value.SE), width=.2,position=position_dodge(.9))
 #ggsave("figures/BVR_MSNs_taxa_density.jpg", width=5, height=4) 
 
@@ -194,8 +233,9 @@ ggplot(zoop_dens_stand, aes(Hour,value_max_std, color=as.factor(MSN))) +
                 ymin=-Inf, ymax= Inf, fill= "Midnight"),color=NA) +
   geom_rect(aes(xmin=as.POSIXct("2022-10-16 06:11:00"),xmax=as.POSIXct("2022-10-16 12:30:00"), 
                 ymin=-Inf, ymax= Inf, fill= "Noon"),color=NA) +
-  geom_point(size=2) + theme_bw() + facet_grid(site_no~metric,scales="free_y",
-                                               labeller = labeller(metric=metric_taxa, site_no=sites)) +
+  geom_point(size=2) + 
+  theme_bw() + 
+  facet_grid(site_no~metric,scales="free_y",labeller = labeller(metric=metric_taxa, site_no=sites)) +
   xlab("Hour")+ coord_cartesian(clip = 'off') +
   theme(text = element_text(size=8), axis.text = element_text(size=7, color="black"), 
         legend.background = element_blank(), 
@@ -208,7 +248,6 @@ ggplot(zoop_dens_stand, aes(Hour,value_max_std, color=as.factor(MSN))) +
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), 
         legend.key.width =unit(0.7,"line"))+ 
-  scale_x_datetime(expand = c(0,0),labels = date_format("%H-%M",tz="EST5EDT")) +
   scale_x_datetime(expand = c(0,0),labels = date_format("%H-%M",tz="EST5EDT"))+
   scale_color_manual("",values=c("#008585","#9BBAA0","#F2E2B0","#DEA868","#C7522B"), 
                      labels=c("10-11 Jul 2019","24-25 Jul 2019","12-13 Aug 2020","15-16 Jun 2021","7-8 Jul 2021"), guide=guide_legend(order=1)) + 
@@ -221,11 +260,11 @@ mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Cladocera_density_No
 mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Copepoda_density_NopL"])
 mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Rotifera_density_NopL"])
 
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==1])
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==2])
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==3])
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==4])
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==5])
+mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==1]) #10-11 Jul 2019
+mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==2]) #24-25 Jul 2019
+mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==3]) #12-13 Aug 2020
+mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==4]) #15-16 Jun 2021
+mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==5]) #7-8 Jul 2021
 
 mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Cladocera_density_NopL" & zoop_dens_stand$site_no=="BVR_50"])
 mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Copepoda_density_NopL" & zoop_dens_stand$site_no=="BVR_50"])
@@ -245,13 +284,20 @@ zoop_dens_stand$hr <- hour(zoop_dens_stand$Hour)
 #list of night hours
 night <- c(21,22,23,0,1,2,3,4,5)
 
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Cladocera_density_NopL" & zoop_dens_stand$hr %in% night])
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Copepoda_density_NopL" & zoop_dens_stand$hr %in% night])
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Rotifera_density_NopL" & zoop_dens_stand$hr %in% night])
+#Night
+night_clad <- mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Cladocera_density_NopL" & zoop_dens_stand$hr %in% night])
+night_cope <- mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Copepoda_density_NopL" & zoop_dens_stand$hr %in% night])
+night_roti <- mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Rotifera_density_NopL" & zoop_dens_stand$hr %in% night])
 
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Cladocera_density_NopL" & !zoop_dens_stand$hr %in% night])
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Copepoda_density_NopL" & !zoop_dens_stand$hr %in% night])
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Rotifera_density_NopL" & !zoop_dens_stand$hr %in% night])
+#Day
+day_clad <- mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Cladocera_density_NopL" & !zoop_dens_stand$hr %in% night])
+day_cope <- mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Copepoda_density_NopL" & !zoop_dens_stand$hr %in% night])
+day_roti <- mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Rotifera_density_NopL" & !zoop_dens_stand$hr %in% night])
+
+#Percent difference
+(night_clad-day_clad)/day_clad*100
+(night_cope-day_cope)/day_cope*100
+(night_roti-day_roti)/day_roti*100
 
 #-------------------------------------------------------------------------------------#
 # create new df for avg size
@@ -326,7 +372,8 @@ ggplot(subset(zoop_size_DHM_long, metric %in% c("CladoceraMeanSize_mm","Copepoda
                 ymin=-Inf, ymax= Inf, fill= "Noon"),color=NA) +
   geom_point(size=2) + theme_bw() + 
   facet_grid(site_no~metric,scales="free_y",labeller = labeller(metric=size_taxa, site_no=sites)) + 
-  xlab("")+ coord_cartesian(clip = 'off') +
+  xlab("")+ 
+  coord_cartesian(clip = 'off') +
   theme(text = element_text(size=8), axis.text = element_text(size=7, color="black"), 
         legend.background = element_blank(), 
         legend.key = element_blank(), 
@@ -342,7 +389,9 @@ ggplot(subset(zoop_size_DHM_long, metric %in% c("CladoceraMeanSize_mm","Copepoda
   scale_color_manual("",values=c("#008585","#9BBAA0","#F2E2B0","#DEA868","#C7522B"), 
                      labels=c("10-11 Jul 2019","24-25 Jul 2019","12-13 Aug 2020",
                               "15-16 Jun 2021","7-8 Jul 2021"), guide=guide_legend(order=1)) + 
-  geom_line()+ ylab("Size (mm)") + scale_fill_manual("",values=c("#CCCCCC","white"), guide = "none")+
+  geom_line()+ 
+  ylab("Size (mm)") + 
+  scale_fill_manual("",values=c("#CCCCCC","white"), guide = "none")+
   geom_errorbar(aes(ymin=value-value.SE, ymax=value+value.SE), width=.2,position=position_dodge(.9))
 #ggsave("figures/BVR_MSNs_taxa_size.jpg", width=5, height=4) 
 

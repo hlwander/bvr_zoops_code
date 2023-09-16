@@ -268,8 +268,6 @@ geom_text(aes(x=5.9, y=c(rep(0,28),0.4,-0.4), label=c(rep(NA,28),"Typical \nMigr
 #-------------------------------------------------------------------------------
 #create df with proportion of total zoops (both density and biomass) over time
 
-library(plyr)
-
 #now calculate the proportion in each habitat
 Hourly_prop <- plyr::ddply(all_DHM, c("metric", "MSN", "Hour","DateTime"), function(x) {
   data.frame(
@@ -280,5 +278,3 @@ Hourly_prop <- plyr::ddply(all_DHM, c("metric", "MSN", "Hour","DateTime"), funct
 
 #export proportion df
 #write.csv(Hourly_prop,"output/Hourly_proportions_pelvslit.csv",row.names = FALSE)
-
-detach('package:plyr')
