@@ -58,162 +58,192 @@ year<-c(2019,2020,2021)
 
 for(y in 1:length(year)){
 
-  #Names of the two files for a particular year
-  dataFiles<-c(paste0("zoop_data/FCR",year[y],
-                      "_ZooplanktonCounting_Density_DataEntry.csv"),
-               paste0("zoop_data/FCR",year[y],
-                      "_ZooplanktonCounting_SizeID_DataEntry.csv"))
-  
-  #Create Density and SizeID data frames for that year
-  Density<-read.csv(dataFiles[1], fill = TRUE,as.is=TRUE)
-  SizeID<-read.csv(dataFiles[2], fill = TRUE,as.is=TRUE, na.strings = "")
-  
-  #get rid of practice samples (qualitative not quantitative)
-  SizeID<- SizeID |> filter(!sample_ID %in% c("F17Jun19_50_6.5_20", 
+#Names of the two files for a particular year
+dataFiles<-c(paste0("zoop_data/FCR",year[y],
+                    "_ZooplanktonCounting_Density_DataEntry.csv"),
+             paste0("zoop_data/FCR",year[y],
+                    "_ZooplanktonCounting_SizeID_DataEntry.csv"))
+
+#Create Density and SizeID data frames for that year
+Density<-read.csv(dataFiles[1], fill = TRUE,as.is=TRUE)
+SizeID<-read.csv(dataFiles[2], fill = TRUE,as.is=TRUE, na.strings = "")
+
+#make sure Project is FCR[YEAR] for all samples
+Density$Project <- paste0("FCR",year[y])
+SizeID$Project <- paste0("FCR",year[y])
+
+#get rid of practice samples (qualitative not quantitative)
+SizeID<- SizeID |> filter(!sample_ID %in% c("F17Jun19_50_6.5_20"))
+
+Density<- Density |> filter(!sample_ID %in% c("F17Jun19_50_6.5_20", 
                                               "F17Jun19_50_6.5_80", 
                                               "F20Jun19_10_20"))
-  
-  Density<- Density |> filter(!sample_ID %in% c("F17Jun19_50_6.5_20", 
-                                                "F17Jun19_50_6.5_80", 
-                                                "F20Jun19_10_20"))
-  
-  #Radius of the sampling net in meters --> FOR 80um NET
-  RadiusOfZoopNet_m<-0.1524
-  AreaOfZoopNet_m2<-(RadiusOfZoopNet_m^2) *pi
-  
-  #Radius of the sampling net in meters --> FOR 20um NET
-  RadiusOfZoopNet_m_20<-0.099
-  AreaOfZoopNet_m2_20<-(RadiusOfZoopNet_m_20^2) *pi
-  
-  #proportion of sample counted (used to scale raw density/biomass for hypo calcs in numerator)
-  #volume of the zoop tow: depth of tow times area of circle (in m3) X conversion factor from m3 to L
-  Density$Volume_unadj <- ifelse(Density$site_no=="BVR_trap", 
-                                 .25, #Traps are 250 mL
-                          ifelse(Density$mesh_size_μm==80, 
-                                 (Density$DepthOfTow_m*AreaOfZoopNet_m2)*1000, 
-                          ifelse(Density$mesh_size_μm==20, 
-                                 (Density$DepthOfTow_m*AreaOfZoopNet_m2_20)*1000,
-                          ifelse(Density$mesh_size_μm==61, 
-                                 30, #Schindler is 30 L
-                                 NA))))
-  
-  #Density$proportional_vol is the 1-5mL in the counting chamber relative to the 
-  #concentrated total volume of the sample (100-1000mL) 
-  Density$proportional_vol<- Density$SubsampleVolume_mL / 
-                                Density$InitialSampleVolume_mL
-  
-  #now multiply proportional_vol by total volume sampled to get the volume
-  #represented by each subsample
-  #conditional for each of the mesh sizes/methods; 
-  #trap volume = proportional vol * .25L trap
-  #schindler vol= proportional vol * 30L schindler trap; 
-  
-  Density$Volume_L <- ifelse(Density$site_no=="BVR_trap", 
-                             Density$proportional_vol * .25,
-                      ifelse(Density$mesh_size_μm==61, 
-                             Density$proportional_vol * 30,
-                      ifelse(Density$mesh_size_μm==80, 
-                             Density$proportional_vol * Density$Volume_unadj,                
-                      ifelse(Density$mesh_size_μm==20, 
-                             Density$proportional_vol * Density$Volume_unadj,
-                             NA))))
-  
-  
-  #REPLACE plomida with ploima (they are synonymous orders!)
-  SizeID$TaxaID[SizeID$TaxaID=="Plomida"]<- "Ploima"
-  
-  #Aggregate by sample ID
-  #Create a vector of the sample ID
-  uniqueSampleID<-unique(Density$sample_ID)
-  
-  #Initialize a data frame with the correct columns
-  ZoopDensityCalcs<-data.frame(matrix(ncol = length(names(Density)), 
-                                      nrow = length(uniqueSampleID)))
-  
-  names(ZoopDensityCalcs)<-names(Density)
-  
-  #Store the sample_ID
-  ZoopDensityCalcs$sample_ID<-uniqueSampleID[order(uniqueSampleID)]
-  
-  ##Sum the volume, proportion counted, and # of zooplankton for each sample 
-  ZoopDensityCalcs$Volume_L<-aggregate(Volume_L~sample_ID,data=Density,
-                                       FUN=sum,na.action=na.omit)[,2] 
-    #Note that aggregate sorts by grouping element, matching with ordered sample ID
-  ZoopDensityCalcs$proportional_vol<-aggregate(proportional_vol~sample_ID,
-                                       data=Density,FUN=sum,na.action=na.omit)[,2]
-  ZoopDensityCalcs$Zooplankton_No.<-aggregate(Zooplankton_No.~sample_ID,
-                                       data=Density,FUN=sum,na.action=na.omit)[,2]
-  
-  #Pull the unique entries for some of the string columns
-  ZoopDensityCalcs$Project<-aggregate(Project~sample_ID,data=Density,
-                                      FUN=unique,na.action=na.omit)[,2]
-  ZoopDensityCalcs$site_no<-aggregate(site_no~sample_ID,data=Density,
-                                      FUN=unique,na.action=na.omit)[,2]
-  ZoopDensityCalcs$collect_date<-as.Date(aggregate(collect_date~sample_ID,data=Density,
-                                      FUN=unique,na.action=na.omit)[,2],"%d-%b-%y")
-  ZoopDensityCalcs$Hour<-aggregate(Hour~sample_ID,data=Density,
-                                      FUN=unique,na.action=na.omit)[,2]
-  
-  #If any counter initials are recorded, transfer to summary output
-  ZoopDensityCalcs$INT<-ifelse(sum(!is.na(Density$INT))==0,NA,
-                               aggregate(INT~sample_ID,data=Density,
-                                         FUN=unique,na.action=na.omit)[,2])
-  
-  #select unadjusted volume for each sample ID
-  ZoopDensityCalcs$Volume_unadj<-as.numeric(aggregate(Volume_unadj~sample_ID,
-                                                      data=Density,
-                                                      FUN=unique,na.action=na.omit)[,2])
-  
-  
-  ### Note: For NA volume, subsample A was concentrated to 200 mL and B and C were concentrated to 500 mL
-  ZoopDensityCalcs$InitialSampleVolume_mL<-
-    aggregate(InitialSampleVolume_mL~sample_ID,data=Density,FUN=unique,na.action=na.omit)[,2]
-  #convert to integer so can export at the end
-  ZoopDensityCalcs$InitialSampleVolume_mL<- 
-    as.numeric(as.character(ZoopDensityCalcs$InitialSampleVolume_mL))
-  
-  #Unique depth of tows and mesh size
-  ZoopDensityCalcs$DepthOfTow_m<-aggregate(DepthOfTow_m~sample_ID,data=Density,
-                                           FUN=unique,na.action=na.omit)[,2]
-  ZoopDensityCalcs$mesh_size_μm<-aggregate(mesh_size_μm~sample_ID,data=Density,
-                                           FUN=unique,na.action=na.pass)[,2]
-  
-  #Keep important columns
-  keep<-c("Project","site_no","collect_date","Hour","sample_ID","DepthOfTow_m",
-          "InitialSampleVolume_mL","Zooplankton_No.","INT","Volume_L",
-          "Volume_unadj","proportional_vol","mesh_size_μm")
-  ZoopDensityCalcs<-ZoopDensityCalcs[,keep]
-  
-  #Net efficiencies calculated in the NetEfficiencyCalcs script 
-  bvr_neteff<- 0.04112955 #avg from 2020 and 2021
-  fcr_neteff <- 0.05317030 #avg from 2020 and 2021
-  
-  #Calculate the zooplankton density 2 different ways (tows vs. schindler/horiz traps)
-  #multiplying # by net efficiency ratio (calculated from tow (apparent dens) / schindler (actual dens) counts in 2020 (n=2)) 
-  ZoopDensityCalcs$ZoopDensity_No.pL<- ifelse(ZoopDensityCalcs$site_no=="BVR_trap" | 
-                ZoopDensityCalcs$site_no=="BVR_schind" | ZoopDensityCalcs$site_no=="FCR_schind", 
-                ZoopDensityCalcs$Zooplankton_No./ZoopDensityCalcs$Volume_unadj,
-          ifelse(substr(ZoopDensityCalcs$site_no,1,3)=="BVR" & ZoopDensityCalcs$DepthOfTow_m >= 8, 
-                ZoopDensityCalcs$Zooplankton_No.* (1/bvr_neteff) / ZoopDensityCalcs$Volume_L,
-          ifelse(substr(ZoopDensityCalcs$site_no,1,3)=="FCR" & ZoopDensityCalcs$DepthOfTow_m >= 8, 
-                ZoopDensityCalcs$Zooplankton_No.* (1/fcr_neteff) / ZoopDensityCalcs$Volume_L, 
-                ZoopDensityCalcs$Zooplankton_No. / ZoopDensityCalcs$Volume_L)))
-  
-  #########################################
-  #Here calculate the density for each sample
-  #########################################
-  
-  #convert from character to numeric
-  SizeID$MarksInOcularMicrometer_No.<- as.numeric(SizeID$MarksInOcularMicrometer_No.)
-  
-  #Calculate the size based on the marks in the ocular micrometer and conversion
-  #Checks for non-NA and non-numeric strings
-  #Prints out the row to examine
-  for(i in 1:length(SizeID$MarksInOcularMicrometer_No.)){
-    if(!is.na(SizeID$MarksInOcularMicrometer_No.[i]) & 
-       is.na(as.numeric(SizeID$MarksInOcularMicrometer_No.[i]))){
-      print(paste("Row",i))
-      }
+
+#Radius of the sampling net in meters --> FOR 80um NET!
+RadiusOfZoopNet_m<-0.1524
+AreaOfZoopNet_m2<-(RadiusOfZoopNet_m^2) *pi
+
+#Radius of the sampling net in meters --> FOR 20um NET!
+RadiusOfZoopNet_m_20<-0.099
+AreaOfZoopNet_m2_20<-(RadiusOfZoopNet_m_20^2) *pi
+
+#proportion of sample counted (used to scale raw density/biomass for hypo calcs in numerator)
+#volume of the zoop tow depth of tow times area of circle (in m3) X conversion factor from m3 to L
+Density$Volume_unadj <- ifelse(Density$site_no=="BVR_trap", 
+                               Density$Volume_unadj <-.25,
+                        ifelse(Density$mesh_size_μm==80, 
+                               Density$Volume_unadj <- 
+                               (Density$DepthOfTow_m*AreaOfZoopNet_m2)*1000, 
+                        ifelse(Density$mesh_size_μm==20, 
+                               Density$Volume_unadj<- 
+                               (Density$DepthOfTow_m*AreaOfZoopNet_m2_20)*1000,
+                        ifelse(Density$mesh_size_μm==61, 
+                               Density$Volume_unadj<- 30, 
+                               Density$Volume_unadj<-NA))))
+
+
+#This is the 1-5mL in the counting chamber relative to the concentrated total volume of the sample (100-1000mL) 
+Density$proportional_vol<- Density$SubsampleVolume_mL / 
+                              Density$InitialSampleVolume_mL
+
+#now multiply proportional vol by vol unadj to get olume sampled represented by each subsample volume (NOTE: only for 80 um net!!!)
+#conditional for each of the mesh sizes/methods; schindler vol= proportional vol * 30L schindler trap; trap volume = proportional vol * .25L
+Density$Volume_L <- ifelse(Density$site_no=="BVR_trap", 
+                           Density$Volume_L<- Density$proportional_vol * .25,
+                    ifelse(Density$mesh_size_μm==61, 
+                          Density$Volume_L<- Density$proportional_vol * 30,
+                    ifelse(Density$mesh_size_μm==80, 
+                          Density$Volume_L <- Density$proportional_vol * Density$Volume_unadj,                
+                    ifelse(Density$mesh_size_μm==20, 
+                          Density$Volume_L<-  Density$proportional_vol * 
+                            (Density$DepthOfTow_m*pi*RadiusOfZoopNet_m_20^2) * 1000,
+                          Density$Volume_L<-NA))))
+
+
+#REPLACE plomida with ploima (they are synonymous orders!)
+SizeID$TaxaID[SizeID$TaxaID=="Plomida"]<- "Ploima"
+
+#Aggregate by sample ID
+#Create a vector of the sample ID
+uniqueSampleID<-unique(Density$sample_ID)
+
+#Initialize a data frame with the correct columns
+ZoopDensityCalcs<-data.frame(matrix(ncol = length(names(Density)), 
+                                    nrow = length(uniqueSampleID)))
+
+names(ZoopDensityCalcs)<-names(Density)
+
+#Store the sample_ID
+ZoopDensityCalcs$sample_ID<-uniqueSampleID[order(uniqueSampleID)]
+
+##Sum the volume, proportion counted, and # of zooplankton for each sample 
+ZoopDensityCalcs$Volume_L<-aggregate(Volume_L~sample_ID,data=Density,
+                                     FUN=sum,na.action=na.omit)[,2]
+ZoopDensityCalcs$proportional_vol<-aggregate(proportional_vol~sample_ID,
+                                     data=Density,FUN=sum,na.action=na.omit)[,2]
+ZoopDensityCalcs$Zooplankton_No.<-aggregate(Zooplankton_No.~sample_ID,
+                                     data=Density,FUN=sum,na.action=na.omit)[,2]
+
+#Pull the unique entries for some of the string columns
+ZoopDensityCalcs$Project<-aggregate(Project~sample_ID,data=Density,
+                                    FUN=unique,na.action=na.omit)[,2]
+ZoopDensityCalcs$site_no<-aggregate(site_no~sample_ID,data=Density,
+                                    FUN=unique,na.action=na.omit)[,2]
+ZoopDensityCalcs$collect_date<-as.Date(aggregate(collect_date~sample_ID,data=Density,
+                                    FUN=unique,na.action=na.omit)[,2],"%d-%b-%y")
+ZoopDensityCalcs$Hour<-aggregate(Hour~sample_ID,data=Density,
+                                    FUN=unique,na.action=na.omit)[,2]
+
+ZoopDensityCalcs$INT<-ifelse(sum(!is.na(Density$INT))==0,NA,
+                             aggregate(INT~sample_ID,data=Density,
+                                       FUN=unique,na.action=na.omit)[,2])
+
+#select unadjusted volume for each sample ID
+ZoopDensityCalcs$Volume_unadj<-as.numeric(aggregate(Volume_unadj~sample_ID,
+                                                    data=Density,
+                                                    FUN=unique,na.action=na.omit)[,2])
+
+
+### Note: For NA volume, subsample A was concentrated to 200 mL and B and C were concentrated to 500 mL
+ZoopDensityCalcs$InitialSampleVolume_mL<-
+  aggregate(InitialSampleVolume_mL~sample_ID,data=Density,FUN=unique,na.action=na.omit)[,2]
+#convert to integer so can export at the end
+ZoopDensityCalcs$InitialSampleVolume_mL<- 
+  as.numeric(as.character(ZoopDensityCalcs$InitialSampleVolume_mL))
+
+#Average depth of tows and mesh size
+ZoopDensityCalcs$DepthOfTow_m<-aggregate(DepthOfTow_m~sample_ID,data=Density,
+                                         FUN=mean,na.action=na.omit)[,2]
+ZoopDensityCalcs$mesh_size_μm<-aggregate(mesh_size_μm~sample_ID,data=Density,
+                                         FUN=mean,na.action=na.pass)[,2]
+
+#Keep important columns
+keep<-c("Project","site_no","collect_date","Hour","sample_ID","DepthOfTow_m","InitialSampleVolume_mL","Zooplankton_No.","INT","Volume_L","Volume_unadj","proportional_vol","mesh_size_μm")
+ZoopDensityCalcs<-ZoopDensityCalcs[,keep]
+
+#Net efficiencies calculated in the NetEfficiencyCalcs script 
+bvr_neteff<- 0.02056477 ##avg from 2020 and 2021
+fcr_neteff <- 0.02658515 #avg from 2020 and 2021
+
+#Calculate the zooplankton density 2 different ways (tows vs. schindler/horiz traps)
+#multiplying # by net efficiency ratio (calculated from tow (apparent dens) / schindler (actual dens) counts in 2020 (n=2)) 
+ZoopDensityCalcs$ZoopDensity_No.pL<- ifelse(ZoopDensityCalcs$site_no=="BVR_trap" | 
+              ZoopDensityCalcs$site_no=="BVR_schind" | ZoopDensityCalcs$site_no=="FCR_schind", 
+              ZoopDensityCalcs$ZoopDensity_No.pL <- 
+              ZoopDensityCalcs$Zooplankton_No./ZoopDensityCalcs$Volume_unadj,
+        ifelse(substr(ZoopDensityCalcs$site_no,1,3)=="BVR" & ZoopDensityCalcs$DepthOfTow_m >= 8, 
+              ZoopDensityCalcs$ZoopDensity_No.pL <- 
+              ZoopDensityCalcs$Zooplankton_No.* (1/bvr_neteff) / ZoopDensityCalcs$Volume_L,
+        ifelse(substr(ZoopDensityCalcs$site_no,1,3)=="FCR" & ZoopDensityCalcs$DepthOfTow_m >= 8, 
+              ZoopDensityCalcs$ZoopDensity_No.pL <- 
+              ZoopDensityCalcs$Zooplankton_No.* (1/fcr_neteff) / ZoopDensityCalcs$Volume_L, 
+              ZoopDensityCalcs$ZoopDensity_No.pL <- 
+              ZoopDensityCalcs$Zooplankton_No. / ZoopDensityCalcs$Volume_L)))
+#NOTE - no need to correct for net inefficiency in epi samples bc net eff >93% 
+
+#########################################
+#Here calculate the density for each sample
+#########################################
+
+#convert from character to numeric
+SizeID$MarksInOcularMicrometer_No.<- as.numeric(SizeID$MarksInOcularMicrometer_No.)
+
+#Calculate the size based on the marks in the ocular micrometer and conversion
+#Checks for non-NA and non-numeric strings
+#Prints out the row to examine
+for(i in 1:length(SizeID$MarksInOcularMicrometer_No.)){
+  if(!is.na(SizeID$MarksInOcularMicrometer_No.[i]) & 
+     is.na(as.numeric(SizeID$MarksInOcularMicrometer_No.[i]))){
+    print(paste("Row",i))
+    }
+}
+
+#Calculates the size of each zooplankton
+SizeID$Size_mm<-as.numeric(SizeID$MarksInOcularMicrometer_No.) *
+  (ZoopOccularLensConversions[match(SizeID$ObjectiveMagnification,
+                                    ZoopOccularLensConversions$Objective),2] / 
+     ZoopOccularLensConversions[match(SizeID$ObjectiveMagnification,
+                                      ZoopOccularLensConversions$Objective),3])
+
+#Create a new column for each level of taxonomic richness
+SizeID[,names(ZoopTaxonomy)]<-NA
+
+#Ensure first letter of order name is capital
+substr(SizeID$LowestTaxonomicLevelOfID, 1, 1) <- 
+  toupper(substr(SizeID$LowestTaxonomicLevelOfID, 1, 1))
+
+#Figure out which column the taxa ID is
+for(j in 1:length(SizeID$TaxaID)){
+    #Pick out only values with Taxa Level and ID 
+    if(!is.na(SizeID$LowestTaxonomicLevelOfID[j]) & !is.na(SizeID$TaxaID[j])){
+    #Select the column with the lowest level of ID
+    TaxaColumn<-match(SizeID$LowestTaxonomicLevelOfID[j],names(ZoopTaxonomy))
+    #Get the row for the correct taxa (it will output the first match)
+    TaxaRow<-match(SizeID$TaxaID[j],ZoopTaxonomy[,TaxaColumn])
+    #Run through each of the levels up to the lowest level and store it in new columns in the SizeID data frame
+    #if nauplius, then record lowest taxonomic level as Copepoda (insert NA in order-species columns)
+  for(k in 1:TaxaColumn){
+      SizeID[j,names(ZoopTaxonomy)[k]] <-ZoopTaxonomy[TaxaRow,k]
   }
   
   #Calculates the size of each zooplankton

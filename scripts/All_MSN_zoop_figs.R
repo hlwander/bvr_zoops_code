@@ -3,113 +3,71 @@
 
 source("scripts/install.R")
 
-#read in zoop data from all 3 years
-zoops2019<- read.csv('output/FCR_ZooplanktonSummary2019.csv',header = TRUE)
-zoops2020<- read.csv('output/FCR_ZooplanktonSummary2020.csv',header = TRUE)
-zoops2021<- read.csv('output/FCR_ZooplanktonSummary2021.csv',header = TRUE)
+#get date into posixct format
+zoop_summary$DateTime <- as.POSIXct(zoop_summary$DateTime, 
+                                    format="%Y-%m-%d %H:%M:%S", tz="UTC")
 
-#combine all zoop datasets
-zoop <- rbind(zoops2019,zoops2020,zoops2021)
+#create column with just date for subsetting
+zoop_summary$date <- as.Date(zoop_summary$DateTime)
 
-#make sure sample_ID is class character
-zoop$sample_ID<- as.character(zoop$sample_ID)
+#only select 2019-2022 MSN data
+zoop_summary <- zoop_summary |> 
+  filter(date %in% c("2019-07-10", "2019-07-11", "2019-07-24",
+                     "2019-07-25", "2020-08-12", "2020-08-13",
+                     "2021-06-15", "2021-06-16", "2021-07-07",
+                     "2021-07-08"))
 
-#change BVR_50_p --> BVR_50
-zoop$site_no[zoop$site_no=="BVR_50_p"] <- "BVR_50"
+#select cols to keep (dens, biom, and size)
+zoop_summary <- zoop_summary |>  
+  select("Reservoir","Site","DateTime","StartDepth_m","EndDepth_m", "Rep",
+         "CollectionMethod","Taxon", "Density_IndPerL", "Biomass_ugL",
+         "MeanLength_mm")
 
-#merge collect_date and hour in a new column
-zoop$date<- paste(zoop$collect_date,zoop$Hour,sep=" ")
-#get times into date format (character here)
-zoop$date<- format(as.POSIXct(zoop$date,format="%Y-%m-%d %H:%M"), 
-                   format="%Y-%m-%d %H:%M:%S")
-#convert to posixct date format
-zoop$date<- as.POSIXct(zoop$date, format="%Y-%m-%d %H:%M")
+#drop schindler data and dam site (49)
+zoop_summary <- zoop_summary |> filter(CollectionMethod!="Schindler",
+                                       Site!=49)
+
+#add date column
+zoop_summary$date <- as.Date(zoop_summary$DateTime)
+
+#add hour column
+zoop_summary$Hour <- substr(zoop_summary$DateTime,12,13)
+
+#change a couple hours so they group properly
+zoop_summary$Hour[zoop_summary$Hour=="11"] <- "12"
+zoop_summary$Hour[zoop_summary$Hour=="23"] <- "0"
+zoop_summary$Hour[zoop_summary$Hour=="03"] <- "04"
+zoop_summary$Hour[as.character(zoop_summary$DateTime)=="2019-07-10 19:04:00"] <- "18"
+
+#change 00 to 0 for grouping purposes
+zoop_summary$Hour[zoop_summary$Hour=="00"] <- "0"
 
 #order by site, then hour
-zoop<- arrange(zoop,zoop$site_no,zoop$date)
-
-#pull rep # off as new column
-zoop$rep <- ifelse(substrEnd(zoop$sample_ID,4)=="rep1" |
-                     substrEnd(zoop$sample_ID,4)=="rep2" | 
-                     substrEnd(zoop$sample_ID,4)=="rep3" | 
-                     substrEnd(zoop$sample_ID,4)=="rep4",
-                   substrEnd(zoop$sample_ID,1),NA)
-
-#drop rep# from sample ID
-zoop$sample_ID <- ifelse(substrEnd(zoop$sample_ID,4)=="rep1" |
-                           substrEnd(zoop$sample_ID,4)=="rep2" |
-                           substrEnd(zoop$sample_ID,4)=="rep3" |
-                           substrEnd(zoop$sample_ID,4)=="rep4",
-                         substr(zoop$sample_ID, 1, nchar(zoop$sample_ID)-5),
-                         zoop$sample_ID)
-
-#drop 20um samples
-zoop <- zoop[!substrEnd(zoop$sample_ID,2)=="20",]
-
-#get hour into character format for grouping
-zoop$Hour <- format(round(strptime(paste0(zoop$collect_date, zoop$Hour), 
-                                   format="%Y-%m-%d %H:%M"),units="hours"),
-                    format="%H:%M")
-#manually change hour of some samples (rounding problems)
-zoop$Hour[grepl("midnight",zoop$sample_ID,ignore.case = TRUE)] <- "00:00"
-zoop$Hour[grepl("noon",zoop$sample_ID,ignore.case = TRUE)] <- "12:00"
-zoop$Hour[grepl("sunrise_h1",zoop$sample_ID,ignore.case = TRUE) |
-            grepl("sunrise_epi_h1",zoop$sample_ID,ignore.case = TRUE)] <- "04:00"
-zoop$Hour[grepl("sunrise_h2",zoop$sample_ID,ignore.case = TRUE) |
-            grepl("sunrise_epi_h2",zoop$sample_ID,ignore.case = TRUE)] <- "05:00"
-zoop$Hour[grepl("sunrise_h3",zoop$sample_ID,ignore.case = TRUE) |
-            grepl("sunrise_epi_h3",zoop$sample_ID,ignore.case = TRUE)] <- "06:00"
-zoop$Hour[grepl("sunrise_h4",zoop$sample_ID,ignore.case = TRUE) |
-            grepl("sunrise_epi_h4",zoop$sample_ID,ignore.case = TRUE)] <- "07:00"
-zoop$Hour[grepl("sunset_h1",zoop$sample_ID,ignore.case = TRUE) | 
-            grepl("sunset_epi_h1",zoop$sample_ID,ignore.case = TRUE)] <- "18:00"
-zoop$Hour[grepl("sunset_h2",zoop$sample_ID,ignore.case = TRUE) | 
-            grepl("sunset_epi_h2",zoop$sample_ID,ignore.case = TRUE)] <- "19:00"
-zoop$Hour[grepl("sunset_h3",zoop$sample_ID,ignore.case = TRUE) |
-            grepl("sunset_epi_h3",zoop$sample_ID,ignore.case = TRUE)] <- "20:00"
-zoop$Hour[grepl("sunset_h4",zoop$sample_ID,ignore.case = TRUE) |
-            grepl("sunset_epi_h4",zoop$sample_ID,ignore.case = TRUE)] <- "21:00"
-
-#drop schindler samples and only select BVR_50 epi samples
-zoop <- zoop[substrEnd(zoop$site_no,6)!="schind" & 
-               zoop$site_no!="BVR_d" & 
-               zoop$site_no!="BVR_dam" & 
-               zoop$site_no!="BVR_trap" & 
-               zoop$site_no!="FCR_50",]
+zoop_summary<- arrange(zoop_summary,zoop_summary$Site,zoop_summary$date)
 
 ##### Create new df to combine reps over 24 hours
-zoop.repmeans <- zoop %>% select(sample_ID,site_no,collect_date,Hour, ZoopDensity_No.pL, BiomassConcentration_ugpL,
-                                 Cladocera_density_NopL, Cladocera_BiomassConcentration_ugpL, Cladocera_PercentOfTotal,
-                                 Cyclopoida_density_NopL, Cyclopoida_BiomassConcentration_ugpL, Cyclopoida_PercentOfTotal,
-                                 Rotifera_density_NopL, Rotifera_BiomassConcentration_ugpL,Rotifera_PercentOfTotal,
-                                 Calanoida_PercentOfTotal, Calanoida_density_NopL, Calanoida_BiomassConcentration_ugpL,
-                                 Copepoda_PercentOfTotal, Copepoda_density_NopL, Copepoda_BiomassConcentration_ugpL,
-                                 nauplius_PercentOfTotal, nauplius_density_NopL, nauplius_BiomassConcentration_ugpL) %>%
-  group_by(sample_ID, site_no, Hour, collect_date) %>%
-  summarise_at(vars(ZoopDensity_No.pL:nauplius_BiomassConcentration_ugpL), list(rep.mean=mean, rep.SE=stderr))
+zoop.repmeans <- zoop_summary %>% select(Site, date, Hour, StartDepth_m,
+                                         EndDepth_m, Taxon, Density_IndPerL, 
+                                         Biomass_ugL, MeanLength_mm) |> 
+  group_by(Site, date, Hour, Taxon, StartDepth_m) %>%
+  summarise_at(vars(Density_IndPerL:MeanLength_mm), 
+               list(rep.mean=mean, rep.SE=stderr))
 
-#merge collect_date and hour in a new column
-zoop.repmeans$datetime<- paste(zoop.repmeans$collect_date,zoop.repmeans$Hour,sep=" ")
-#get times into date format (character here)
-zoop.repmeans$datetime<- format(as.POSIXct(zoop.repmeans$datetime,format="%Y-%m-%d %H:%M"), 
-                                format="%Y-%m-%d %H:%M:%S")
-#convert to posixct date format
-zoop.repmeans$datetime<- as.POSIXct(zoop.repmeans$datetime, format="%Y-%m-%d %H:%M")
-
-zoop.repmeans$dates <- ifelse(zoop.repmeans$collect_date=="2019-07-10" | 
-                                zoop.repmeans$collect_date=="2019-07-24"| 
-                                zoop.repmeans$collect_date=="2020-08-12" | 
-                                zoop.repmeans$collect_date=="2021-06-15" |
-                                zoop.repmeans$collect_date=="2021-07-07",
-                              "2022-10-15",
-                              "2022-10-16")
+#standardize datetime for all MSNs so we can visualize on a single plot
+zoop.repmeans$date_temp <- ifelse(zoop.repmeans$date=="2019-07-10" | 
+                                zoop.repmeans$date=="2019-07-24"| 
+                                zoop.repmeans$date=="2020-08-12" | 
+                                zoop.repmeans$date=="2021-06-15" |
+                                zoop.repmeans$date=="2021-07-07",
+                              "2022-10-15","2022-10-16")
 
 #only select hour and then add arbitrary dates for plotting
-zoop.repmeans$Hour <- format(zoop.repmeans$Hour, format='%H:%M')
+zoop.repmeans$Hour <- format(paste0(zoop.repmeans$Hour,":00"), format='%H:%M')
 
-#combine hour and date
-zoop.repmeans$Hour <- strptime(paste0(as.character(zoop.repmeans$dates), zoop.repmeans$Hour),
-                               format="%Y-%m-%d %H:%M")
+
+#combine hour and date 
+zoop.repmeans$Hour <- strptime(paste0(as.character(zoop.repmeans$date_temp), 
+                                      zoop.repmeans$Hour),format="%Y-%m-%d %H:%M")
 zoop.repmeans$Hour <- as.POSIXct(zoop.repmeans$Hour)
 
 #make sure zoop.repmeans is a dataframe
@@ -119,123 +77,91 @@ zoop.repmeans <- data.frame(zoop.repmeans)
 zoop.repmeans <- zoop.repmeans[order(zoop.repmeans$Hour),]
 
 #Export all zoop data df
-write.csv("output/All_MSN_zoops.csv",row.names = FALSE)
+write.csv(zoop.repmeans,"output/All_MSN_zoop_tows.csv",row.names = FALSE)
 
 #only select epi samples for DHM plots
-zoop_epi <- zoop.repmeans[grepl("epi",zoop.repmeans$sample_ID) |
-                            grepl("sunrise",zoop.repmeans$sample_ID) | 
-                            grepl("sunset",zoop.repmeans$sample_ID) | 
-                            zoop.repmeans$site_no=="BVR_l",]
+zoop_epi <- zoop.repmeans |> filter(StartDepth_m <=4)
 
 #convert new dfs from tibble to dataframe 
 zoop_DHM <- data.frame(zoop_epi)
 
-#convert df from wide to long
-df1 <- zoop_DHM %>% gather(metric,value,ZoopDensity_No.pL_rep.mean:nauplius_BiomassConcentration_ugpL_rep.mean)
-df2 <- zoop_DHM %>% gather(metric.SE,value.SE, ZoopDensity_No.pL_rep.SE:nauplius_BiomassConcentration_ugpL_rep.SE)
-
-##cut and paste to merge df
-zoop_DHM_long <- df1[,c(1:4,27,28)]
-zoop_DHM_long$value.SE <- df2$value.SE
-
 #Export DHM csv
-write.csv(zoop_DHM_long,"output/All_MSN_DHM.csv",row.names = FALSE)
-
-#reset DHM df so can only look at density
-zoop_DHM_long <- NA
-
-variables <- c("ZoopDensity_No.pL_rep.mean","Cladocera_density_NopL_rep.mean", "Cladocera_PercentOfTotal_rep.mean",
-               "Cyclopoida_density_NopL_rep.mean","Cyclopoida_PercentOfTotal_rep.mean","Rotifera_density_NopL_rep.mean",
-               "Rotifera_PercentOfTotal_rep.mean","Calanoida_density_NopL_rep.mean","Calanoida_PercentOfTotal_rep.mean",
-               "Copepoda_density_NopL_rep.mean","Copepoda_PercentOfTotal_rep.mean", 
-               "nauplius_density_NopL_rep.mean","nauplius_PercentOfTotal_rep.mean")
-SE <- c("ZoopDensity_No.pL_rep.SE","Cladocera_density_NopL_rep.SE", "Cladocera_PercentOfTotal_rep.SE",
-        "Cyclopoida_density_NopL_rep.SE","Cyclopoida_PercentOfTotal_rep.SE","Rotifera_density_NopL_rep.SE",
-        "Rotifera_PercentOfTotal_rep.SE","Calanoida_density_NopL_rep.SE","Calanoida_PercentOfTotal_rep.SE",
-        "Copepoda_density_NopL_rep.SE","Copepoda_PercentOfTotal_rep.SE",
-        "nauplius_density_NopL_rep.SE","nauplius_PercentOfTotal_rep.SE")
-
-#remove biomass too
-zoop_DHM <- zoop_DHM[,-c(which(grepl("ugpL",colnames(zoop_DHM))))]
-
-#convert df from wide to long
-df1 <- zoop_DHM %>% gather(metric,value,all_of(variables))
-df2 <- zoop_DHM %>% gather(metric.SE,value.SE, all_of(SE))
-
-#cut and paste to merge df
-zoop_DHM_long <- df1[,c(1:4,18,20:21)]
-zoop_DHM_long$value.SE <- df2$value.SE
-
-#drop _rep.mean from all metric names
-zoop_DHM_long$metric <- substr(zoop_DHM_long$metric,1,nchar(zoop_DHM_long$metric)-9)
+write.csv(zoop_DHM,"output/All_MSN_tows_DHM.csv",row.names = FALSE)
 
 #add column for MSN #
-zoop_DHM_long$MSN <- ifelse(zoop_DHM_long$collect_date=="2019-07-10" | zoop_DHM_long$collect_date=="2019-07-11",1,
-                            ifelse(zoop_DHM_long$collect_date=="2019-07-24" | zoop_DHM_long$collect_date=="2019-07-25",2,
-                                   ifelse(zoop_DHM_long$collect_date=="2020-08-12" | zoop_DHM_long$collect_date=="2020-08-13",3,
-                                          ifelse(zoop_DHM_long$collect_date=="2021-06-15" | zoop_DHM_long$collect_date=="2021-06-16",4,5))))
-
-metric_taxa <-c("ZoopDensity","Cladocera","Cladocera","Cyclopoida",
-                "Cyclopoida", "Rotifera", "Rotifera", "Calanoida",
-                "Calanoida","Copepoda","Copepoda","Nauplius","Nauplius")
-names(metric_taxa) <- c(unique(zoop_DHM_long$metric))
+zoop_DHM$MSN <- ifelse(zoop_DHM$date=="2019-07-10" | 
+                         zoop_DHM$date=="2019-07-11",1,
+                     ifelse(zoop_DHM$date=="2019-07-24" | 
+                              zoop_DHM$date=="2019-07-25",2,
+                     ifelse(zoop_DHM$date=="2020-08-12" | 
+                              zoop_DHM$date=="2020-08-13",3,
+                     ifelse(zoop_DHM$date=="2021-06-15" | 
+                              zoop_DHM$date=="2021-06-16",4,5))))
 
 sites <- c("Pelagic","Littoral")
-names(sites) <- c("BVR_50","BVR_l")
+names(sites) <- c(50, 51)
 
 #------------------------------------------------------------------------------#
 #Figure for zoop density for each MSN 24-hours --> Figure S4
-ggplot(subset(zoop_DHM_long, metric %in% c("Cladocera_density_NopL","Copepoda_density_NopL","Rotifera_density_NopL")),
-                aes(Hour,value, color=as.factor(MSN))) + 
-  geom_rect(aes(xmin=as.POSIXct("2022-10-15 11:30:00"),xmax=as.POSIXct("2022-10-15 20:41:00"), 
-                ymin=-Inf, ymax= Inf, fill= "Noon"),color=NA) +
-  geom_rect(aes(xmin=as.POSIXct("2022-10-15 20:42:00"),xmax=as.POSIXct("2022-10-16 06:10:00"), 
+ggplot(subset(zoop_DHM, Taxon %in% c("Cladocera",
+              "Copepoda","Rotifera")),
+                aes(Hour,Density_IndPerL_rep.mean, color=as.factor(MSN))) + 
+  geom_rect(aes(xmin=as.POSIXct("2022-10-15 11:30:00"),
+                xmax=as.POSIXct("2022-10-15 20:41:00"), ymin=-Inf, ymax= Inf, 
+                fill= "Noon"),color=NA) +
+  geom_rect(aes(xmin=as.POSIXct("2022-10-15 20:42:00"),
+                xmax=as.POSIXct("2022-10-16 06:10:00"), 
                 ymin=-Inf, ymax= Inf, fill= "Midnight"),color=NA) +
-  geom_rect(aes(xmin=as.POSIXct("2022-10-16 06:11:00"),xmax=as.POSIXct("2022-10-16 12:30:00"), 
+  geom_rect(aes(xmin=as.POSIXct("2022-10-16 06:11:00"),
+                xmax=as.POSIXct("2022-10-16 12:30:00"), 
                 ymin=-Inf, ymax= Inf, fill= "Noon"),color=NA) +
-  geom_point(size=2) + 
-  theme_bw() + 
-  facet_grid(site_no~metric,scales="free_y",labeller = labeller(metric=metric_taxa, site_no=sites)) + 
-  xlab("")+ 
-  coord_cartesian(clip = 'off') +
+  geom_point(size=2) + theme_bw() + facet_grid(Site~Taxon,scales="free_y",
+                labeller = labeller(Site=sites)) + 
+  xlab("")+ coord_cartesian(clip = 'off') +
   theme(text = element_text(size=8), 
         axis.text = element_text(size=7, color="black"), 
-        legend.background = element_blank(), 
-        legend.key = element_blank(), 
+        legend.background = element_blank(), legend.key = element_blank(), 
         legend.key.height=unit(0.3,"line"),
         axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), 
         strip.background = element_rect(fill = "transparent"), 
-        legend.position = c(0.1,0.92), 
-        legend.spacing = unit(-0.5, 'cm'),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(), 
+        legend.position = c(0.1,0.92), legend.spacing = unit(-0.5, 'cm'),
+        panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
         legend.key.width =unit(0.7,"line"))+ 
   scale_x_datetime(expand = c(0,0),labels = date_format("%H-%M",tz="EST5EDT")) +
-  scale_color_manual("",values=c("#008585","#9BBAA0","#F2E2B0","#DEA868","#C7522B"), labels=c("10-11 Jul 2019","24-25 Jul 2019","12-13 Aug 2020","15-16 Jun 2021","7-8 Jul 2021"), guide=guide_legend(order=1)) + 
+  scale_color_manual("",values=c("#008585","#9BBAA0","#F2E2B0","#DEA868","#C7522B"), 
+                     labels=c("10-11 Jul 2019","24-25 Jul 2019",
+                              "12-13 Aug 2020","15-16 Jun 2021","7-8 Jul 2021"), 
+                     guide=guide_legend(order=1)) + 
   geom_line()+ ylab("Density (Individuals/L)") + 
   scale_fill_manual("",values=c("#CCCCCC","white"), guide = "none")+
-  geom_errorbar(aes(ymin=value-value.SE, ymax=value+value.SE), width=.2,position=position_dodge(.9))
+  geom_errorbar(aes(ymin=Density_IndPerL_rep.mean - Density_IndPerL_rep.SE, 
+                    ymax=Density_IndPerL_rep.mean + Density_IndPerL_rep.SE), 
+                width=.2,position=position_dodge(.9))
 #ggsave("figures/BVR_MSNs_taxa_density.jpg", width=5, height=4) 
 
 #-------------------------------------------------------------------------------#
 #new df to standardize density among taxa for ALL days
-zoop_dens_stand <- data.frame(subset(zoop_DHM_long, metric %in% c("Cladocera_density_NopL","Copepoda_density_NopL","Rotifera_density_NopL")))
+zoop_dens_stand <- data.frame(subset(zoop_DHM, 
+                          Taxon %in% c("Cladocera", "Copepoda", "Rotifera")))
 
 #calculate % density of max within a day for each taxa as x / max
-zoop_dens_stand <- zoop_dens_stand %>% group_by(metric) %>%
-  mutate(value_max_std = value / max(value))
+zoop_dens_stand <- zoop_dens_stand %>% group_by(Taxon) %>%
+  mutate(value_max_std = Density_IndPerL_rep.mean / 
+           max(Density_IndPerL_rep.mean))
 
 #Manuscript Figure 4
 ggplot(zoop_dens_stand, aes(Hour,value_max_std, color=as.factor(MSN))) + 
-  geom_rect(aes(xmin=as.POSIXct("2022-10-15 11:30:00"),xmax=as.POSIXct("2022-10-15 20:41:00"), 
+  geom_rect(aes(xmin=as.POSIXct("2022-10-15 11:30:00"),
+                xmax=as.POSIXct("2022-10-15 20:41:00"), 
                 ymin=-Inf, ymax= Inf, fill= "Noon"),color=NA) +
-  geom_rect(aes(xmin=as.POSIXct("2022-10-15 20:42:00"),xmax=as.POSIXct("2022-10-16 06:10:00"), 
+  geom_rect(aes(xmin=as.POSIXct("2022-10-15 20:42:00"),
+                xmax=as.POSIXct("2022-10-16 06:10:00"), 
                 ymin=-Inf, ymax= Inf, fill= "Midnight"),color=NA) +
-  geom_rect(aes(xmin=as.POSIXct("2022-10-16 06:11:00"),xmax=as.POSIXct("2022-10-16 12:30:00"), 
+  geom_rect(aes(xmin=as.POSIXct("2022-10-16 06:11:00"),
+                xmax=as.POSIXct("2022-10-16 12:30:00"), 
                 ymin=-Inf, ymax= Inf, fill= "Noon"),color=NA) +
-  geom_point(size=2) + 
-  theme_bw() + 
-  facet_grid(site_no~metric,scales="free_y",labeller = labeller(metric=metric_taxa, site_no=sites)) +
+  geom_point(size=2) + theme_bw() + facet_grid(Site~Taxon,scales="free_y",
+                      labeller = labeller(Site=sites)) +
   xlab("Hour")+ coord_cartesian(clip = 'off') +
   theme(text = element_text(size=8), axis.text = element_text(size=7, color="black"), 
         legend.background = element_blank(), 
@@ -250,15 +176,17 @@ ggplot(zoop_dens_stand, aes(Hour,value_max_std, color=as.factor(MSN))) +
         legend.key.width =unit(0.7,"line"))+ 
   scale_x_datetime(expand = c(0,0),labels = date_format("%H-%M",tz="EST5EDT"))+
   scale_color_manual("",values=c("#008585","#9BBAA0","#F2E2B0","#DEA868","#C7522B"), 
-                     labels=c("10-11 Jul 2019","24-25 Jul 2019","12-13 Aug 2020","15-16 Jun 2021","7-8 Jul 2021"), guide=guide_legend(order=1)) + 
+                     labels=c("10-11 Jul 2019","24-25 Jul 2019",
+                              "12-13 Aug 2020","15-16 Jun 2021","7-8 Jul 2021"), 
+                     guide=guide_legend(order=1)) + 
   geom_line()+ ylab("Standardized density") + 
   scale_fill_manual("",values=c("#CCCCCC","white"), guide = "none")
 #ggsave("figures/BVR_MSNs_taxa_percent_density_over_max_std.jpg", width=5, height=4) 
 
 #numbers in results text
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Cladocera_density_NopL"])
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Copepoda_density_NopL"])
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Rotifera_density_NopL"])
+mean(zoop_dens_stand$value_max_std[zoop_dens_stand$Taxon=="Cladocera"])
+mean(zoop_dens_stand$value_max_std[zoop_dens_stand$Taxon=="Copepoda"])
+mean(zoop_dens_stand$value_max_std[zoop_dens_stand$Taxon=="Rotifera"])
 
 mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==1]) #10-11 Jul 2019
 mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==2]) #24-25 Jul 2019
@@ -266,16 +194,28 @@ mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==3]) #12-13 Aug 2020
 mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==4]) #15-16 Jun 2021
 mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==5]) #7-8 Jul 2021
 
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Cladocera_density_NopL" & zoop_dens_stand$site_no=="BVR_50"])
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Copepoda_density_NopL" & zoop_dens_stand$site_no=="BVR_50"])
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Rotifera_density_NopL" & zoop_dens_stand$site_no=="BVR_50"])
+mean(zoop_dens_stand$value_max_std[
+  zoop_dens_stand$Taxon=="Cladocera" & 
+    zoop_dens_stand$Site=="50"])
+mean(zoop_dens_stand$value_max_std[
+  zoop_dens_stand$Taxon=="Copepoda" & 
+    zoop_dens_stand$Site=="50"])
+mean(zoop_dens_stand$value_max_std[
+  zoop_dens_stand$Taxon=="Rotifera" & 
+    zoop_dens_stand$Site=="50"])
 
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Cladocera_density_NopL" & zoop_dens_stand$site_no=="BVR_l"])
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Copepoda_density_NopL" & zoop_dens_stand$site_no=="BVR_l"])
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Rotifera_density_NopL" & zoop_dens_stand$site_no=="BVR_l"])
+mean(zoop_dens_stand$value_max_std[
+  zoop_dens_stand$Taxon=="Cladocera" & 
+    zoop_dens_stand$Site=="51"])
+mean(zoop_dens_stand$value_max_std[
+  zoop_dens_stand$Taxon=="Copepoda" & 
+    zoop_dens_stand$Site=="51"])
+mean(zoop_dens_stand$value_max_std[
+  zoop_dens_stand$Taxon=="Rotifera" & 
+    zoop_dens_stand$Site=="51"])
 
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$site_no=="BVR_l"])
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$site_no=="BVR_50"])
+mean(zoop_dens_stand$value_max_std[zoop_dens_stand$Site=="51"])
+mean(zoop_dens_stand$value_max_std[zoop_dens_stand$Site=="50"])
 
 #day vs night differences
 #pull out hour + make separate column (20:00 to 6:00 is night)
@@ -285,14 +225,26 @@ zoop_dens_stand$hr <- hour(zoop_dens_stand$Hour)
 night <- c(21,22,23,0,1,2,3,4,5)
 
 #Night
-night_clad <- mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Cladocera_density_NopL" & zoop_dens_stand$hr %in% night])
-night_cope <- mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Copepoda_density_NopL" & zoop_dens_stand$hr %in% night])
-night_roti <- mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Rotifera_density_NopL" & zoop_dens_stand$hr %in% night])
+night_clad <- mean(zoop_dens_stand$value_max_std[
+  zoop_dens_stand$Taxon=="Cladocera" & 
+    zoop_dens_stand$hr %in% night])
+night_cope <- mean(zoop_dens_stand$value_max_std[
+  zoop_dens_stand$Taxon=="Copepoda" & 
+    zoop_dens_stand$hr %in% night])
+night_roti <- mean(zoop_dens_stand$value_max_std[
+  zoop_dens_stand$Taxon=="Rotifera" & 
+    zoop_dens_stand$hr %in% night])
 
 #Day
-day_clad <- mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Cladocera_density_NopL" & !zoop_dens_stand$hr %in% night])
-day_cope <- mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Copepoda_density_NopL" & !zoop_dens_stand$hr %in% night])
-day_roti <- mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Rotifera_density_NopL" & !zoop_dens_stand$hr %in% night])
+day_clad <-mean(zoop_dens_stand$value_max_std[
+  zoop_dens_stand$Taxon=="Cladocera" & 
+    !zoop_dens_stand$hr %in% night])
+day_cope <- mean(zoop_dens_stand$value_max_std[
+  zoop_dens_stand$Taxon=="Copepoda" & 
+    !zoop_dens_stand$hr %in% night])
+day_roti <-mean(zoop_dens_stand$value_max_std[
+  zoop_dens_stand$Taxon=="Rotifera" & 
+    !zoop_dens_stand$hr %in% night])
 
 #Percent difference
 (night_clad-day_clad)/day_clad*100
@@ -300,80 +252,26 @@ day_roti <- mean(zoop_dens_stand$value_max_std[zoop_dens_stand$metric=="Rotifera
 (night_roti-day_roti)/day_roti*100
 
 #-------------------------------------------------------------------------------------#
-# create new df for avg size
-zoop_size <- zoop %>% select(sample_ID,site_no,collect_date,Hour, which(grepl("MeanSize",colnames(zoop)))) %>%
-  group_by(sample_ID, site_no, Hour, collect_date) %>%
-  summarise_at(vars(OverallMeanSize_mm:LecaneMeanSize_mm), list(rep.mean=mean, rep.SE=stderr))
+# plot df for avg size
 
-#merge collect_date and hour in a new column
-zoop_size$datetime<- paste(zoop_size$collect_date,zoop_size$Hour,sep=" ")
-#get times into date format (character here)
-zoop_size$datetime<- format(as.POSIXct(zoop_size$datetime,format="%Y-%m-%d %H:%M"), format="%Y-%m-%d %H:%M:%S")
-#convert to posixct date format
-zoop_size$datetime<- as.POSIXct(zoop_size$datetime, format="%Y-%m-%d %H:%M")
-
-zoop_size$dates <- ifelse(zoop_size$collect_date=="2019-07-10" | zoop_size$collect_date=="2019-07-24"| 
-                            zoop_size$collect_date=="2020-08-12" | zoop_size$collect_date=="2021-06-15" |
-                            zoop_size$collect_date=="2021-07-07","2022-10-15","2022-10-16")
-
-#only select hour and then add arbitrary dates for plotting
-zoop_size$Hour <- format(zoop_size$Hour, format='%H:%M')
-
-#combine hour and date
-zoop_size$Hour <- strptime(paste0(as.character(zoop_size$dates), zoop_size$Hour),format="%Y-%m-%d %H:%M")
-zoop_size$Hour <- as.POSIXct(zoop_size$Hour)
-
-#make sure zoop_size is a dataframe
-zoop_size <- data.frame(zoop_size)
-
-#order by hour for plotting
-zoop_size <- zoop_size[order(zoop_size$Hour),]
-
-#only select epi samples for DHM plots
-zoop_size_epi <- zoop_size[grepl("epi",zoop_size$sample_ID) |grepl("sunrise",zoop_size$sample_ID) | grepl("sunset",zoop_size$sample_ID) | zoop_size$site_no=="BVR_l",]
-
-#convert new dfs from tibble to dataframe 
-zoop_size_DHM <- data.frame(zoop_size_epi)
-
-#convert df from wide to long (kinda hacky way bc having problems doing this)
-df1_size <- zoop_size_DHM %>% gather(metric,value,OverallMeanSize_mm_rep.mean:LecaneMeanSize_mm_rep.mean)
-df2_size <- zoop_size_DHM %>% gather(metric.SE,value.SE, OverallMeanSize_mm_rep.SE:LecaneMeanSize_mm_rep.SE)
-
-##cut and paste to merge df
-zoop_size_DHM_long <- df1_size[,c(1:4,31,32)]
-zoop_size_DHM_long$value.SE <- df2_size$value.SE
-
-#drop _rep.mean from all metric names
-zoop_size_DHM_long$metric <- substr(zoop_size_DHM_long$metric,1,nchar(zoop_size_DHM_long$metric)-9)
-
-#add column for MSN #
-zoop_size_DHM_long$MSN <- ifelse(zoop_size_DHM_long$collect_date=="2019-07-10" | zoop_size_DHM_long$collect_date=="2019-07-11",1,
-                            ifelse(zoop_size_DHM_long$collect_date=="2019-07-24" | zoop_size_DHM_long$collect_date=="2019-07-25",2,
-                                   ifelse(zoop_size_DHM_long$collect_date=="2020-08-12" | zoop_size_DHM_long$collect_date=="2020-08-13",3,
-                                          ifelse(zoop_size_DHM_long$collect_date=="2021-06-15" | zoop_size_DHM_long$collect_date=="2021-06-16",4,5))))
-
-#change facet labels
-size_taxa <-c("Total","Daphniidae","Copepoda","Calanoida",
-                "Cladocera", "Cyclopoida", "Rotifera", "Keratella",
-                "Kellicottia","Crustacea","Bosminidae","Nauplius","Ceriodaphnia",
-                "Daphnia", "Bosmina", "Ploima", "Gastropidae", "Collothecidae",
-                "Conochilidae", "Synchaetidae", "Trichocercidae", "Lepadella",
-                "Monostyla", "Lecane")
-names(size_taxa) <- c(unique(zoop_size_DHM_long$metric))
+#replace 0 sizes with NA (bc we do not have the data and zoops are most definitely not 0 mm long)
+zoop_DHM$MeanLength_mm_rep.mean[zoop_DHM$MeanLength_mm_rep.mean==0] <- NA
 
 #Figure S4
-ggplot(subset(zoop_size_DHM_long, metric %in% c("CladoceraMeanSize_mm","CopepodaMeanSize_mm","RotiferaMeanSize_mm")),
-       aes(Hour,value, color=as.factor(MSN))) + 
-  geom_rect(aes(xmin=as.POSIXct("2022-10-15 11:30:00"),xmax=as.POSIXct("2022-10-15 20:41:00"), 
+ggplot(subset(zoop_DHM, Taxon %in% c("Cladocera", "Copepoda", "Rotifera")),
+       aes(Hour,MeanLength_mm_rep.mean, color=as.factor(MSN))) + 
+  geom_rect(aes(xmin=as.POSIXct("2022-10-15 11:30:00"),
+                xmax=as.POSIXct("2022-10-15 20:41:00"), 
                 ymin=-Inf, ymax= Inf, fill= "Noon"),color=NA) +
-  geom_rect(aes(xmin=as.POSIXct("2022-10-15 20:42:00"),xmax=as.POSIXct("2022-10-16 06:10:00"), 
+  geom_rect(aes(xmin=as.POSIXct("2022-10-15 20:42:00"),
+                xmax=as.POSIXct("2022-10-16 06:10:00"), 
                 ymin=-Inf, ymax= Inf, fill= "Midnight"),color=NA) +
-  geom_rect(aes(xmin=as.POSIXct("2022-10-16 06:11:00"),xmax=as.POSIXct("2022-10-16 12:30:00"), 
+  geom_rect(aes(xmin=as.POSIXct("2022-10-16 06:11:00"),
+                xmax=as.POSIXct("2022-10-16 12:30:00"), 
                 ymin=-Inf, ymax= Inf, fill= "Noon"),color=NA) +
   geom_point(size=2) + theme_bw() + 
-  facet_grid(site_no~metric,scales="free_y",labeller = labeller(metric=size_taxa, site_no=sites)) + 
-  xlab("")+ 
-  coord_cartesian(clip = 'off') +
+  facet_grid(Site~Taxon,scales="free_y",labeller = labeller(Site=sites)) + 
+  xlab("")+ coord_cartesian(clip = 'off') +
   theme(text = element_text(size=8), axis.text = element_text(size=7, color="black"), 
         legend.background = element_blank(), 
         legend.key = element_blank(), 
@@ -385,13 +283,17 @@ ggplot(subset(zoop_size_DHM_long, metric %in% c("CladoceraMeanSize_mm","Copepoda
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), 
         legend.key.width =unit(0.7,"line")) + 
-  scale_x_datetime(expand = c(0,0),labels = date_format("%H-%M",tz="EST5EDT")) +
-  scale_color_manual("",values=c("#008585","#9BBAA0","#F2E2B0","#DEA868","#C7522B"), 
+  scale_x_datetime(expand = c(0,0),
+                   labels = date_format("%H-%M",tz="EST5EDT")) +
+  scale_color_manual("",
+                     values=c("#008585","#9BBAA0","#F2E2B0","#DEA868","#C7522B"), 
                      labels=c("10-11 Jul 2019","24-25 Jul 2019","12-13 Aug 2020",
-                              "15-16 Jun 2021","7-8 Jul 2021"), guide=guide_legend(order=1)) + 
-  geom_line()+ 
-  ylab("Size (mm)") + 
+                              "15-16 Jun 2021","7-8 Jul 2021"), 
+                     guide=guide_legend(order=1)) + 
+  geom_line()+ ylab("Size (mm)") + 
   scale_fill_manual("",values=c("#CCCCCC","white"), guide = "none")+
-  geom_errorbar(aes(ymin=value-value.SE, ymax=value+value.SE), width=.2,position=position_dodge(.9))
+  geom_errorbar(aes(ymin=MeanLength_mm_rep.mean-MeanLength_mm_rep.SE, 
+                    ymax=MeanLength_mm_rep.mean+MeanLength_mm_rep.SE), 
+                width=.2,position=position_dodge(.9))
 #ggsave("figures/BVR_MSNs_taxa_size.jpg", width=5, height=4) 
 
