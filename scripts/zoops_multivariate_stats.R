@@ -938,21 +938,21 @@ NMDS_day_env <- days$plot + geom_point() + theme_bw() + geom_path() +
 #ggsave("figures/NMDS_2v1_envfit.jpg", NMDS_day_env, width=3, height=4) 
 
 #------------------------------------------------------------------------------#
-#multiplot of env variable vs NMDS2 centroids for SI
+#multiplot of env variable vs NMDS1 centroids for SI
 
 #convert msn_drivers from wide to long
 msn_drivers_long <- msn_drivers %>% pivot_longer(cols = epi_temp:thermo_depth, 
                                                  names_to = "variable")
 
-#add NMDS2 col
-msn_drivers_long$NMDS2 <- ifelse(msn_drivers_long$groups==1, days$df_mean.ord$y[1],
-                          ifelse(msn_drivers_long$groups==2, days$df_mean.ord$y[2],
-                          ifelse(msn_drivers_long$groups==3, days$df_mean.ord$y[3],
-                          ifelse(msn_drivers_long$groups==4, days$df_mean.ord$y[4],
+#add NMDS1 col
+msn_drivers_long$NMDS1 <- ifelse(msn_drivers_long$groups==1, days$df_mean.ord$x[1],
+                          ifelse(msn_drivers_long$groups==2, days$df_mean.ord$x[2],
+                          ifelse(msn_drivers_long$groups==3, days$df_mean.ord$x[3],
+                          ifelse(msn_drivers_long$groups==4, days$df_mean.ord$x[4],
                                                  days$df_mean.ord$y[5]))))
 
 #multipanel plot (Figure S7)
-driver_NMDS <- ggplot(data=msn_drivers_long, aes(NMDS2, value, color=groups)) + 
+driver_NMDS <- ggplot(data=msn_drivers_long, aes(NMDS1, value, color=groups)) + 
   geom_point() + facet_wrap(~variable, scales = "free_y") + scale_color_manual(
     "",values=c("#008585","#9BBAA0","#F2E2B0","#DEA868","#C7522B"), 
        labels=c("10-11 Jul 2019","24-25 Jul 2019","12-13 Aug 2020",
@@ -970,7 +970,7 @@ driver_NMDS <- ggplot(data=msn_drivers_long, aes(NMDS2, value, color=groups)) +
                           panel.grid.major = element_blank(),
                           panel.grid.minor = element_blank(), 
                           legend.key.width =unit(0.7,"line"))
-#ggsave("figures/driver_vs_NMDS2.jpg", driver_NMDS, width=3, height=3) 
+#ggsave("figures/driver_vs_NMDS1.jpg", driver_NMDS, width=3, height=3) 
 
 #-----------------------------------------------------------------------------------------------
 #migration metrics across taxa vs dispersion to better link migration and variability (Fig. S10)
