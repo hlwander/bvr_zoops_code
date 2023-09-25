@@ -4,7 +4,7 @@
 
 #######################START OF READING IN DATA#######################################
 #Load packages and functions
-source("scripts/install.R")
+source("scripts/01_install.R")
 
 #Read in the csv file that contains all the taxa from the zooplankton key that we use
 #http://cfb.unh.edu/cfbkey/html/index.html

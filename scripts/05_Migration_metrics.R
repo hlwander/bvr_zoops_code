@@ -1,7 +1,7 @@
 #Script to calculate DVM and DHM metrics
 #Created 5Dec2022
 
-source("scripts/install.R")
+source("scripts/01_install.R")
 
 #read in DHM csv
 all_DHM <- read.csv("output/All_MSN_tows_DHM.csv")
@@ -308,8 +308,6 @@ geom_text(aes(x=5.9, y=c(rep(0,28),0.4,-0.4), label=c(rep(NA,28),"Typical \nMigr
 #-------------------------------------------------------------------------------
 #create df with proportion of total zoops (both density and biomass) over time
 
-library(plyr)
-
 #now calculate the proportion in each habitat
 Hourly_prop <- plyr::ddply(all_DHM, c("Taxon", "MSN", "time","DateTime"), function(x) {
   data.frame(
@@ -320,5 +318,3 @@ Hourly_prop <- plyr::ddply(all_DHM, c("Taxon", "MSN", "time","DateTime"), functi
 
 #export proportion df
 #write.csv(Hourly_prop,"output/Hourly_proportions_pelvslit.csv",row.names = FALSE)
-
-detach('package:plyr')

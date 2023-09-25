@@ -7,7 +7,7 @@
     #samples collected from at noon (x1), midnight (x1), sunset (x4), and sunrise (x4)
 
 #Load packages and functions
-source("scripts/install.R")
+source("scripts/01_install.R")
 
 #list of years to loop through
 year <- c(2019, 2020, 2021)

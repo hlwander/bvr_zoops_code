@@ -1,6 +1,6 @@
 #script for getting all summary files into EDI format
 
-source("scripts/install.R")
+source("scripts/01_install.R")
 
 #read in zoop data from all 3 years
 zoops2019<- read.csv('output/FCR_ZooplanktonSummary2019.csv',header = TRUE)

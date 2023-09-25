@@ -1,7 +1,7 @@
 #script for calculating zooplankton net efficiency in Beaverdam Reservoir
 
 #Load packages and functions
-source("scripts/install.R")
+source("scripts/01_install.R")
 
 #only want 2020-2022 bc those are only years with paired schindler and net tows
 zoop20<- read.csv('output/FCR_ZooplanktonSummary2020.csv',

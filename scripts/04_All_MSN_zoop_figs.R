@@ -1,7 +1,7 @@
 #Zoop density change over 24hrs for all 5 MSNs
 #created 16 Oct 2022
 
-source("scripts/install.R")
+source("scripts/01_install.R")
 
 #get date into posixct format
 zoop_summary$DateTime <- as.POSIXct(zoop_summary$DateTime, 
@@ -188,11 +188,11 @@ mean(zoop_dens_stand$value_max_std[zoop_dens_stand$Taxon=="Cladocera"])
 mean(zoop_dens_stand$value_max_std[zoop_dens_stand$Taxon=="Copepoda"])
 mean(zoop_dens_stand$value_max_std[zoop_dens_stand$Taxon=="Rotifera"])
 
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==1])
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==2])
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==3])
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==4])
-mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==5])
+mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==1]) #10-11 Jul 2019
+mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==2]) #24-25 Jul 2019
+mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==3]) #12-13 Aug 2020
+mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==4]) #15-16 Jun 2021
+mean(zoop_dens_stand$value_max_std[zoop_dens_stand$MSN==5]) #7-8 Jul 2021
 
 mean(zoop_dens_stand$value_max_std[
   zoop_dens_stand$Taxon=="Cladocera" & 
@@ -224,25 +224,32 @@ zoop_dens_stand$hr <- hour(zoop_dens_stand$Hour)
 #list of night hours
 night <- c(21,22,23,0,1,2,3,4,5)
 
-mean(zoop_dens_stand$value_max_std[
-  zoop_dens_stand$Taxon=="Cladocera" & 
-    zoop_dens_stand$hr %in% night])
-mean(zoop_dens_stand$value_max_std[
-  zoop_dens_stand$Taxon=="Copepoda" & 
-    zoop_dens_stand$hr %in% night])
-mean(zoop_dens_stand$value_max_std[
-  zoop_dens_stand$Taxon=="Rotifera" & 
-    zoop_dens_stand$hr %in% night])
+#night
+night_clad <- mean(zoop_dens_stand$value_max_std[
+                   zoop_dens_stand$Taxon=="Cladocera" & 
+                   zoop_dens_stand$hr %in% night])
+night_cope <- mean(zoop_dens_stand$value_max_std[
+                   zoop_dens_stand$Taxon=="Copepoda" & 
+                   zoop_dens_stand$hr %in% night])
+night_roti <- mean(zoop_dens_stand$value_max_std[
+                   zoop_dens_stand$Taxon=="Rotifera" & 
+                   zoop_dens_stand$hr %in% night])
 
-mean(zoop_dens_stand$value_max_std[
-  zoop_dens_stand$Taxon=="Cladocera" & 
-    !zoop_dens_stand$hr %in% night])
-mean(zoop_dens_stand$value_max_std[
-  zoop_dens_stand$Taxon=="Copepoda" & 
-    !zoop_dens_stand$hr %in% night])
-mean(zoop_dens_stand$value_max_std[
-  zoop_dens_stand$Taxon=="Rotifera" & 
-    !zoop_dens_stand$hr %in% night])
+#day
+day_clad <- mean(zoop_dens_stand$value_max_std[
+                 zoop_dens_stand$Taxon=="Cladocera" & 
+                !zoop_dens_stand$hr %in% night])
+day_cope <- mean(zoop_dens_stand$value_max_std[
+                 zoop_dens_stand$Taxon=="Copepoda" & 
+                !zoop_dens_stand$hr %in% night])
+day_roti <- mean(zoop_dens_stand$value_max_std[
+                 zoop_dens_stand$Taxon=="Rotifera" & 
+                !zoop_dens_stand$hr %in% night])
+
+#Percent difference
+(night_clad-day_clad) / ((night_clad + day_clad) / 2) * 100
+(night_cope-day_cope) / ((night_cope + day_cope) / 2) * 100
+(night_roti-day_roti) / ((night_roti + day_roti) / 2) * 100
 
 #-------------------------------------------------------------------------------------#
 # plot df for avg size
@@ -263,7 +270,9 @@ ggplot(subset(zoop_DHM, Taxon %in% c("Cladocera", "Copepoda", "Rotifera")),
                 xmax=as.POSIXct("2022-10-16 12:30:00"), 
                 ymin=-Inf, ymax= Inf, fill= "Noon"),color=NA) +
   geom_point(size=2) + theme_bw() + 
-  facet_grid(Site~Taxon,scales="free_y",labeller = labeller(Site=sites)) + 
+  ggh4x::facet_grid2(vars(Site), vars(Taxon), 
+                     scales = "free_y", independent = "y",
+                     labeller = labeller(Site=sites)) +
   xlab("")+ coord_cartesian(clip = 'off') +
   theme(text = element_text(size=8), axis.text = element_text(size=7, color="black"), 
         legend.background = element_blank(), 
@@ -271,7 +280,7 @@ ggplot(subset(zoop_DHM, Taxon %in% c("Cladocera", "Copepoda", "Rotifera")),
         legend.key.height=unit(0.3,"line"), 
         axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), 
         strip.background = element_rect(fill = "transparent"), 
-        legend.position = c(0.9,0.95), 
+        legend.position = c(0.9,0.43), 
         legend.spacing = unit(-0.5, 'cm'),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), 

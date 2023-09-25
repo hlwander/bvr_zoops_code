@@ -1,7 +1,7 @@
 #multivariate stats for 2019 - 2021 zoop data
 #created 25Nov2021
 
-source("scripts/install.R")
+source("scripts/01_install.R")
 
 #select density cols to keep
 zoop_summary <- zoop_summary |>  
@@ -159,7 +159,8 @@ NMDS_site <- sites$plot + geom_point() + theme_bw() +
   geom_polygon(data = sites$df_hull, aes(x = x, y = y, fill = Group), alpha=0.2) +
   geom_point(data=sites$df_mean.ord, aes(x, y), 
              color="black", pch=21, size=2, fill=c("#882255","#3399CC")) +
-  theme(text = element_text(size=7), axis.text = element_text(size=7, color="black"), 
+  theme(text = element_text(size=7), 
+        axis.text = element_text(size=7, color="black"), 
         legend.background = element_blank(), 
         legend.key.height=unit(0.3,"line"),
         legend.key = element_blank(),
@@ -187,7 +188,8 @@ NMDS_day <- days$plot + geom_point() + theme_bw() + geom_path() + ylab(NULL) +
   geom_point(data=days$df_mean.ord, aes(x, y), 
              color="black", pch=21, size=2, 
              fill=c("#008585","#89B199","#EFECBF","#DB9B5A","#C7522B")) +
-  theme(text = element_text(size=7), axis.text = element_text(size=7, color="black"), 
+  theme(text = element_text(size=7), 
+        axis.text = element_text(size=7, color="black"), 
         legend.background = element_blank(), 
         legend.key.height=unit(0.3,"line"), 
         legend.key = element_blank(),
@@ -222,7 +224,8 @@ NMDS_hour <- hours$plot + geom_point() + theme_bw() + geom_path() + ylab(NULL) +
   geom_polygon(data = hours$df_hull, aes(x = x, y = y, fill = Group), alpha=0.2) +
   geom_point(data=hours$df_mean.ord, aes(x, y), 
              color="black", pch=21, size=2, fill=hcl.colors(11,"sunset")) +
-  theme(text = element_text(size=7), axis.text = element_text(size=7, color="black"), 
+  theme(text = element_text(size=7), 
+        axis.text = element_text(size=7, color="black"), 
         legend.background = element_blank(), 
         legend.key.height=unit(0.3,"line"), 
         legend.key = element_blank(),

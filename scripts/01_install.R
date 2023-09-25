@@ -5,12 +5,14 @@ library(pacman)
 
 if (!require('ggordiplots')) remotes::install_github("jfq3/ggordiplots")
 
+install.packages("ggh4x")
+
 #read in libraries
 pacman::p_load(dplyr, vegan, labdsv, goeveg, rLakeAnalyzer, 
                ggplot2,tidyr,lubridate, scales, colorblindcheck, 
                viridis, RColorBrewer, plotrix, BiocManager, ggpubr,
                remotes, egg, splancs, FSA, rcompanion, ggrepel,
-               ggordiplots)
+               ggordiplots, ggh4x)
 
 #------------------------------------------------------------------#
 #functions
