@@ -713,8 +713,6 @@ ctd<- ctd |>
                            as.Date("2021-07-07"), 
                            as.Date("2021-07-08"), as.Date("2021-07-12"))) #ctd cast from 4 days after MSN 5
 
-library(plyr)
-
 #select every 0.5m from casts
 ctd_final_temp <- ctd |>
   dplyr::mutate(rdepth = plyr::round_any(Depth_m, 0.5)) |>
@@ -730,8 +728,6 @@ ctd_final_DO <- ctd |>
   dplyr::rename(depth = rdepth) |>
   dplyr::group_by(Reservoir,Site, DateTime) |>
   dplyr::mutate(oxy = min(depth[value<=2], na.rm=TRUE))
-
-detach('package:plyr')
 
 depths <- ctd_final_DO$oxy[(ctd_final_DO$DateTime=="2019-07-10" | 
                               ctd_final_DO$DateTime=="2019-07-24" |
@@ -823,53 +819,53 @@ migration_metrics <- read.csv("output/migration_metrics.csv",header=T)
 
 #make an environmental driver df
 msn_drivers <- data.frame("groups" = as.character(1:5), #epi is 0.1m, hypo is 10m - avg for both noons of msn when available
-     "epi_temp" = c(ctd.final_avg$Temp_C_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==1],
+     "epilimnetic_temperature" = c(ctd.final_avg$Temp_C_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==1],
                     ctd.final_avg$Temp_C_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==2],
                     ctd.final_avg$Temp_C_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==3],
                     ctd.final_avg$Temp_C_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==4],
                     ctd.final_avg$Temp_C_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==5]), 
-     "hypo_temp" = c(ctd.final_avg$Temp_C_1[ctd.final_avg$Depth_m==10 & ctd.final_avg$msn==1],
+     "hypolimnetic_temperature" = c(ctd.final_avg$Temp_C_1[ctd.final_avg$Depth_m==10 & ctd.final_avg$msn==1],
                      ctd.final_avg$Temp_C_1[ctd.final_avg$Depth_m==10 & ctd.final_avg$msn==2],
                      ctd.final_avg$Temp_C_1[ctd.final_avg$Depth_m==10 & ctd.final_avg$msn==3],
                      ctd.final_avg$Temp_C_1[ctd.final_avg$Depth_m==10 & ctd.final_avg$msn==4],
                      ctd.final_avg$Temp_C_1[ctd.final_avg$Depth_m==10 & ctd.final_avg$msn==5]),
-     "epi_spcond" = c(ctd.final_avg$SpCond_uScm_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==1],
+     "epilimnetic_sp_cond" = c(ctd.final_avg$SpCond_uScm_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==1],
                       ctd.final_avg$SpCond_uScm_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==2],
                       ctd.final_avg$SpCond_uScm_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==3],
                       ctd.final_avg$SpCond_uScm_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==4],
                       ctd.final_avg$SpCond_uScm_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==5]),
-     "hypo_spcond" = c(ctd.final_avg$SpCond_uScm_1[ctd.final_avg$Depth_m==10 & ctd.final_avg$msn==1],
+     "hypolimnetic_sp_cond" = c(ctd.final_avg$SpCond_uScm_1[ctd.final_avg$Depth_m==10 & ctd.final_avg$msn==1],
                        ctd.final_avg$SpCond_uScm_1[ctd.final_avg$Depth_m==10 & ctd.final_avg$msn==2],
                        ctd.final_avg$SpCond_uScm_1[ctd.final_avg$Depth_m==10 & ctd.final_avg$msn==3],
                        ctd.final_avg$SpCond_uScm_1[ctd.final_avg$Depth_m==10 & ctd.final_avg$msn==4],
                        ctd.final_avg$SpCond_uScm_1[ctd.final_avg$Depth_m==10 & ctd.final_avg$msn==5]),
-     "epi_chl" = c(ctd.final_avg$Chla_ugL_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==1],
+     "epilimnetic_chlorophyll" = c(ctd.final_avg$Chla_ugL_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==1],
                    ctd.final_avg$Chla_ugL_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==2],
                    ctd.final_avg$Chla_ugL_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==3],
                    ctd.final_avg$Chla_ugL_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==4],
                    ctd.final_avg$Chla_ugL_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==5]),
-     "hypo_chl" = c(ctd.final_avg$Chla_ugL_1[ctd.final_avg$Depth_m==10 & ctd.final_avg$msn==1],
+     "hypolimnetic_chlorophyll" = c(ctd.final_avg$Chla_ugL_1[ctd.final_avg$Depth_m==10 & ctd.final_avg$msn==1],
                     ctd.final_avg$Chla_ugL_1[ctd.final_avg$Depth_m==10 & ctd.final_avg$msn==2],
                     ctd.final_avg$Chla_ugL_1[ctd.final_avg$Depth_m==10 & ctd.final_avg$msn==3],
                     ctd.final_avg$Chla_ugL_1[ctd.final_avg$Depth_m==10 & ctd.final_avg$msn==4],
                     ctd.final_avg$Chla_ugL_1[ctd.final_avg$Depth_m==10 & ctd.final_avg$msn==5]),
-     "epi_par" = c(ctd.final_avg$PAR_umolm2s_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==1],
+     "epilimnetic_PAR" = c(ctd.final_avg$PAR_umolm2s_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==1],
                    ctd.final_avg$PAR_umolm2s_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==2],
                    ctd.final_avg$PAR_umolm2s_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==3],
                    ctd.final_avg$PAR_umolm2s_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==4],
                    ctd.final_avg$PAR_umolm2s_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==5]),
-     "epi_tn" = c(chem_avg$TN_ugL_1[chem_avg$Depth_m==0.1 & chem_avg$msn==1],
+     "epilimnetic_TN" = c(chem_avg$TN_ugL_1[chem_avg$Depth_m==0.1 & chem_avg$msn==1],
                   chem_avg$TN_ugL_1[chem_avg$Depth_m==0.1 & chem_avg$msn==2],
                   chem_avg$TN_ugL_1[chem_avg$Depth_m==0.1 & chem_avg$msn==3],
                   chem_avg$TN_ugL_1[chem_avg$Depth_m==0.1 & chem_avg$msn==4],
                   chem_avg$TN_ugL_1[chem_avg$Depth_m==0.1 & chem_avg$msn==5]), 
-     "epi_tp" = c(chem_avg$TP_ugL_1[chem_avg$Depth_m==0.1 & chem_avg$msn==1],
+     "epilimnetic_TP" = c(chem_avg$TP_ugL_1[chem_avg$Depth_m==0.1 & chem_avg$msn==1],
                   chem_avg$TP_ugL_1[chem_avg$Depth_m==0.1 & chem_avg$msn==2],
                   chem_avg$TP_ugL_1[chem_avg$Depth_m==0.1 & chem_avg$msn==3],
                   chem_avg$TP_ugL_1[chem_avg$Depth_m==0.1 & chem_avg$msn==4],
                   chem_avg$TP_ugL_1[chem_avg$Depth_m==0.1 & chem_avg$msn==5]), 
-     "secchi" = as.numeric(secchi$Secchi_m),
-     "thermo_depth" = c(mean(ctd_thermo_depth$therm_depth[ctd_thermo_depth$msn==1]),
+     "Secchi" = as.numeric(secchi$Secchi_m),
+     "thermocline_depth" = c(mean(ctd_thermo_depth$therm_depth[ctd_thermo_depth$msn==1]),
                        mean(ctd_thermo_depth$therm_depth[ctd_thermo_depth$msn==2]),
                        mean(ctd_thermo_depth$therm_depth[ctd_thermo_depth$msn==3]),
                        mean(ctd_thermo_depth$therm_depth[ctd_thermo_depth$msn==4]),
@@ -916,7 +912,7 @@ NMDS_day_env <- days$plot + geom_point() + theme_bw() + geom_path() +
   geom_point(data=days$df_mean.ord, aes(x, y), 
              color="black", pch=21, size=2, 
              fill=c("#008585","#89B199","#EFECBF","#DB9B5A","#C7522B")) +
-  theme(text = element_text(size=7), axis.text = element_text(size=7, color="black"), 
+  theme(text = element_text(size=6), axis.text = element_text(size=6, color="black"), 
         legend.background = element_blank(), 
         legend.key.height=unit(0.3,"line"), 
         legend.key = element_blank(),
@@ -937,8 +933,46 @@ NMDS_day_env <- days$plot + geom_point() + theme_bw() + geom_path() +
   geom_segment(data = scores,
               aes(x = 0, xend = NMDS1, y = 0, yend = NMDS2), linewidth= 0.3,
               arrow = arrow(length = unit(0.1, "cm")), colour = "black") +
-  geom_text_repel(data=scores, aes(x = NMDS1, y = NMDS2, label = env), size=2)
-#ggsave("figures/NMDS_2v1_envfit.jpg", NMDS_day_env, width=3, height=4) 
+  #2 vs. 1
+  #annotate(geom="text", x=0.03, y=0.9, label="hypolimnetic sp. cond.", size=1.5) +
+  #annotate(geom="text", x=0.09, y=0.8, label="epilimnetic chl.", size=1.5) +
+  #annotate(geom="text", x=0.68, y=0.85, label="epilimnetic sp. cond.", size=1.5) +
+  #annotate(geom="text", x=-0.8, y=0.14, label="Secchi", size=1.5) +
+  #annotate(geom="text", x=-0.8, y=0.01, label="thermocline depth", size=1.5) +
+  #annotate(geom="text", x=0.7, y=0.26, label="epilimnetic PAR", size=1.5) +
+  #annotate(geom="text", x=0.8, y=0.1, label="epilimnetic temp.", size=1.5) +
+  #annotate(geom="text", x=0.8, y=0.01, label="hypolimnetic chl.", size=1.5) +
+  #annotate(geom="text", x=0.88, y=-0.09, label="hypolimnetic temp.", size=1.5) +
+  #annotate(geom="text", x=0.75, y=-0.18, label="epilimnetic TN", size=1.5) +
+  #annotate(geom="text", x=0.7, y=-0.23, label="epilimnetic TP", size=1.5)
+  
+  #3 vs. 1
+  #annotate(geom="text", x=-0.7, y=0.07, label="thermocline depth", size=1.5) +
+  #annotate(geom="text", x=-0.6, y=-0.17, label="Secchi", size=1.5) +
+  #annotate(geom="text", x=0.4, y=0.52, label="epilimnetic sp. cond.", size=1.5) +
+  #annotate(geom="text", x=0.7, y=0.36, label="epilimnetic temp.", size=1.5) +
+  #annotate(geom="text", x=0.8, y=0.22, label="epilimnetic chl.", size=1.5) +
+  #annotate(geom="text", x=0.77, y=0.16, label="epilimnetic TN", size=1.5) +
+  #annotate(geom="text", x=0.85, y=0.08, label="epilimnetic TP", size=1.5) +
+  #annotate(geom="text", x=0.8, y=0.04, label="hypolimnetic chl.", size=1.5) +
+  #annotate(geom="text", x=0.7, y=-0.03, label="hypolimnetic temp.", size=1.5) +
+  #annotate(geom="text", x=0.85, y=-0.06, label="hypolimnetic sp. cond.", size=1.5) +
+  #annotate(geom="text", x=0.8, y=-0.15, label="epilimnetic PAR", size=1.5) 
+
+  #4 vs. 1
+  #annotate(geom="text", x=-0.8, y=0.18, label="Secchi", size=1.5) +
+  #annotate(geom="text", x=-0.8, y=0.06, label="thermocline depth", size=1.5) +
+  #annotate(geom="text", x=0.65, y=0.14, label="epilimnetic temp.", size=1.5) +
+  #annotate(geom="text", x=0.8, y=0.24, label="hypolimnetic chl.", size=1.5) +
+  #geom_segment(aes(x=0.93, y=0.22, xend=0.93, yend=0.09), lwd=0.2) +
+  #annotate(geom="text", x=0.85, y=0.05, label="epilimnetic TP", size=1.5) +
+  #annotate(geom="text", x=0.87, y=-0.01, label="hypolimnetic temp.", size=1.5) +
+  #annotate(geom="text", x=0.84, y=-0.09, label="epilimnetic TN", size=1.5) +
+  #annotate(geom="text", x=0.7, y=-0.22, label="epilimnetic PAR", size=1.5) +
+  #annotate(geom="text", x=0.79, y=-0.4, label="epilimnetic sp. cond.", size=1.5) +
+  #annotate(geom="text", x=0.82, y=-0.5, label="hypolimnetic sp. cond.", size=1.5) +
+  #annotate(geom="text", x=0.29, y=-0.5, label="epilimnetic chl.", size=1.5) 
+#ggsave("figures/NMDS_2v1_envfit.jpg", NMDS_day_env, width=3, height=2) 
 
 #------------------------------------------------------------------------------#
 #multiplot of env variable vs NMDS1 centroids for SI
