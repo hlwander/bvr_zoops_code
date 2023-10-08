@@ -251,8 +251,8 @@ migration_long$SE <- metrics_se$value
 
 #-------------------------------------------------------------------------------#
 #change facet labels
-metric_taxa <-c("cladocera","cladocera","copepoda",
-                "copepoda","rotifera","rotifera")
+metric_taxa <-c("cladocerans","cladocerans","copepods",
+                "copepods","rotifers","rotifers")
 names(metric_taxa) <- c(unique(migration_long$metric))
 
 #plot migration metrics --> Figure 9

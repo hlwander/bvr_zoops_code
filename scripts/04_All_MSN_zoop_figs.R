@@ -100,6 +100,10 @@ zoop_DHM$MSN <- ifelse(zoop_DHM$date=="2019-07-10" |
 sites <- c("Pelagic","Littoral")
 names(sites) <- c(50, 51)
 
+#rename taxon
+taxon <- c("cladocerans","copepods", "rotifers")
+names(taxon) <- unique(zoop_dens_stand$Taxon)
+
 #------------------------------------------------------------------------------#
 #Figure for zoop density for each MSN 24-hours --> Figure S4
 ggplot(subset(zoop_DHM, Taxon %in% c("Cladocera",
@@ -115,7 +119,7 @@ ggplot(subset(zoop_DHM, Taxon %in% c("Cladocera",
                 xmax=as.POSIXct("2022-10-16 12:30:00"), 
                 ymin=-Inf, ymax= Inf, fill= "Noon"),color=NA) +
   geom_point(size=2) + theme_bw() + facet_grid(Site~Taxon,scales="free_y",
-                labeller = labeller(Site=sites)) + 
+                labeller = labeller(Site=sites, Taxon=taxon)) + 
   xlab("")+ coord_cartesian(clip = 'off') +
   theme(text = element_text(size=8), 
         axis.text = element_text(size=7, color="black"), 
@@ -148,6 +152,10 @@ zoop_dens_stand <- zoop_dens_stand %>% group_by(Taxon) %>%
   mutate(value_max_std = Density_IndPerL_rep.mean / 
            max(Density_IndPerL_rep.mean))
 
+#rename taxon
+taxon <- c("cladocerans","copepods", "rotifers")
+names(taxon) <- unique(zoop_dens_stand$Taxon)
+
 #Manuscript Figure 4
 ggplot(zoop_dens_stand, aes(Hour,value_max_std, color=as.factor(MSN))) + 
   geom_rect(aes(xmin=as.POSIXct("2022-10-15 11:30:00"),
@@ -160,7 +168,7 @@ ggplot(zoop_dens_stand, aes(Hour,value_max_std, color=as.factor(MSN))) +
                 xmax=as.POSIXct("2022-10-16 12:30:00"), 
                 ymin=-Inf, ymax= Inf, fill= "Noon"),color=NA) +
   geom_point(size=2) + theme_bw() + facet_grid(Site~Taxon,scales="free_y",
-                      labeller = labeller(Site=sites)) +
+                      labeller = labeller(Site=sites, Taxon=taxon)) +
   xlab("Hour")+ coord_cartesian(clip = 'off') +
   theme(text = element_text(size=8), axis.text = element_text(size=7, color="black"), 
         legend.background = element_blank(), 
@@ -257,6 +265,10 @@ day_roti <- mean(zoop_dens_stand$value_max_std[
 #replace 0 sizes with NA (bc we do not have the data and zoops are most definitely not 0 mm long)
 zoop_DHM$MeanLength_mm_rep.mean[zoop_DHM$MeanLength_mm_rep.mean==0] <- NA
 
+#rename taxon
+taxon <- c("cladocerans","copepods", "rotifers")
+names(taxon) <- unique(zoop_dens_stand$Taxon)
+
 #Figure S4
 ggplot(subset(zoop_DHM, Taxon %in% c("Cladocera", "Copepoda", "Rotifera")),
        aes(Hour,MeanLength_mm_rep.mean, color=as.factor(MSN))) + 
@@ -272,7 +284,7 @@ ggplot(subset(zoop_DHM, Taxon %in% c("Cladocera", "Copepoda", "Rotifera")),
   geom_point(size=2) + theme_bw() + 
   ggh4x::facet_grid2(vars(Site), vars(Taxon), 
                      scales = "free_y", independent = "y",
-                     labeller = labeller(Site=sites)) +
+                     labeller = labeller(Site=sites, Taxon=taxon)) +
   xlab("")+ coord_cartesian(clip = 'off') +
   theme(text = element_text(size=8), axis.text = element_text(size=7, color="black"), 
         legend.background = element_blank(), 
