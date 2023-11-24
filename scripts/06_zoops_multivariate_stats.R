@@ -252,24 +252,6 @@ fig5 <- egg::ggarrange(NMDS_site, NMDS_day, NMDS_hour, nrow=1)
 #ggsave("figures/NMDS_multipanel_2v1.jpg",fig5, width=5, height=3.5) 
 
 #-------------------------------------------------------------------------------#
-#track hours for each campaign
-ord <- ordiplot(NMDS_temporal_avg_bray,display = c('sites','species'),
-                choices = c(1,2),type = "n")
-ordihull(ord, zoop_avg$groups, display = "sites", draw = c("polygon"),
-         col = c("#008585","#89B199","#EFECBF","#DB9B5A","#C7522B"), 
-         alpha = 75,cex = 2)
-lines(NMDS_temporal_avg_bray$points[zoop_avg$groups=="3"  & 
-                                      zoop_avg$site=="lit" ,1], 
-      NMDS_temporal_avg_bray$points[(zoop_avg$groups=="3" & 
-                                       zoop_avg$site=="lit"),2], col="#EFECBF")
-
-points(NMDS_temporal_avg_bray$points[(zoop_avg$groups=="3" & 
-                                        zoop_avg$site=="lit"),1], 
-       NMDS_temporal_avg_bray$points[(zoop_avg$groups=="3" & 
-                                        zoop_avg$site=="lit"),2], 
-       pch=as.character(zoop_avg$order),col="#EFECBF")
-
-#-------------------------------------------------------------------------------#
 #                     Calculating euclidean distance                            #
 #-------------------------------------------------------------------------------#
 #step 1: use Euclidean distance matrix from transformed community data (zoop_euc)
@@ -569,52 +551,20 @@ kw_results_disp <- data.frame("Group" = c("Littoral", "Pelagic", "10-11 Jul 2019
 #------------------------------------------------------------------------------#
 #pull in driver data --> can't use ysi or fp because only have 2 or 3 casts out of 5
 
+msn_dates <- c("2019-07-10", "2019-07-11", "2019-07-24",
+               "2019-07-25", "2020-08-12", "2020-08-13",
+               "2021-06-15", "2021-06-16", "2021-07-07", 
+               "2021-07-08")
+
 #chem
 inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/199/11/509f39850b6f95628d10889d66885b76" 
 infile1 <- tempfile()
 try(download.file(inUrl1,infile1, timeout = max(300, getOption("timeout"))))
 
-chem <-read.csv(infile1,header=F 
-               ,skip=1
-               ,sep=","  
-               , col.names=c(
-                 "Reservoir",     
-                 "Site",     
-                 "DateTime",     
-                 "Depth_m",     
-                 "Rep",     
-                 "TN_ugL",     
-                 "TP_ugL",     
-                 "NH4_ugL",     
-                 "NO3NO2_ugL",     
-                 "SRP_ugL",     
-                 "DOC_mgL",     
-                 "DIC_mgL",     
-                 "DC_mgL",     
-                 "DN_mgL",     
-                 "Flag_DateTime",     
-                 "Flag_TN_ugL",     
-                 "Flag_TP_ugL",     
-                 "Flag_NH4_ugL",     
-                 "Flag_NO3NO2_ugL",     
-                 "Flag_SRP_ugL",     
-                 "Flag_DOC_mgL",     
-                 "Flag_DIC_mgL",     
-                 "Flag_DC_mgL",     
-                 "Flag_DN_mgL"    ), check.names=TRUE)
-
-unlink(infile1)
-
-chem <- chem |>
+chem <-read.csv(infile1,header=T) |>
   mutate(DateTime = as.Date(DateTime)) |>
   filter(Reservoir =="BVR" & Site==50 & 
-           DateTime %in% c(as.Date("2019-07-10"), as.Date("2019-07-11"), 
-                           as.Date("2019-07-24"),
-                           as.Date("2019-07-25"), as.Date("2020-08-12"), 
-                           as.Date("2020-08-13"),
-                           as.Date("2021-06-15"), as.Date("2021-06-16"), 
-                           as.Date("2021-07-07"), 
-                           as.Date("2021-07-08"))) #can only do TN/TP for all 5 MSNs
+           DateTime %in% c(msn_dates)) #can only do TN/TP for all 5 MSNs
 
 #add msn #
 chem$msn <- ifelse(chem$DateTime=="2019-07-10" | chem$DateTime=="2019-07-11","1",
@@ -626,7 +576,7 @@ chem$msn <- ifelse(chem$DateTime=="2019-07-10" | chem$DateTime=="2019-07-11","1"
                                                chem$DateTime=="2021-06-16","4","5"))))
 
 #average across msn and depth
-chem_avg <- chem %>% group_by(Reservoir, Depth_m, msn) %>% 
+chem_avg <- chem |> group_by(Reservoir, Depth_m, msn) |>  
   summarise(across(everything(), list(mean)))
 
 #--------------------------------------#
@@ -635,29 +585,10 @@ inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/198/11/81f396b3e910d3
 infile1 <- tempfile()
 try(download.file(inUrl1,infile1,timeout = max(300, getOption("timeout"))))
 
-secchi <-read.csv(infile1,header=F 
-               ,skip=1
-               ,sep=","  
-               , col.names=c(
-                 "Reservoir",     
-                 "Site",     
-                 "DateTime",     
-                 "Secchi_m",     
-                 "Flag_DateTime",     
-                 "Flag_Secchi_m"    ), check.names=TRUE)
-
-unlink(infile1)
-
-secchi <- secchi |>
+secchi <-read.csv(infile1,header=T) |>
   mutate(DateTime = as.Date(DateTime)) |>
   filter(Reservoir =="BVR" & Site==50 & 
-           DateTime %in% c(as.Date("2019-07-10"), as.Date("2019-07-11"), 
-                           as.Date("2019-07-24"),
-                           as.Date("2019-07-25"), as.Date("2020-08-12"), 
-                           as.Date("2020-08-13"),
-                           as.Date("2021-06-15"), as.Date("2021-06-16"), 
-                           as.Date("2021-07-07"), 
-                           as.Date("2021-07-08"))) #can only do TN/TP for all 5 MSNs
+           DateTime %in% c(msn_dates)) #can only do TN/TP for all 5 MSNs
 
 #add secchi for 5th MSN - 1.8m
 secchi[5,] <- c("BVR",50,"2021-07-08",1.8,0,0)
@@ -668,50 +599,10 @@ inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/200/13/27ceda6bc7fdec
 infile1 <- tempfile()
 try(download.file(inUrl1,infile1, timeout = max(300, getOption("timeout"))))
 
-ctd <-read.csv(infile1,header=F 
-               ,skip=1
-               ,sep=","  
-               , col.names=c(
-                 "Reservoir",     
-                 "Site",     
-                 "DateTime",     
-                 "Depth_m",     
-                 "Temp_C",     
-                 "DO_mgL",     
-                 "DOsat_percent",     
-                 "Cond_uScm",     
-                 "SpCond_uScm",     
-                 "Chla_ugL",     
-                 "Turbidity_NTU",     
-                 "pH",     
-                 "ORP_mV",     
-                 "PAR_umolm2s",     
-                 "DescRate_ms",     
-                 "Flag_DateTime",     
-                 "Flag_Temp_C",     
-                 "Flag_DO_mgL",     
-                 "Flag_DOsat_percent",     
-                 "Flag_Cond_uScm",     
-                 "Flag_SpCond_uScm",     
-                 "Flag_Chla_ugL",     
-                 "Flag_Turbidity_NTU",     
-                 "Flag_pH",     
-                 "Flag_ORP_mV",     
-                 "Flag_PAR_umolm2s",     
-                 "Flag_DescRate_ms"    ), check.names=TRUE)
-
-unlink(infile1)
-
-ctd<- ctd |>
-  mutate(DateTime = as.Date(DateTime)) |>
-  filter(Reservoir =="BVR" & 
-           DateTime %in% c(as.Date("2019-07-10"), as.Date("2019-07-11"), 
-                           as.Date("2019-07-24"),
-                           as.Date("2019-07-25"), as.Date("2020-08-12"), 
-                           as.Date("2020-08-13"),
-                           as.Date("2021-06-15"), as.Date("2021-06-16"), 
-                           as.Date("2021-07-07"), 
-                           as.Date("2021-07-08"), as.Date("2021-07-12"))) #ctd cast from 4 days after MSN 5
+ctd <-read.csv(infile1,header=T) |>
+  dplyr::mutate(DateTime = as.Date(DateTime)) |>
+  dplyr::filter(Reservoir =="BVR" & Depth_m >0 &
+           DateTime %in% c(msn_dates, "2021-07-12")) #ctd cast from 4 days after MSN 5
 
 #select every 0.5m from casts
 ctd_final_temp <- ctd |>
@@ -737,7 +628,6 @@ depths <- ctd_final_DO$oxy[(ctd_final_DO$DateTime=="2019-07-10" |
                               ctd_final_DO$Reservoir=="BVR" & 
                               ctd_final_DO$Site==50 & ctd_final_DO$depth>0]
 
-
 #oxygen plots for all 5 MSNs (Figure S1)
 ggplot(subset(ctd_final_DO, depth > 0 & Reservoir=="BVR" & Site==50 & 
                 DateTime %in% c(as.Date("2019-07-10"), as.Date("2019-07-24"),
@@ -761,11 +651,9 @@ ggplot(subset(ctd_final_DO, depth > 0 & Reservoir=="BVR" & Site==50 &
 
 #calculate thermocline depth and oxycline depth by date
 ctd_thermo_depth <- ctd_final_temp |> group_by(DateTime) |> 
-  filter(depth > 0) |>
   mutate(therm_depth = thermo.depth(value,depth))
 
 ctd_oxy_depth <- ctd_final_DO %>% group_by(DateTime) |>
-  filter(depth > 0) |>
   mutate(oxy_depth = thermo.depth(value,depth))
 
 #add msn # 
@@ -817,6 +705,46 @@ ctd.final_avg <- ctd.final |> group_by(Reservoir, Depth_m, msn) |>
 #read in migration metrics
 migration_metrics <- read.csv("output/migration_metrics.csv",header=T)
 
+#read in met data
+inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/389/7/02d36541de9088f2dd99d79dc3a7a853" 
+infile1 <- tempfile()
+try(download.file(inUrl1,infile1,method="curl"))
+if (is.na(file.size(infile1))) download.file(inUrl1,infile1,method="auto")
+
+#list hours in day vs night
+day <- c(6:20)
+night <- c(21:23,0:5)
+
+#monthly met for jul 2019, Aug 2020, Jun 2021, Jul 2021
+monthly_met <- read.csv(infile1,header=T) |> 
+  dplyr::mutate(my = paste0(format(as.Date(DateTime), "%m"),
+                      format(as.Date(DateTime), "%y"))) |> 
+  dplyr::filter(my %in% c("0719","0820","0621","0721")) |> 
+  dplyr::select(my, AirTemp_C_Average,
+                WindSpeed_Average_m_s, WindDir_degrees) |> 
+  dplyr::group_by(my) |> 
+  dplyr::summarise(AirTemp_month = mean(AirTemp_C_Average),
+                   WindSpeed_month = mean(WindSpeed_Average_m_s),
+                   WindDir_month = mean(WindDir_degrees)) 
+  
+#avg obs for each 24 hr period and day vs. night
+met <-read.csv(infile1,header=T) |> 
+  dplyr::filter(as.Date(DateTime) %in% c(msn_dates)) |> 
+  dplyr::select(DateTime, AirTemp_C_Average,
+                  WindSpeed_Average_m_s, WindDir_degrees) |> 
+  dplyr::mutate(hour = hour(DateTime)) |> 
+  dplyr::mutate(DateTime = as.Date(DateTime)) |> 
+  dplyr::group_by(DateTime) |> 
+  dplyr::summarise(AirTemp_C_24hrs = mean(AirTemp_C_Average),
+                   WindSpeed_24hrs = mean(WindSpeed_Average_m_s),
+                   WindDir_24hrs = mean(WindDir_degrees),
+                   AirTemp_day = mean(AirTemp_C_Average[hour %in% day]),
+                   AirTemp_night = mean(AirTemp_C_Average[hour %in% night]),
+                   WindSpeed_day = mean(WindSpeed_Average_m_s[hour %in% day]),
+                   WindSpeed_night = mean(WindSpeed_Average_m_s[hour %in% night]),
+                   WindDir_day = mean(WindDir_degrees[hour %in% day]),
+                   WindDir_night = mean(WindDir_degrees[hour %in% night]))
+  
 #make an environmental driver df
 msn_drivers <- data.frame("groups" = as.character(1:5), #epi is 0.1m, hypo is 10m - avg for both noons of msn when available
      "epilimnetic_temperature" = c(ctd.final_avg$Temp_C_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==1],
@@ -870,36 +798,97 @@ msn_drivers <- data.frame("groups" = as.character(1:5), #epi is 0.1m, hypo is 10
                        mean(ctd_thermo_depth$therm_depth[ctd_thermo_depth$msn==3]),
                        mean(ctd_thermo_depth$therm_depth[ctd_thermo_depth$msn==4]),
                        mean(ctd_thermo_depth$therm_depth[ctd_thermo_depth$msn==5])),
-     "Cladocera_DVM" = c(migration_metrics$value[
-       migration_metrics$metric=="Cladocera_density_NopL" & 
-       migration_metrics$migration=="DVM_avg"]),
-     "Copepoda_DVM" = c(migration_metrics$value[
-       migration_metrics$metric=="Copepoda_density_NopL" & 
-       migration_metrics$migration=="DVM_avg"]),
-     "Rotifera_DVM" = c(migration_metrics$value[
-       migration_metrics$metric=="Rotifera_density_NopL" & 
-       migration_metrics$migration=="DVM_avg"]),
-     "Cladocera_DHM" = c(migration_metrics$value[
-       migration_metrics$metric=="Cladocera_density_NopL" & 
-       migration_metrics$migration=="DHM_avg"]),
-     "Copepoda_DHM" = c(migration_metrics$value[
-       migration_metrics$metric=="Copepoda_density_NopL" & 
-       migration_metrics$migration=="DHM_avg"]),
-     "Rotifera_DHM" = c(migration_metrics$value[
-       migration_metrics$metric=="Rotifera_density_NopL" & 
-       migration_metrics$migration=="DHM_avg"]))
-     #"hypoxic_depth" = c(6.5, 5.5, 3.5, 6.5, 5)) #don't think I can do this bc we don't trust 2021 ctd data ugh
+     "Monthly_wind_speed" = c(monthly_met$WindSpeed_month[monthly_met$my=="0719"],
+                              monthly_met$WindSpeed_month[monthly_met$my=="0719"],
+                              monthly_met$WindSpeed_month[monthly_met$my=="0820"],
+                              monthly_met$WindSpeed_month[monthly_met$my=="0621"],
+                              monthly_met$WindSpeed_month[monthly_met$my=="0721"]),
+     "Monthly_wind_dir" = c(monthly_met$WindDir_month[monthly_met$my=="0719"],
+                            monthly_met$WindDir_month[monthly_met$my=="0719"],
+                            monthly_met$WindDir_month[monthly_met$my=="0820"],
+                            monthly_met$WindDir_month[monthly_met$my=="0621"],
+                            monthly_met$WindDir_month[monthly_met$my=="0721"]),
+     "Monthly_air_temp" = c(monthly_met$AirTemp_month[monthly_met$my=="0719"],
+                            monthly_met$AirTemp_month[monthly_met$my=="0719"],
+                            monthly_met$AirTemp_month[monthly_met$my=="0820"],
+                            monthly_met$AirTemp_month[monthly_met$my=="0621"],
+                            monthly_met$AirTemp_month[monthly_met$my=="0721"]),
+     "24hr_wind_speed" = c(mean(met$WindSpeed_24hrs[met$DateTime %in% c("2019-07-10", "2019-07-11")]),
+                           mean(met$WindSpeed_24hrs[met$DateTime %in% c("2019-07-24", "2019-07-25")]),
+                           mean(met$WindSpeed_24hrs[met$DateTime %in% c("2020-08-12", "2020-08-13")]),
+                           mean(met$WindSpeed_24hrs[met$DateTime %in% c("2021-06-15", "2021-06-16")]),
+                           mean(met$WindSpeed_24hrs[met$DateTime %in% c("2021-07-07", "2021-07-08")])),
+     "24hr_wind_dir" = c(mean(met$WindDir_24hrs[met$DateTime %in% c("2019-07-10", "2019-07-11")]),
+                         mean(met$WindDir_24hrs[met$DateTime %in% c("2019-07-24", "2019-07-25")]),
+                         mean(met$WindDir_24hrs[met$DateTime %in% c("2020-08-12", "2020-08-13")]),
+                         mean(met$WindDir_24hrs[met$DateTime %in% c("2021-06-15", "2021-06-16")]),
+                         mean(met$WindDir_24hrs[met$DateTime %in% c("2021-07-07", "2021-07-08")])),
+     "24hr_air_temp" = c(mean(met$AirTemp_C_24hrs[met$DateTime %in% c("2019-07-10", "2019-07-11")]),
+                         mean(met$AirTemp_C_24hrs[met$DateTime %in% c("2019-07-24", "2019-07-25")]),
+                         mean(met$AirTemp_C_24hrs[met$DateTime %in% c("2020-08-12", "2020-08-13")]),
+                         mean(met$AirTemp_C_24hrs[met$DateTime %in% c("2021-06-15", "2021-06-16")]),
+                         mean(met$AirTemp_C_24hrs[met$DateTime %in% c("2021-07-07", "2021-07-08")])),
+     "Day_wind_speed" = c(mean(met$WindSpeed_day[met$DateTime %in% c("2019-07-10", "2019-07-11")]),
+                          mean(met$WindSpeed_day[met$DateTime %in% c("2019-07-24", "2019-07-25")]),
+                          mean(met$WindSpeed_day[met$DateTime %in% c("2020-08-12", "2020-08-13")]),
+                          mean(met$WindSpeed_day[met$DateTime %in% c("2021-06-15", "2021-06-16")]),
+                          mean(met$WindSpeed_day[met$DateTime %in% c("2021-07-07", "2021-07-08")])),
+     "Day_wind_dir" = c(mean(met$WindDir_day[met$DateTime %in% c("2019-07-10", "2019-07-11")]),
+                        mean(met$WindDir_day[met$DateTime %in% c("2019-07-24", "2019-07-25")]),
+                        mean(met$WindDir_day[met$DateTime %in% c("2020-08-12", "2020-08-13")]),
+                        mean(met$WindDir_day[met$DateTime %in% c("2021-06-15", "2021-06-16")]),
+                        mean(met$WindDir_day[met$DateTime %in% c("2021-07-07", "2021-07-08")])),
+     "Day_air_temp" = c(mean(met$AirTemp_day[met$DateTime %in% c("2019-07-10", "2019-07-11")]),
+                        mean(met$AirTemp_day[met$DateTime %in% c("2019-07-24", "2019-07-25")]),
+                        mean(met$AirTemp_day[met$DateTime %in% c("2020-08-12", "2020-08-13")]),
+                        mean(met$AirTemp_day[met$DateTime %in% c("2021-06-15", "2021-06-16")]),
+                        mean(met$AirTemp_day[met$DateTime %in% c("2021-07-07", "2021-07-08")])),
+     "Night_wind_speed" = c(mean(met$WindSpeed_night[met$DateTime %in% c("2019-07-10", "2019-07-11")]),
+                          mean(met$WindSpeed_night[met$DateTime %in% c("2019-07-24", "2019-07-25")]),
+                          mean(met$WindSpeed_night[met$DateTime %in% c("2020-08-12", "2020-08-13")]),
+                          mean(met$WindSpeed_night[met$DateTime %in% c("2021-06-15", "2021-06-16")]),
+                          mean(met$WindSpeed_night[met$DateTime %in% c("2021-07-07", "2021-07-08")])),
+     "Night_wind_dir" = c(mean(met$WindDir_night[met$DateTime %in% c("2019-07-10", "2019-07-11")]),
+                        mean(met$WindDir_night[met$DateTime %in% c("2019-07-24", "2019-07-25")]),
+                        mean(met$WindDir_night[met$DateTime %in% c("2020-08-12", "2020-08-13")]),
+                        mean(met$WindDir_night[met$DateTime %in% c("2021-06-15", "2021-06-16")]),
+                        mean(met$WindDir_night[met$DateTime %in% c("2021-07-07", "2021-07-08")])),
+     "Night_air_temp" = c(mean(met$AirTemp_night[met$DateTime %in% c("2019-07-10", "2019-07-11")]),
+                        mean(met$AirTemp_night[met$DateTime %in% c("2019-07-24", "2019-07-25")]),
+                        mean(met$AirTemp_night[met$DateTime %in% c("2020-08-12", "2020-08-13")]),
+                        mean(met$AirTemp_night[met$DateTime %in% c("2021-06-15", "2021-06-16")]),
+                        mean(met$AirTemp_night[met$DateTime %in% c("2021-07-07", "2021-07-08")])),
+     
+    "Cladocera_DVM" = c(migration_metrics$value[
+      migration_metrics$metric=="Cladocera_density_NopL" & 
+      migration_metrics$migration=="DVM_avg"]),
+    "Copepoda_DVM" = c(migration_metrics$value[
+      migration_metrics$metric=="Copepoda_density_NopL" & 
+      migration_metrics$migration=="DVM_avg"]),
+    "Rotifera_DVM" = c(migration_metrics$value[
+      migration_metrics$metric=="Rotifera_density_NopL" & 
+      migration_metrics$migration=="DVM_avg"]),
+    "Cladocera_DHM" = c(migration_metrics$value[
+      migration_metrics$metric=="Cladocera_density_NopL" & 
+      migration_metrics$migration=="DHM_avg"]),
+    "Copepoda_DHM" = c(migration_metrics$value[
+      migration_metrics$metric=="Copepoda_density_NopL" & 
+      migration_metrics$migration=="DHM_avg"]),
+    "Rotifera_DHM" = c(migration_metrics$value[
+      migration_metrics$metric=="Rotifera_density_NopL" & 
+      migration_metrics$migration=="DHM_avg"]))
 
 #join driver and env dfs
 zoops_plus_drivers <- left_join(zoop_avg, msn_drivers)
 
 #fit environmental drivers onto ordination
-fit_env <- envfit(ord$sites, zoops_plus_drivers[,c(25:35)])
+fit_env <- envfit(ord$sites, zoops_plus_drivers[,c(25:47)])
 
-#pull out vectors
-scores <- data.frame((fit_env$vectors)$arrows, (fit_env$vectors)$r, 
-                     (fit_env$vectors)$pvals)
+#pull out vectors - need to multiply by the sqrt of r2 to get magnitude!
+scores <- data.frame((fit_env$vectors)$arrows * sqrt(fit_env$vectors$r), 
+                     pvals=(fit_env$vectors)$pvals)
 scores <- cbind(scores, env = rownames(scores))
+
 
 #plot drivers w/ NMDS
 ord <- ordiplot(NMDS_temporal_avg_bray,display = c('sites','species'),
@@ -933,52 +922,100 @@ NMDS_day_env <- days$plot + geom_point() + theme_bw() + geom_path() +
   geom_segment(data = scores,
               aes(x = 0, xend = NMDS1, y = 0, yend = NMDS2), linewidth= 0.3,
               arrow = arrow(length = unit(0.1, "cm")), colour = "black") +
+  #geom_text_repel(data = scores, aes(x = NMDS1, y = NMDS2, label = env), size = 3)
+  
   #2 vs. 1
-  #annotate(geom="text", x=0.03, y=0.9, label="hypolimnetic sp. cond.", size=1.5) +
-  #annotate(geom="text", x=0.09, y=0.8, label="epilimnetic chl.", size=1.5) +
-  #annotate(geom="text", x=0.68, y=0.85, label="epilimnetic sp. cond.", size=1.5) +
-  #annotate(geom="text", x=-0.8, y=0.14, label="Secchi", size=1.5) +
-  #annotate(geom="text", x=-0.8, y=0.01, label="thermocline depth", size=1.5) +
-  #annotate(geom="text", x=0.7, y=0.26, label="epilimnetic PAR", size=1.5) +
-  #annotate(geom="text", x=0.8, y=0.1, label="epilimnetic temp.", size=1.5) +
-  #annotate(geom="text", x=0.8, y=0.01, label="hypolimnetic chl.", size=1.5) +
-  #annotate(geom="text", x=0.88, y=-0.09, label="hypolimnetic temp.", size=1.5) +
-  #annotate(geom="text", x=0.75, y=-0.18, label="epilimnetic TN", size=1.5) +
-  #annotate(geom="text", x=0.7, y=-0.23, label="epilimnetic TP", size=1.5)
+  annotate(geom="text", x= 0.22, y= 0.63, label="hypolimnetic sp. cond.", size=1.5) +
+  annotate(geom="text", x= 0.38, y= 0.56, label="epilimnetic chl.", size=1.5) +
+  annotate(geom="text", x= 0.35, y= 0.51, label="daily wind dir.", size=1.5) +
+  annotate(geom="text", x= 0.09, y= 0.46, label="24-hr wind dir.", size=1.5) +
+  annotate(geom="text", x= 0.37, y= 0.41, label="epilimnetic sp. cond.", size=1.5) +
+  annotate(geom="text", x= 0.32, y= 0.16, label="monthly air temp.", size=1.5) +
+  annotate(geom="text", x= -0.07, y= 0.39, label="nightly wind dir.", size=1.5) +
+  annotate(geom="text", x= -0.36, y= 0.35, label="monthly wind dir.", size=1.5) +
+  annotate(geom="text", x= -0.42, y= 0.29, label="nightly wind speed", size=1.5) +
+  annotate(geom="text", x= -0.26, y= 0.12, label="24-hr wind speed", size=1.5) +
+  annotate(geom="text", x= -0.7, y= 0.25, label="monthly wind speed", size=1.5) +
+  annotate(geom="text", x= -0.57, y= 0.08, label="Secchi", size=1.5) +
+  annotate(geom="text", x= -0.69, y= 0.01, label="thermocline depth", size=1.5) +
+  annotate(geom="text", x= -0.44, y= -0.05, label="daily wind speed", size=1.5) +
+  annotate(geom="text", x= 0.81, y= 0.25, label="epilimnetic PAR", size=1.5) +
+  annotate(geom="text", x= 0.55, y= 0.04, label="epilimnetic temp.", size=1.5) +
+  annotate(geom="text", x= 0.7, y= 0, label="hypolimnetic chl.", size=1.5) +
+  annotate(geom="text", x= 0.8, y= -0.08, label="hypolimnetic temp.", size=1.5) +
+  annotate(geom="text", x= 0.8, y= -0.14, label="epilimnetic TN", size=1.5) +
+  annotate(geom="text", x= 0.8, y= -0.21, label="epilimnetic TP", size=1.5) +
+  annotate(geom="text", x= 0.48, y= -0.13, label="daily air temp.", size=1.5) +
+  annotate(geom="text", x= 0.6, y= -0.24, label="24-hr air temp.", size=1.5) +
+  annotate(geom="text", x= 0.52, y= -0.33, label="nightly air temp.", size=1.5)
   
   #3 vs. 1
-  #annotate(geom="text", x=-0.7, y=0.07, label="thermocline depth", size=1.5) +
-  #annotate(geom="text", x=-0.6, y=-0.17, label="Secchi", size=1.5) +
-  #annotate(geom="text", x=0.4, y=0.52, label="epilimnetic sp. cond.", size=1.5) +
-  #annotate(geom="text", x=0.7, y=0.36, label="epilimnetic temp.", size=1.5) +
-  #annotate(geom="text", x=0.8, y=0.22, label="epilimnetic chl.", size=1.5) +
-  #annotate(geom="text", x=0.77, y=0.16, label="epilimnetic TN", size=1.5) +
-  #annotate(geom="text", x=0.85, y=0.08, label="epilimnetic TP", size=1.5) +
-  #annotate(geom="text", x=0.8, y=0.04, label="hypolimnetic chl.", size=1.5) +
-  #annotate(geom="text", x=0.7, y=-0.03, label="hypolimnetic temp.", size=1.5) +
-  #annotate(geom="text", x=0.85, y=-0.06, label="hypolimnetic sp. cond.", size=1.5) +
-  #annotate(geom="text", x=0.8, y=-0.15, label="epilimnetic PAR", size=1.5) 
+  #annotate(geom="text", x= 0.51, y= -0.33, label="hypolimnetic sp. cond.", size=1.5) +
+  #geom_segment(aes(x= 0.18, y= 0, xend= 0.4, yend= -0.31), linewidth=0.2)+
+  #annotate(geom="text", x= 0.23, y= -0.4, label="epilimnetic chl.", size=1.5) +
+  #geom_segment(aes(x= 0.2, y= 0.05, xend= 0.24, yend= -0.39), linewidth=0.2)+
+  #annotate(geom="text", x= 0.25, y= -0.08, label="daily wind dir.", size=1.5) +
+  #annotate(geom="text", x= 0.14, y= -0.5, label="24-hr wind dir.", size=1.5) +
+  #geom_segment(aes(x= 0.09, y= 0.03, xend= 0.04, yend= -0.48), linewidth=0.2)+
+  #annotate(geom="text", x= 0.4, y= 0.24, label="epilimnetic sp. cond.", size=1.5) +
+  #geom_segment(aes(x= 0.19, y= 0.15, xend= 0.2, yend= 0.22), linewidth=0.2)+
+  #annotate(geom="text", x= 0.3, y= 0.3, label="monthly air temp.", size=1.5) +
+  #annotate(geom="text", x= -0.25, y= 0.28, label="nightly wind dir.", size=1.5) +
+  #geom_segment(aes(x=-0.04, y=0.12, xend=-0.24, yend=0.26), linewidth=0.2)+
+  #annotate(geom="text", x= -0.35, y= 0.17, label="monthly wind dir.", size=1.5) +
+  #annotate(geom="text", x= -0.41, y= -0.03, label="nightly wind speed", size=1.5) +
+  #annotate(geom="text", x= -0.45, y= -0.07, label="24-hr wind speed", size=1.5) +
+  #annotate(geom="text", x= -0.67, y= 0, label="monthly wind speed", size=1.5) +
+  #annotate(geom="text", x= -0.6, y= -0.25, label="Secchi", size=1.5) +
+  #annotate(geom="text", x= -0.55, y= 0.07, label="thermocline depth", size=1.5) +
+  #annotate(geom="text", x= -0.47, y= -0.1, label="daily wind speed", size=1.5) +
+  #annotate(geom="text", x= 0.8, y= -0.15, label="epilimnetic PAR", size=1.5) +
+  #annotate(geom="text", x= 0.4, y= 0.18, label="epilimnetic temp.", size=1.5) +
+  #annotate(geom="text", x= 0.77, y= 0.04, label="hypolimnetic chl.", size=1.5) +
+  #annotate(geom="text", x= 0.78, y= -0.04, label="hypolimnetic temp.", size=1.5) +
+  #annotate(geom="text", x= 0.8, y= 0.15, label="epilimnetic TN", size=1.5) +
+  #annotate(geom="text", x= 0.8, y= 0.08, label="epilimnetic TP", size=1.5) +
+  #annotate(geom="text", x= 0.44, y= -0.15, label="daily air temp.", size=1.5) +
+  #geom_segment(aes(x= 0.43, y= 0.09, xend= 0.42, yend= -0.13), linewidth=0.2) +
+  #annotate(geom="text", x= 0.6, y= -0.21, label="24-hr air temp.", size=1.5) +
+  #geom_segment(aes(x= 0.46, y= 0.10, xend= 0.5, yend= -0.19), linewidth=0.2) +
+  #annotate(geom="text", x= 0.78, y= 0.31, label="nightly air temp.", size=1.5) +
+  #geom_segment(aes(x= 0.49, y= 0.11, xend= 0.78, yend= 0.29), linewidth=0.2)
 
   #4 vs. 1
-  #annotate(geom="text", x=-0.8, y=0.18, label="Secchi", size=1.5) +
-  #annotate(geom="text", x=-0.8, y=0.06, label="thermocline depth", size=1.5) +
-  #annotate(geom="text", x=0.65, y=0.14, label="epilimnetic temp.", size=1.5) +
-  #annotate(geom="text", x=0.8, y=0.24, label="hypolimnetic chl.", size=1.5) +
-  #geom_segment(aes(x=0.93, y=0.22, xend=0.93, yend=0.09), lwd=0.2) +
-  #annotate(geom="text", x=0.85, y=0.05, label="epilimnetic TP", size=1.5) +
-  #annotate(geom="text", x=0.87, y=-0.01, label="hypolimnetic temp.", size=1.5) +
-  #annotate(geom="text", x=0.84, y=-0.09, label="epilimnetic TN", size=1.5) +
-  #annotate(geom="text", x=0.7, y=-0.22, label="epilimnetic PAR", size=1.5) +
-  #annotate(geom="text", x=0.79, y=-0.4, label="epilimnetic sp. cond.", size=1.5) +
-  #annotate(geom="text", x=0.82, y=-0.5, label="hypolimnetic sp. cond.", size=1.5) +
-  #annotate(geom="text", x=0.29, y=-0.5, label="epilimnetic chl.", size=1.5) 
+  #annotate(geom="text", x= 0.5, y= -0.22, label="hypolimnetic sp. cond.", size=1.5) +
+  #annotate(geom="text", x= 0.43, y= -0.26, label="epilimnetic chl.", size=1.5) +
+  #annotate(geom="text", x= 0.49, y= -0.33, label="daily wind dir.", size=1.5) +
+  #annotate(geom="text", x= 0.27, y= -0.37, label="24-hr wind dir.", size=1.5) +
+  #annotate(geom="text", x= 0.39, y= -0.14, label="epilimnetic sp. cond.", size=1.5) +
+  #annotate(geom="text", x= 0.28, y= -0.05, label="monthly air temp.", size=1.5) +
+  #annotate(geom="text", x= 0.08, y= -0.42, label="nightly wind dir.", size=1.5) +
+  #geom_segment(aes(x= 0.08, y= -0.32, xend= 0.08, yend= -0.4), linewidth=0.2) +
+  #annotate(geom="text", x= -0.4, y= -0.16, label="monthly wind dir.", size=1.5) +
+  #geom_segment(aes(x= -0.11, y= -0.12, xend= -0.23, yend= -0.16), linewidth=0.2) +
+  #annotate(geom="text", x= -0.29, y= -0.35, label="nightly wind speed", size=1.5) +
+  #annotate(geom="text", x= -0.36, y= -0.24, label="24-hr wind speed", size=1.5) +
+  #annotate(geom="text", x= -0.67, y= -0.03, label="monthly wind speed", size=1.5) +
+  #annotate(geom="text", x= -0.51, y= 0.12, label="Secchi", size=1.5) +
+  #annotate(geom="text", x= -0.68, y= 0.04, label="thermocline depth", size=1.5) +
+  #annotate(geom="text", x= -0.42, y= -0.11, label="daily wind speed", size=1.5) +
+  #annotate(geom="text", x= 0.8, y= -0.13, label="epilimnetic PAR", size=1.5) +
+  #annotate(geom="text", x= 0.44, y= 0.07, label="epilimnetic temp.", size=1.5) +
+  #annotate(geom="text", x= 0.68, y= 0.14, label="hypolimnetic chl.", size=1.5) +
+  #geom_segment(aes(x= 0.74, y= 0.07, xend= 0.68, yend= 0.13), linewidth=0.2) +
+  #annotate(geom="text", x= 0.79, y= 0.03, label="hypolimnetic temp.", size=1.5) +
+  #annotate(geom="text", x= 0.66, y= -0.07, label="epilimnetic TN", size=1.5) +
+  #annotate(geom="text", x= 0.84, y= 0.1, label="epilimnetic TP", size=1.5) +
+  #annotate(geom="text", x= 0.59, y= 0.19, label="daily air temp.", size=1.5) +
+  #annotate(geom="text", x= 0.61, y= 0.24, label="24-hr air temp.", size=1.5) +
+  #annotate(geom="text", x= 0.63, y= 0.3, label="nightly air temp.", size=1.5)
 #ggsave("figures/NMDS_2v1_envfit.jpg", NMDS_day_env, width=3, height=2) 
 
 #------------------------------------------------------------------------------#
 #multiplot of env variable vs NMDS1 centroids for SI
 
 #convert msn_drivers from wide to long
-msn_drivers_long <- msn_drivers %>% pivot_longer(cols = epi_temp:thermo_depth, 
+msn_drivers_long <- msn_drivers %>% pivot_longer(cols = epilimnetic_temperature:Night_air_temp, 
                                                  names_to = "variable")
 
 #add NMDS1 col
@@ -988,13 +1025,13 @@ msn_drivers_long$NMDS1 <- ifelse(msn_drivers_long$groups==1, days$df_mean.ord$x[
                           ifelse(msn_drivers_long$groups==4, days$df_mean.ord$x[4],
                                                  days$df_mean.ord$y[5]))))
 
-#multipanel plot (Figure S7)
+#multipanel plot (Figure S2)
 driver_NMDS <- ggplot(data=msn_drivers_long, aes(NMDS1, value, color=groups)) + 
   geom_point() + facet_wrap(~variable, scales = "free_y") + scale_color_manual(
     "",values=c("#008585","#9BBAA0","#F2E2B0","#DEA868","#C7522B"), 
        labels=c("10-11 Jul 2019","24-25 Jul 2019","12-13 Aug 2020",
                  "15-16 Jun 2021","7-8 Jul 2021"), guide=guide_legend(order=1)) +
-                    theme(text = element_text(size=6), 
+                    theme(text = element_text(size=5), 
                           axis.text = element_text(size=5, color="black"), 
                           legend.background = element_blank(), 
                           legend.key = element_blank(), 
@@ -1007,7 +1044,7 @@ driver_NMDS <- ggplot(data=msn_drivers_long, aes(NMDS1, value, color=groups)) +
                           panel.grid.major = element_blank(),
                           panel.grid.minor = element_blank(), 
                           legend.key.width =unit(0.7,"line"))
-#ggsave("figures/driver_vs_NMDS1.jpg", driver_NMDS, width=3, height=3) 
+#ggsave("figures/driver_vs_NMDS1.jpg", driver_NMDS, width=5, height=5) 
 
 #-----------------------------------------------------------------------------------------------
 #migration metrics across taxa vs dispersion to better link migration and variability (Fig. S10)
