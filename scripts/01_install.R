@@ -5,7 +5,7 @@ library(pacman)
 
 if (!require('ggordiplots')) remotes::install_github("jfq3/ggordiplots")
 
-install.packages("ggh4x")
+if (!require('ggordiplots')) install.packages("ggh4x")
 
 #read in libraries
 pacman::p_load(dplyr, vegan, labdsv, goeveg, rLakeAnalyzer, 

@@ -100,14 +100,23 @@ zoop_DHM$MSN <- ifelse(zoop_DHM$date=="2019-07-10" |
 sites <- c("Pelagic","Littoral")
 names(sites) <- c(50, 51)
 
+taxa_list <- c("Bosmina","Ceriodaphnia","Daphnia","Calanoida",
+               "Cyclopoida","nauplius","Collothecidae","Conochilidae",
+               "Gastropidae","Kellicottia","Keratella","Lecane","Lepadella",
+               "Monostyla","Synchaetidae","Trichocercidae")
+
 #rename taxon
-taxon <- c("cladocerans","copepods", "rotifers")
-names(taxon) <- unique(zoop_dens_stand$Taxon)
+taxon <- c("Bosmina","Calanoida","Ceriodaphnia", "cladocerans",
+           "Collotheca","Conochilus","copepods","Crustacea","Cyclopoida",
+           "Daphnia","Gastropus","Kellicottia","Keratella","Lecane",
+           "Lepadella","Monostyla","Ploima","rotifers","Synchaeta",
+           "Trichocerca","nauplius")
+names(taxon) <- unique(zoop_DHM$Taxon)
 
 #------------------------------------------------------------------------------#
 #Figure for zoop density for each MSN 24-hours --> Figure S4
-ggplot(subset(zoop_DHM, Taxon %in% c("Cladocera",
-              "Copepoda","Rotifera")),
+ggplot(subset(zoop_DHM, Taxon %in% taxa_list),
+                #c("Cladocera","Copepoda","Rotifera")),
                 aes(Hour,Density_IndPerL_rep.mean, color=as.factor(MSN))) + 
   geom_rect(aes(xmin=as.POSIXct("2022-10-15 11:30:00"),
                 xmax=as.POSIXct("2022-10-15 20:41:00"), ymin=-Inf, ymax= Inf, 
@@ -140,7 +149,45 @@ ggplot(subset(zoop_DHM, Taxon %in% c("Cladocera",
   geom_errorbar(aes(ymin=Density_IndPerL_rep.mean - Density_IndPerL_rep.SE, 
                     ymax=Density_IndPerL_rep.mean + Density_IndPerL_rep.SE), 
                 width=.2,position=position_dodge(.9))
-#ggsave("figures/BVR_MSNs_taxa_density.jpg", width=5, height=4) 
+#ggsave("figures/BVR_MSNs_16taxa_density.jpg", width=8, height=4) 
+
+#list of night hours
+night <- c(21,22,23,0,1,2,3,4,5)
+
+#is there a diurnal deficit? - yes dens is higher at night
+pel_rot_day <- mean(zoop_DHM$Density_IndPerL_rep.mean[zoop_DHM$Site==50 & 
+                                         !hour(zoop_DHM$Hour) %in% night
+                                       & zoop_DHM$Taxon=="Rotifera"]) #change out taxa name
+pel_rot_night <- mean(zoop_DHM$Density_IndPerL_rep.mean[zoop_DHM$Site==50 & 
+                                         hour(zoop_DHM$Hour) %in% night
+                                       & zoop_DHM$Taxon=="Rotifera"])
+
+(pel_rot_night-pel_rot_day) / ((pel_rot_night + pel_rot_day) / 2) * 100
+
+mean(zoop_DHM$Density_IndPerL_rep.mean[zoop_DHM$Site==51 & 
+                                         !hour(zoop_DHM$Hour) %in% night
+                                       & zoop_DHM$Taxon=="Rotifera"])
+mean(zoop_DHM$Density_IndPerL_rep.mean[zoop_DHM$Site==51 & 
+                                         hour(zoop_DHM$Hour) %in% night
+                                       & zoop_DHM$Taxon=="Rotifera"])
+
+#all taxa diurnal deficit
+pel_day <- mean(zoop_DHM$Density_IndPerL_rep.mean[zoop_DHM$Site==50 & 
+                                         !hour(zoop_DHM$Hour) %in% night
+                                       & zoop_DHM$Taxon %in% c("Cladocera","Copepoda","Rotifera")]) 
+pel_night <- mean(zoop_DHM$Density_IndPerL_rep.mean[zoop_DHM$Site==50 & 
+                                         hour(zoop_DHM$Hour) %in% night
+                                       & zoop_DHM$Taxon %in% c("Cladocera","Copepoda","Rotifera")]) 
+
+lit_day <- mean(zoop_DHM$Density_IndPerL_rep.mean[zoop_DHM$Site==51 & 
+                                         !hour(zoop_DHM$Hour) %in% night
+                                       & zoop_DHM$Taxon %in% c("Cladocera","Copepoda","Rotifera")]) 
+lit_night <- mean(zoop_DHM$Density_IndPerL_rep.mean[zoop_DHM$Site==51 & 
+                                         hour(zoop_DHM$Hour) %in% night
+                                       & zoop_DHM$Taxon %in% c("Cladocera","Copepoda","Rotifera")]) 
+
+(pel_night-pel_day) / ((pel_night + pel_day) / 2) * 100
+(lit_night-lit_day) / ((lit_night + lit_day) / 2) * 100
 
 #-------------------------------------------------------------------------------#
 #new df to standardize density among taxa for ALL days
@@ -148,9 +195,22 @@ zoop_dens_stand <- data.frame(subset(zoop_DHM,
                           Taxon %in% c("Cladocera", "Copepoda", "Rotifera")))
 
 #calculate % density of max within a day for each taxa as x / max
-zoop_dens_stand <- zoop_dens_stand %>% group_by(Taxon) %>%
+zoop_dens_stand <- zoop_dens_stand |> group_by(Taxon) %>%
   mutate(value_max_std = Density_IndPerL_rep.mean / 
            max(Density_IndPerL_rep.mean))
+
+#calculate proportion of biomass within a day for each taxa as x / max
+zoop_biom_prop <- zoop_dens_stand |>  group_by(Taxon, Site, MSN) |>
+  mutate(mean_biom = mean(Biomass_ugL_rep.mean, na.rm=T)) |> 
+         ungroup() |> group_by(Site,MSN) |> 
+           mutate(biom_prop = mean_biom / 
+           (sum(mean(Biomass_ugL_rep.mean[Taxon=="Cladocera"], na.rm=T),
+               mean(Biomass_ugL_rep.mean[Taxon=="Copepoda"], na.rm=T),
+               mean(Biomass_ugL_rep.mean[Taxon=="Rotifera"], na.rm=T))))
+
+range(zoop_biom_prop$biom_prop[zoop_biom_prop$Taxon=="Cladocera"])
+range(zoop_biom_prop$biom_prop[zoop_biom_prop$Taxon=="Copepoda"])
+range(zoop_biom_prop$biom_prop[zoop_biom_prop$Taxon=="Rotifera"]) #2-53%
 
 #rename taxon
 taxon <- c("cladocerans","copepods", "rotifers")
@@ -229,9 +289,6 @@ mean(zoop_dens_stand$value_max_std[zoop_dens_stand$Site=="50"])
 #pull out hour + make separate column (20:00 to 6:00 is night)
 zoop_dens_stand$hr <- hour(zoop_dens_stand$Hour)
 
-#list of night hours
-night <- c(21,22,23,0,1,2,3,4,5)
-
 #night
 night_clad <- mean(zoop_dens_stand$value_max_std[
                    zoop_dens_stand$Taxon=="Cladocera" & 
@@ -258,6 +315,16 @@ day_roti <- mean(zoop_dens_stand$value_max_std[
 (night_clad-day_clad) / ((night_clad + day_clad) / 2) * 100
 (night_cope-day_cope) / ((night_cope + day_cope) / 2) * 100
 (night_roti-day_roti) / ((night_roti + day_roti) / 2) * 100
+
+#day vs. night at pelagic vs littoral sites
+night_lit <- mean(zoop_dens_stand$value_max_std[zoop_dens_stand$Site=="51" & zoop_dens_stand$hr %in% night])
+day_lit <- mean(zoop_dens_stand$value_max_std[zoop_dens_stand$Site=="51" & !zoop_dens_stand$hr %in% night])
+night_pel <- mean(zoop_dens_stand$value_max_std[zoop_dens_stand$Site=="50" & zoop_dens_stand$hr %in% night])
+day_pel <- mean(zoop_dens_stand$value_max_std[zoop_dens_stand$Site=="50" & !zoop_dens_stand$hr %in% night])
+
+#percent diff
+(night_lit-day_lit) / ((night_lit + day_lit) / 2) * 100
+(night_pel-day_pel) / ((night_pel + day_pel) / 2) * 100
 
 #-------------------------------------------------------------------------------------#
 # plot df for avg size

@@ -69,7 +69,6 @@ zoop_epi_tows$groups <-
   ifelse(zoop_epi_tows$date=="2021-06-15" | 
          zoop_epi_tows$date=="2021-06-16","4","5"))))
 
-
 #------------------------------------------------------------------------------#
 # set up data for NMDS
 #relies on rank orders for ordination, no assumptions of linear relationship
@@ -78,7 +77,6 @@ zoop_temporal_dens <- zoop_epi_tows[,c(grepl("density_NopL",colnames(zoop_epi_to
 #transforming data - hellinger transformation because gives low weight to low/zero values
 #converts species abundances from absolute to relative - use w/ bray curtis (jaccard might be another one to try later on to look at absolute)
 zoop_temporal_dens_trans <- hellinger(zoop_temporal_dens)
-
 
 #-------------------------------------------------------------------------------#
 #           Averaging zoops by time and campaign/day for new NMDS               #
@@ -108,27 +106,28 @@ zoop_epi_tows$order[zoop_epi_tows$order==1 &
 zoop_epi_tows$time[zoop_epi_tows$order==1] <- "noon1"
 zoop_epi_tows$time[zoop_epi_tows$order==11] <- "noon2"
 
-#average by MSN, site, then hour
-zoop_avg <- zoop_epi_tows %>% group_by(groups,site,order) %>%
-  summarise_at(vars(Copepoda_density_NopL_mean:Lecane_density_NopL_mean), 
-               list(mean = mean))
+#add day vs. night col
+zoop_epi_tows$day <- ifelse(zoop_epi_tows$order %in% c(1:4,9:11), 1, 0)
 
-#pelagic vs littoral dfs
-zoop_pel <- zoop_avg[zoop_avg$site=="pel",]
-zoop_lit <- zoop_avg[zoop_avg$site=="lit",]
+zoop_epi_tows$dns <- ifelse(zoop_epi_tows$time %in% c("noon1","noon2"), "n",
+                            ifelse(zoop_epi_tows$time=="midnight", "m", "s"))
+
+#average by MSN, site, then hour
+zoop_avg <- zoop_epi_tows %>% group_by(groups,site,order,day,dns) %>%
+  summarise_at(vars(Calanoida_density_NopL_mean,
+                    Cyclopoida_density_NopL_mean,
+                    Keratella_density_NopL_mean,
+                    Kellicottia_density_NopL_mean,
+                    nauplius_density_NopL_mean:Bosmina_density_NopL_mean,
+                    Gastropidae_density_NopL_mean:Lecane_density_NopL_mean), 
+               list(mean = mean))
 
 #only select data cols
 zoop_temporal_avg_dens <- zoop_avg[,c(grepl("mean",colnames(zoop_avg)))] 
 
-zoop_pel_dens <- zoop_pel[,c(grepl("mean",colnames(zoop_pel)))]
-zoop_lit_dens <- zoop_lit[,c(grepl("mean",colnames(zoop_lit)))]
-
 #transforming data - hellinger transformation because gives low weight to low/zero values
 #converts species abundances from absolute to relative - use w/ bray curtis
 zoop_temporal_dens_avg_trans <- hellinger(zoop_temporal_avg_dens)
-
-zoop_pel_dens_trans <- hellinger(zoop_pel_dens)
-zoop_lit_dens_trans <- hellinger(zoop_lit_dens)
 
 #turn transformed community data into Euclidean distance matrix
 zoop_euc <- as.matrix(vegdist(zoop_temporal_dens_avg_trans, method='euclidean'))
@@ -139,7 +138,7 @@ zoop_euc <- as.matrix(vegdist(zoop_temporal_dens_avg_trans, method='euclidean'))
 dimcheckMDS(zoop_euc, distance = "bray", k = 6, trymax = 20, autotransform = TRUE)
 #dev.off()
 
-set.seed(15)
+set.seed(13)
 
 #now do NMDS using averages w/ 4 dimensions for consistency
 NMDS_temporal_avg_bray <- metaMDS(zoop_euc, distance='bray', k=4, trymax=20, 
@@ -174,7 +173,7 @@ NMDS_site <- sites$plot + geom_point() + theme_bw() +
         plot.margin = unit(c(0,-0.1,0,0), 'lines'),
         panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
         legend.key.width =unit(0.1,"line")) + guides(fill="none") +
-        annotate("text", x=-0.15, y=0.5, label= "a: sites", 
+        annotate("text", x=-0.15, y=0.7, label= "a: sites", 
                  fontface = "italic", size = 3) +
         scale_fill_manual("",values=c("#882255","#3399CC"))+
         scale_color_manual("",values=c("#882255","#3399CC"),
@@ -205,7 +204,7 @@ NMDS_day <- days$plot + geom_point() + theme_bw() + geom_path() + ylab(NULL) +
         plot.margin = unit(c(0,-0.1,0,-0.1), 'lines'),
         panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
         legend.key.width =unit(0.1,"line")) + 
-        annotate("text", x=-0.02, y=0.5, label= "b: sampling days", 
+        annotate("text", x=-0.02, y=0.7, label= "b: sampling dates", 
                  fontface = "italic", size = 3) +
         guides(fill="none", color = guide_legend(ncol=2)) +
         scale_fill_manual("",values=c("#008585","#89B199","#EFECBF","#DB9B5A","#C7522B"))+
@@ -241,7 +240,7 @@ NMDS_hour <- hours$plot + geom_point() + theme_bw() + geom_path() + ylab(NULL) +
         plot.margin = unit(c(0,0,0,-0.1), 'lines'),
         panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
         legend.key.width =unit(0.1,"line")) + guides(fill="none") +
-        annotate("text", x=0, y=0.5, label= "c: hours of the day",
+        annotate("text", x=0, y=0.7, label= "c: hours of the day",
                  fontface = "italic", size=3) +
         scale_fill_manual("",values=hcl.colors(11,"sunset"))+
         scale_color_manual("",values=hcl.colors(11,"sunset"),
@@ -249,7 +248,72 @@ NMDS_hour <- hours$plot + geom_point() + theme_bw() + geom_path() + ylab(NULL) +
                              '4am','5am','6am','7am','12pm'))
 
 fig5 <- egg::ggarrange(NMDS_site, NMDS_day, NMDS_hour, nrow=1)
-#ggsave("figures/NMDS_multipanel_2v1.jpg",fig5, width=5, height=3.5) 
+#ggsave("figures/NMDS_multipanel_2v1.jpg",fig5, width=5, height=3) 
+
+#------------------------------------------------------------------------------#
+#supplemental nmds comparing day and night + day, night, and sunset/sunrise
+ord <- ordiplot(NMDS_temporal_avg_bray,display = c('sites','species'),
+                choices = c(1,2),type = "n")
+dn <- gg_ordiplot(ord, zoop_avg$day, kind = "ehull", 
+                     ellipse=FALSE, hull = TRUE, plot = FALSE, pt.size=0.9) 
+
+NMDS_dn <- dn$plot + geom_point() + theme_bw() + 
+  geom_polygon(data = dn$df_hull, aes(x = x, y = y, fill = Group), alpha=0.2) +
+  geom_point(data=dn$df_mean.ord, aes(x, y), 
+             color="black", pch=21, size=2, fill=c("#08638A", "#E0542F")) +
+  theme(text = element_text(size=7), 
+        axis.text = element_text(size=7, color="black"), 
+        legend.background = element_blank(), 
+        legend.key.height=unit(0.3,"line"),
+        legend.key = element_blank(),
+        legend.box.margin=margin(-10,-10,-10,-10),
+        legend.margin=margin(-0,-0.1,-0,-0),
+        legend.direction = "horizontal",
+        axis.text.x = element_text(vjust = 0.5), 
+        axis.ticks.x = element_line(colour = c(rep("black",4), "transparent")), 
+        strip.background = element_rect(fill = "transparent"), 
+        legend.position = "top", legend.spacing = unit(-0.5, 'cm'),
+        plot.margin = unit(c(0,-0.1,0,0), 'lines'),
+        panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
+        legend.key.width =unit(0.1,"line")) + guides(fill="none") +
+ annotate("text", x=-0.15, y=0.5, label= "night vs. day", 
+          fontface = "italic", size = 3) +
+  scale_fill_manual("",values=c("#08638A","#E0542F"))+
+  scale_color_manual("",values=c("#08638A", "#E0542F"),
+                     label=c('night','day')) 
+
+dns <- gg_ordiplot(ord, zoop_avg$dns, kind = "ehull", 
+                  ellipse=FALSE, hull = TRUE, plot = FALSE, pt.size=0.9) 
+
+NMDS_dns <- dns$plot + geom_point() + theme_bw() + #ylab(NULL) +
+  geom_polygon(data = dns$df_hull, aes(x = x, y = y, fill = Group), alpha=0.2) +
+  geom_point(data=dns$df_mean.ord, aes(x, y), 
+             color="black", pch=21, size=2, fill=c("#1d3557","#e63946","#a8dadc")) +
+  theme(text = element_text(size=7), 
+        axis.text = element_text(size=7, color="black"), 
+        legend.background = element_blank(), 
+        legend.key.height=unit(0.3,"line"),
+        legend.key = element_blank(),
+        legend.box.margin=margin(-10,-10,-10,-10),
+        legend.margin=margin(-0,-0,-0,0),
+        legend.direction = "horizontal",
+        axis.text.x = element_text(vjust = 0.5), 
+        axis.ticks.x = element_line(colour = c(rep("black",4), "transparent")), 
+        #axis.text.y=element_blank(),
+        #axis.ticks.y = element_blank(),
+        strip.background = element_rect(fill = "transparent"), 
+        legend.position = "top", legend.spacing = unit(-0.5, 'cm'),
+        plot.margin = unit(c(0,0,0,-0.1), 'lines'),
+        panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
+        legend.key.width =unit(0.1,"line")) + guides(fill="none") +
+  annotate("text", x= 0.05, y=0.5, label= "midnight vs. noon vs. sunrise/sunset", 
+           fontface = "italic", size = 3) +
+  scale_fill_manual("",values=c("#1d3557","#e63946","#a8dadc"))+
+  scale_color_manual("",values=c("#1d3557","#e63946","#a8dadc"),
+                     label=c('midnight','noon',"sunrise/sunset")) 
+
+supp <- egg::ggarrange(NMDS_dn, NMDS_dns, nrow=1)
+#ggsave("figures/supNMDS_2v1.jpg",supp, width=5, height=3.5) 
 
 #-------------------------------------------------------------------------------#
 #                     Calculating euclidean distance                            #
@@ -365,7 +429,7 @@ pair_box <- ggboxplot(pair_df, x = "group", y = "value",
           fill = "group", palette = c("#A4C6B8", "#81858B", "#5E435D"),
           order = c("site_pair", "day_pair", "hour_pair"),
           ylab = "Location", xlab = "") +
-  scale_x_discrete(labels = c("sites", "sampling \n\ days", "hours of \n\ the day")) +
+  scale_x_discrete(labels = c("sites", "sampling \n\ dates", "hours of \n\ the day")) +
   theme(text = element_text(size=7),
         plot.margin = unit(c(-0.5,0,0,0), 'lines')) +
   annotate("text",label=c("b","a","c"), x=c(1.1,2.1,3.1),
@@ -437,7 +501,7 @@ within_hour_dist <- data.frame("group" = c(rep("hour1",10),rep("hour2",10),rep("
 
 #now kw tests for significance 
 kw_sites <- kruskal.test(dist ~ group, data = within_site_dist) #sig! - so pelagic and littoral are different
-kw_days <- kruskal.test(dist ~ group, data = within_day_dist) #not sig
+kw_days <- kruskal.test(dist ~ group, data = within_day_dist) #sig
 kw_hours <- kruskal.test(dist ~ group, data = within_hour_dist) #nope
 
 #dunn post-hoc test
@@ -460,7 +524,7 @@ site_box <- ggboxplot(within_site_dist, x = "group", y = "dist",
                  plot.margin = unit(c(0,-0.4,0,0), 'lines'),
                  axis.text.x = element_text(angle=45, vjust=0.8, hjust=0.8)) +
            annotate("text",label=c("a","b"), x=c(1.2,2.2), size=4,
-                    y=c(0.6, 0.437)) +
+                    y=c(0.63, 0.47)) +
            annotate("text", x=1.3, y=1, label= "a: sites",
                     fontface = "italic", size=3) +
            guides (fill = "none")
@@ -475,7 +539,9 @@ day_box <- ggboxplot(within_day_dist, x = "group", y = "dist",
                 plot.margin = unit(c(0,-0.4,0,-0.4), 'lines'),
                 axis.text.x = element_text(angle=45, vjust=0.8, hjust=0.8),
                 axis.text.y = element_blank(), axis.ticks.y = element_blank()) +
-          annotate("text", x=2.2, y=1, label= "b: sampling days",
+          annotate("text",label=c("ab","a","b","a","a"), x=c(1.3, 2.2, 3.2, 4.2, 5.2), size=4,
+                   y=c(0.46, 0.4, 0.52, 0.45, 0.45)) +
+          annotate("text", x=2.2, y=1, label= "b: sampling dates",
                     fontface = "italic", size=3) +
           guides (fill = "none")
 
@@ -714,20 +780,8 @@ if (is.na(file.size(infile1))) download.file(inUrl1,infile1,method="auto")
 #list hours in day vs night
 day <- c(6:20)
 night <- c(21:23,0:5)
-
-#monthly met for jul 2019, Aug 2020, Jun 2021, Jul 2021
-monthly_met <- read.csv(infile1,header=T) |> 
-  dplyr::mutate(my = paste0(format(as.Date(DateTime), "%m"),
-                      format(as.Date(DateTime), "%y"))) |> 
-  dplyr::filter(my %in% c("0719","0820","0621","0721")) |> 
-  dplyr::select(my, AirTemp_C_Average,
-                WindSpeed_Average_m_s, WindDir_degrees) |> 
-  dplyr::group_by(my) |> 
-  dplyr::summarise(AirTemp_month = mean(AirTemp_C_Average),
-                   WindSpeed_month = mean(WindSpeed_Average_m_s),
-                   WindDir_month = mean(WindDir_degrees)) 
   
-#avg obs for each 24 hr period and day vs. night
+#avg obs for each 24 hr period
 met <-read.csv(infile1,header=T) |> 
   dplyr::filter(as.Date(DateTime) %in% c(msn_dates)) |> 
   dplyr::select(DateTime, AirTemp_C_Average,
@@ -735,15 +789,8 @@ met <-read.csv(infile1,header=T) |>
   dplyr::mutate(hour = hour(DateTime)) |> 
   dplyr::mutate(DateTime = as.Date(DateTime)) |> 
   dplyr::group_by(DateTime) |> 
-  dplyr::summarise(AirTemp_C_24hrs = mean(AirTemp_C_Average),
-                   WindSpeed_24hrs = mean(WindSpeed_Average_m_s),
-                   WindDir_24hrs = mean(WindDir_degrees),
-                   AirTemp_day = mean(AirTemp_C_Average[hour %in% day]),
-                   AirTemp_night = mean(AirTemp_C_Average[hour %in% night]),
-                   WindSpeed_day = mean(WindSpeed_Average_m_s[hour %in% day]),
-                   WindSpeed_night = mean(WindSpeed_Average_m_s[hour %in% night]),
-                   WindDir_day = mean(WindDir_degrees[hour %in% day]),
-                   WindDir_night = mean(WindDir_degrees[hour %in% night]))
+  dplyr::summarise(AirTemp_C = mean(AirTemp_C_Average),
+                   WindSpeed = mean(WindSpeed_Average_m_s))
   
 #make an environmental driver df
 msn_drivers <- data.frame("groups" = as.character(1:5), #epi is 0.1m, hypo is 10m - avg for both noons of msn when available
@@ -798,67 +845,16 @@ msn_drivers <- data.frame("groups" = as.character(1:5), #epi is 0.1m, hypo is 10
                        mean(ctd_thermo_depth$therm_depth[ctd_thermo_depth$msn==3]),
                        mean(ctd_thermo_depth$therm_depth[ctd_thermo_depth$msn==4]),
                        mean(ctd_thermo_depth$therm_depth[ctd_thermo_depth$msn==5])),
-     "Monthly_wind_speed" = c(monthly_met$WindSpeed_month[monthly_met$my=="0719"],
-                              monthly_met$WindSpeed_month[monthly_met$my=="0719"],
-                              monthly_met$WindSpeed_month[monthly_met$my=="0820"],
-                              monthly_met$WindSpeed_month[monthly_met$my=="0621"],
-                              monthly_met$WindSpeed_month[monthly_met$my=="0721"]),
-     "Monthly_wind_dir" = c(monthly_met$WindDir_month[monthly_met$my=="0719"],
-                            monthly_met$WindDir_month[monthly_met$my=="0719"],
-                            monthly_met$WindDir_month[monthly_met$my=="0820"],
-                            monthly_met$WindDir_month[monthly_met$my=="0621"],
-                            monthly_met$WindDir_month[monthly_met$my=="0721"]),
-     "Monthly_air_temp" = c(monthly_met$AirTemp_month[monthly_met$my=="0719"],
-                            monthly_met$AirTemp_month[monthly_met$my=="0719"],
-                            monthly_met$AirTemp_month[monthly_met$my=="0820"],
-                            monthly_met$AirTemp_month[monthly_met$my=="0621"],
-                            monthly_met$AirTemp_month[monthly_met$my=="0721"]),
-     "24hr_wind_speed" = c(mean(met$WindSpeed_24hrs[met$DateTime %in% c("2019-07-10", "2019-07-11")]),
-                           mean(met$WindSpeed_24hrs[met$DateTime %in% c("2019-07-24", "2019-07-25")]),
-                           mean(met$WindSpeed_24hrs[met$DateTime %in% c("2020-08-12", "2020-08-13")]),
-                           mean(met$WindSpeed_24hrs[met$DateTime %in% c("2021-06-15", "2021-06-16")]),
-                           mean(met$WindSpeed_24hrs[met$DateTime %in% c("2021-07-07", "2021-07-08")])),
-     "24hr_wind_dir" = c(mean(met$WindDir_24hrs[met$DateTime %in% c("2019-07-10", "2019-07-11")]),
-                         mean(met$WindDir_24hrs[met$DateTime %in% c("2019-07-24", "2019-07-25")]),
-                         mean(met$WindDir_24hrs[met$DateTime %in% c("2020-08-12", "2020-08-13")]),
-                         mean(met$WindDir_24hrs[met$DateTime %in% c("2021-06-15", "2021-06-16")]),
-                         mean(met$WindDir_24hrs[met$DateTime %in% c("2021-07-07", "2021-07-08")])),
-     "24hr_air_temp" = c(mean(met$AirTemp_C_24hrs[met$DateTime %in% c("2019-07-10", "2019-07-11")]),
-                         mean(met$AirTemp_C_24hrs[met$DateTime %in% c("2019-07-24", "2019-07-25")]),
-                         mean(met$AirTemp_C_24hrs[met$DateTime %in% c("2020-08-12", "2020-08-13")]),
-                         mean(met$AirTemp_C_24hrs[met$DateTime %in% c("2021-06-15", "2021-06-16")]),
-                         mean(met$AirTemp_C_24hrs[met$DateTime %in% c("2021-07-07", "2021-07-08")])),
-     "Day_wind_speed" = c(mean(met$WindSpeed_day[met$DateTime %in% c("2019-07-10", "2019-07-11")]),
-                          mean(met$WindSpeed_day[met$DateTime %in% c("2019-07-24", "2019-07-25")]),
-                          mean(met$WindSpeed_day[met$DateTime %in% c("2020-08-12", "2020-08-13")]),
-                          mean(met$WindSpeed_day[met$DateTime %in% c("2021-06-15", "2021-06-16")]),
-                          mean(met$WindSpeed_day[met$DateTime %in% c("2021-07-07", "2021-07-08")])),
-     "Day_wind_dir" = c(mean(met$WindDir_day[met$DateTime %in% c("2019-07-10", "2019-07-11")]),
-                        mean(met$WindDir_day[met$DateTime %in% c("2019-07-24", "2019-07-25")]),
-                        mean(met$WindDir_day[met$DateTime %in% c("2020-08-12", "2020-08-13")]),
-                        mean(met$WindDir_day[met$DateTime %in% c("2021-06-15", "2021-06-16")]),
-                        mean(met$WindDir_day[met$DateTime %in% c("2021-07-07", "2021-07-08")])),
-     "Day_air_temp" = c(mean(met$AirTemp_day[met$DateTime %in% c("2019-07-10", "2019-07-11")]),
-                        mean(met$AirTemp_day[met$DateTime %in% c("2019-07-24", "2019-07-25")]),
-                        mean(met$AirTemp_day[met$DateTime %in% c("2020-08-12", "2020-08-13")]),
-                        mean(met$AirTemp_day[met$DateTime %in% c("2021-06-15", "2021-06-16")]),
-                        mean(met$AirTemp_day[met$DateTime %in% c("2021-07-07", "2021-07-08")])),
-     "Night_wind_speed" = c(mean(met$WindSpeed_night[met$DateTime %in% c("2019-07-10", "2019-07-11")]),
-                          mean(met$WindSpeed_night[met$DateTime %in% c("2019-07-24", "2019-07-25")]),
-                          mean(met$WindSpeed_night[met$DateTime %in% c("2020-08-12", "2020-08-13")]),
-                          mean(met$WindSpeed_night[met$DateTime %in% c("2021-06-15", "2021-06-16")]),
-                          mean(met$WindSpeed_night[met$DateTime %in% c("2021-07-07", "2021-07-08")])),
-     "Night_wind_dir" = c(mean(met$WindDir_night[met$DateTime %in% c("2019-07-10", "2019-07-11")]),
-                        mean(met$WindDir_night[met$DateTime %in% c("2019-07-24", "2019-07-25")]),
-                        mean(met$WindDir_night[met$DateTime %in% c("2020-08-12", "2020-08-13")]),
-                        mean(met$WindDir_night[met$DateTime %in% c("2021-06-15", "2021-06-16")]),
-                        mean(met$WindDir_night[met$DateTime %in% c("2021-07-07", "2021-07-08")])),
-     "Night_air_temp" = c(mean(met$AirTemp_night[met$DateTime %in% c("2019-07-10", "2019-07-11")]),
-                        mean(met$AirTemp_night[met$DateTime %in% c("2019-07-24", "2019-07-25")]),
-                        mean(met$AirTemp_night[met$DateTime %in% c("2020-08-12", "2020-08-13")]),
-                        mean(met$AirTemp_night[met$DateTime %in% c("2021-06-15", "2021-06-16")]),
-                        mean(met$AirTemp_night[met$DateTime %in% c("2021-07-07", "2021-07-08")])),
-     
+     "Wind_speed" = c(mean(met$WindSpeed[met$DateTime %in% c("2019-07-10", "2019-07-11")]),
+                           mean(met$WindSpeed[met$DateTime %in% c("2019-07-24", "2019-07-25")]),
+                           mean(met$WindSpeed[met$DateTime %in% c("2020-08-12", "2020-08-13")]),
+                           mean(met$WindSpeed[met$DateTime %in% c("2021-06-15", "2021-06-16")]),
+                           mean(met$WindSpeed[met$DateTime %in% c("2021-07-07", "2021-07-08")])),
+     "Air_temp" = c(mean(met$AirTemp_C[met$DateTime %in% c("2019-07-10", "2019-07-11")]),
+                         mean(met$AirTemp_C[met$DateTime %in% c("2019-07-24", "2019-07-25")]),
+                         mean(met$AirTemp_C[met$DateTime %in% c("2020-08-12", "2020-08-13")]),
+                         mean(met$AirTemp_C[met$DateTime %in% c("2021-06-15", "2021-06-16")]),
+                         mean(met$AirTemp_C[met$DateTime %in% c("2021-07-07", "2021-07-08")])),
     "Cladocera_DVM" = c(migration_metrics$value[
       migration_metrics$metric=="Cladocera_density_NopL" & 
       migration_metrics$migration=="DVM_avg"]),
@@ -882,13 +878,18 @@ msn_drivers <- data.frame("groups" = as.character(1:5), #epi is 0.1m, hypo is 10
 zoops_plus_drivers <- left_join(zoop_avg, msn_drivers)
 
 #fit environmental drivers onto ordination
-fit_env <- envfit(ord$sites, zoops_plus_drivers[,c(25:47)])
+fit_env <- envfit(ord$sites, zoops_plus_drivers[,c(22:34)])
 
 #pull out vectors - need to multiply by the sqrt of r2 to get magnitude!
 scores <- data.frame((fit_env$vectors)$arrows * sqrt(fit_env$vectors$r), 
                      pvals=(fit_env$vectors)$pvals)
 scores <- cbind(scores, env = rownames(scores))
 
+#supplmental table w/ r2 and p values for ms
+driver_correlation <- data.frame("variable" = scores$env,
+                                  "R2" = fit_env$vectors$r,
+                                  "p-value" = fit_env$vectors$pvals)
+#write.csv(driver_correlation, "output/driver_correlation.csv", row.names=F)
 
 #plot drivers w/ NMDS
 ord <- ordiplot(NMDS_temporal_avg_bray,display = c('sites','species'),
@@ -922,100 +923,63 @@ NMDS_day_env <- days$plot + geom_point() + theme_bw() + geom_path() +
   geom_segment(data = scores,
               aes(x = 0, xend = NMDS1, y = 0, yend = NMDS2), linewidth= 0.3,
               arrow = arrow(length = unit(0.1, "cm")), colour = "black") +
-  #geom_text_repel(data = scores, aes(x = NMDS1, y = NMDS2, label = env), size = 3)
+  geom_text_repel(data = scores, aes(x = NMDS1, y = NMDS2, label = env), size = 3)
   
   #2 vs. 1
-  annotate(geom="text", x= 0.22, y= 0.63, label="hypolimnetic sp. cond.", size=1.5) +
-  annotate(geom="text", x= 0.38, y= 0.56, label="epilimnetic chl.", size=1.5) +
-  annotate(geom="text", x= 0.35, y= 0.51, label="daily wind dir.", size=1.5) +
-  annotate(geom="text", x= 0.09, y= 0.46, label="24-hr wind dir.", size=1.5) +
-  annotate(geom="text", x= 0.37, y= 0.41, label="epilimnetic sp. cond.", size=1.5) +
-  annotate(geom="text", x= 0.32, y= 0.16, label="monthly air temp.", size=1.5) +
-  annotate(geom="text", x= -0.07, y= 0.39, label="nightly wind dir.", size=1.5) +
-  annotate(geom="text", x= -0.36, y= 0.35, label="monthly wind dir.", size=1.5) +
-  annotate(geom="text", x= -0.42, y= 0.29, label="nightly wind speed", size=1.5) +
-  annotate(geom="text", x= -0.26, y= 0.12, label="24-hr wind speed", size=1.5) +
-  annotate(geom="text", x= -0.7, y= 0.25, label="monthly wind speed", size=1.5) +
-  annotate(geom="text", x= -0.57, y= 0.08, label="Secchi", size=1.5) +
-  annotate(geom="text", x= -0.69, y= 0.01, label="thermocline depth", size=1.5) +
-  annotate(geom="text", x= -0.44, y= -0.05, label="daily wind speed", size=1.5) +
-  annotate(geom="text", x= 0.81, y= 0.25, label="epilimnetic PAR", size=1.5) +
-  annotate(geom="text", x= 0.55, y= 0.04, label="epilimnetic temp.", size=1.5) +
-  annotate(geom="text", x= 0.7, y= 0, label="hypolimnetic chl.", size=1.5) +
-  annotate(geom="text", x= 0.8, y= -0.08, label="hypolimnetic temp.", size=1.5) +
-  annotate(geom="text", x= 0.8, y= -0.14, label="epilimnetic TN", size=1.5) +
-  annotate(geom="text", x= 0.8, y= -0.21, label="epilimnetic TP", size=1.5) +
-  annotate(geom="text", x= 0.48, y= -0.13, label="daily air temp.", size=1.5) +
-  annotate(geom="text", x= 0.6, y= -0.24, label="24-hr air temp.", size=1.5) +
-  annotate(geom="text", x= 0.52, y= -0.33, label="nightly air temp.", size=1.5)
+  #annotate(geom="text", x= 0.2, y= 0.55, label="hypolimnetic sp. cond.", size=1.5) +
+  #annotate(geom="text", x= -0.16, y= 0.5, label="epilimnetic chl.", size=1.5) +
+  #annotate(geom="text", x= 0.17, y= 0.45, label="epilimnetic sp. cond.", size=1.5) +
+  #annotate(geom="text", x= -0.2, y= -0.32, label="wind speed", size=1.5) +
+  #geom_segment(aes(x= -0.2, y= -0.3, xend= -0.2, yend= -0.11), linewidth=0.2)+
+  #annotate(geom="text", x= -0.45, y= 0.06, label="Secchi", size=1.5) +
+  #annotate(geom="text", x= -0.5, y= 0.38, label="thermocline depth", size=1.5) +
+  #annotate(geom="text", x= 0.7, y= 0.08, label="epilimnetic PAR", size=1.5) +
+  #annotate(geom="text", x= 0.3, y= 0.28, label="epilimnetic temp.", size=1.5) +
+  #annotate(geom="text", x= 0.7, y= 0.01, label="hypolimnetic chl.", size=1.5) +
+  #annotate(geom="text", x= 0.72, y= -0.12, label="hypolimnetic temp.", size=1.5) +
+  #annotate(geom="text", x= 0.45, y= -0.26, label="epilimnetic TN", size=1.5) +
+  #annotate(geom="text", x= 0.76, y= -0.26, label="epilimnetic TP", size=1.5) +
+  #annotate(geom="text", x= 0.51, y= -0.07, label="air temp.", size=1.5) 
   
   #3 vs. 1
-  #annotate(geom="text", x= 0.51, y= -0.33, label="hypolimnetic sp. cond.", size=1.5) +
-  #geom_segment(aes(x= 0.18, y= 0, xend= 0.4, yend= -0.31), linewidth=0.2)+
-  #annotate(geom="text", x= 0.23, y= -0.4, label="epilimnetic chl.", size=1.5) +
-  #geom_segment(aes(x= 0.2, y= 0.05, xend= 0.24, yend= -0.39), linewidth=0.2)+
-  #annotate(geom="text", x= 0.25, y= -0.08, label="daily wind dir.", size=1.5) +
-  #annotate(geom="text", x= 0.14, y= -0.5, label="24-hr wind dir.", size=1.5) +
-  #geom_segment(aes(x= 0.09, y= 0.03, xend= 0.04, yend= -0.48), linewidth=0.2)+
-  #annotate(geom="text", x= 0.4, y= 0.24, label="epilimnetic sp. cond.", size=1.5) +
-  #geom_segment(aes(x= 0.19, y= 0.15, xend= 0.2, yend= 0.22), linewidth=0.2)+
-  #annotate(geom="text", x= 0.3, y= 0.3, label="monthly air temp.", size=1.5) +
-  #annotate(geom="text", x= -0.25, y= 0.28, label="nightly wind dir.", size=1.5) +
-  #geom_segment(aes(x=-0.04, y=0.12, xend=-0.24, yend=0.26), linewidth=0.2)+
-  #annotate(geom="text", x= -0.35, y= 0.17, label="monthly wind dir.", size=1.5) +
-  #annotate(geom="text", x= -0.41, y= -0.03, label="nightly wind speed", size=1.5) +
-  #annotate(geom="text", x= -0.45, y= -0.07, label="24-hr wind speed", size=1.5) +
-  #annotate(geom="text", x= -0.67, y= 0, label="monthly wind speed", size=1.5) +
-  #annotate(geom="text", x= -0.6, y= -0.25, label="Secchi", size=1.5) +
-  #annotate(geom="text", x= -0.55, y= 0.07, label="thermocline depth", size=1.5) +
-  #annotate(geom="text", x= -0.47, y= -0.1, label="daily wind speed", size=1.5) +
-  #annotate(geom="text", x= 0.8, y= -0.15, label="epilimnetic PAR", size=1.5) +
-  #annotate(geom="text", x= 0.4, y= 0.18, label="epilimnetic temp.", size=1.5) +
-  #annotate(geom="text", x= 0.77, y= 0.04, label="hypolimnetic chl.", size=1.5) +
-  #annotate(geom="text", x= 0.78, y= -0.04, label="hypolimnetic temp.", size=1.5) +
-  #annotate(geom="text", x= 0.8, y= 0.15, label="epilimnetic TN", size=1.5) +
-  #annotate(geom="text", x= 0.8, y= 0.08, label="epilimnetic TP", size=1.5) +
-  #annotate(geom="text", x= 0.44, y= -0.15, label="daily air temp.", size=1.5) +
-  #geom_segment(aes(x= 0.43, y= 0.09, xend= 0.42, yend= -0.13), linewidth=0.2) +
-  #annotate(geom="text", x= 0.6, y= -0.21, label="24-hr air temp.", size=1.5) +
-  #geom_segment(aes(x= 0.46, y= 0.10, xend= 0.5, yend= -0.19), linewidth=0.2) +
-  #annotate(geom="text", x= 0.78, y= 0.31, label="nightly air temp.", size=1.5) +
-  #geom_segment(aes(x= 0.49, y= 0.11, xend= 0.78, yend= 0.29), linewidth=0.2)
+  #annotate(geom="text", x= -0.27, y= -0.3, label="hypolimnetic sp. cond.", size=1.5) +
+  #annotate(geom="text", x= -0.25, y= -0.4, label="epilimnetic chl.", size=1.5) +
+  #annotate(geom="text", x= -0.29, y= -0.36, label="epilimnetic sp. cond.", size=1.5) +
+  #annotate(geom="text", x= -0.3, y=  0.2, label="wind speed", size=1.5) +
+  #annotate(geom="text", x= -0.37, y= 0.5, label="Secchi", size=1.5) +
+  #annotate(geom="text", x= -0.52, y= 0.27, label="thermocline depth", size=1.5) +
+  #annotate(geom="text", x= 0.7, y= -0.15, label="epilimnetic PAR", size=1.5) +
+  #geom_segment(aes(x= 0.7, y= -0.16, xend= 0.65, yend= -0.34), linewidth=0.2)+
+  #annotate(geom="text", x= 0.2, y= -0.43, label="epilimnetic temp.", size=1.5) +
+  #annotate(geom="text", x= 0.5, y= -0.1, label="hypolimnetic chl.", size=1.5) +
+  #geom_segment(aes(x= 0.5, y= -0.11, xend= 0.62, yend= -0.33), linewidth=0.2)+
+  #annotate(geom="text", x= 0.7, y= -0.24, label="hypolimnetic temp.", size=1.5) +
+  #annotate(geom="text", x= 0.45, y= -0.48, label="epilimnetic TN", size=1.5) +
+  #annotate(geom="text", x= 0.76, y= -0.47, label="epilimnetic TP", size=1.5) +
+  #annotate(geom="text", x= 0.29, y= -0.3, label="air temp.", size=1.5) +
+  #geom_segment(aes(x= 0.29, y= -0.29, xend= 0.4, yend= -0.26), linewidth=0.2)
 
   #4 vs. 1
-  #annotate(geom="text", x= 0.5, y= -0.22, label="hypolimnetic sp. cond.", size=1.5) +
-  #annotate(geom="text", x= 0.43, y= -0.26, label="epilimnetic chl.", size=1.5) +
-  #annotate(geom="text", x= 0.49, y= -0.33, label="daily wind dir.", size=1.5) +
-  #annotate(geom="text", x= 0.27, y= -0.37, label="24-hr wind dir.", size=1.5) +
-  #annotate(geom="text", x= 0.39, y= -0.14, label="epilimnetic sp. cond.", size=1.5) +
-  #annotate(geom="text", x= 0.28, y= -0.05, label="monthly air temp.", size=1.5) +
-  #annotate(geom="text", x= 0.08, y= -0.42, label="nightly wind dir.", size=1.5) +
-  #geom_segment(aes(x= 0.08, y= -0.32, xend= 0.08, yend= -0.4), linewidth=0.2) +
-  #annotate(geom="text", x= -0.4, y= -0.16, label="monthly wind dir.", size=1.5) +
-  #geom_segment(aes(x= -0.11, y= -0.12, xend= -0.23, yend= -0.16), linewidth=0.2) +
-  #annotate(geom="text", x= -0.29, y= -0.35, label="nightly wind speed", size=1.5) +
-  #annotate(geom="text", x= -0.36, y= -0.24, label="24-hr wind speed", size=1.5) +
-  #annotate(geom="text", x= -0.67, y= -0.03, label="monthly wind speed", size=1.5) +
-  #annotate(geom="text", x= -0.51, y= 0.12, label="Secchi", size=1.5) +
-  #annotate(geom="text", x= -0.68, y= 0.04, label="thermocline depth", size=1.5) +
-  #annotate(geom="text", x= -0.42, y= -0.11, label="daily wind speed", size=1.5) +
-  #annotate(geom="text", x= 0.8, y= -0.13, label="epilimnetic PAR", size=1.5) +
-  #annotate(geom="text", x= 0.44, y= 0.07, label="epilimnetic temp.", size=1.5) +
-  #annotate(geom="text", x= 0.68, y= 0.14, label="hypolimnetic chl.", size=1.5) +
-  #geom_segment(aes(x= 0.74, y= 0.07, xend= 0.68, yend= 0.13), linewidth=0.2) +
-  #annotate(geom="text", x= 0.79, y= 0.03, label="hypolimnetic temp.", size=1.5) +
-  #annotate(geom="text", x= 0.66, y= -0.07, label="epilimnetic TN", size=1.5) +
-  #annotate(geom="text", x= 0.84, y= 0.1, label="epilimnetic TP", size=1.5) +
-  #annotate(geom="text", x= 0.59, y= 0.19, label="daily air temp.", size=1.5) +
-  #annotate(geom="text", x= 0.61, y= 0.24, label="24-hr air temp.", size=1.5) +
-  #annotate(geom="text", x= 0.63, y= 0.3, label="nightly air temp.", size=1.5)
-#ggsave("figures/NMDS_2v1_envfit.jpg", NMDS_day_env, width=3, height=2) 
+  #annotate(geom="text", x= 0.3, y= 0.38, label="hypolimnetic sp. cond.", size=1.5) +
+  #annotate(geom="text", x= -0.09, y= 0.36, label="epilimnetic chl.", size=1.5) +
+  #annotate(geom="text", x= 0.16, y= 0.18, label="epilimnetic sp. cond.", size=1.5) +
+  #annotate(geom="text", x= -0.25, y= 0.23, label="wind speed", size=1.5) +
+  #annotate(geom="text", x= -0.46, y= 0.06, label="Secchi", size=1.5) +
+  #annotate(geom="text", x= -0.55, y= -0.06, label="thermocline depth", size=1.5) +
+  #annotate(geom="text", x= 0.73, y= 0.35, label="epilimnetic PAR", size=1.5) +
+  #annotate(geom="text", x= 0.42, y= -0.12, label="epilimnetic temp.", size=1.5) +
+  #annotate(geom="text", x= 0.7, y= 0.03, label="hypolimnetic chl.", size=1.5) +
+  #annotate(geom="text", x= 0.71, y= 0.1, label="hypolimnetic temp.", size=1.5) +
+  #annotate(geom="text", x= 0.67, y= -0.05, label="epilimnetic TN", size=1.5) +
+  #annotate(geom="text", x= 0.71, y= -0.14, label="epilimnetic TP", size=1.5) +
+  #annotate(geom="text", x= 0.43, y= -0.28, label="air temp.", size=1.5)
+#ggsave("figures/NMDS_2v1_envfit.jpg", NMDS_day_env, width=3, height=2.5) 
 
 #------------------------------------------------------------------------------#
 #multiplot of env variable vs NMDS1 centroids for SI
 
 #convert msn_drivers from wide to long
-msn_drivers_long <- msn_drivers %>% pivot_longer(cols = epilimnetic_temperature:Night_air_temp, 
+msn_drivers_long <- msn_drivers |> pivot_longer(cols = epilimnetic_temperature:Air_temp, 
                                                  names_to = "variable")
 
 #add NMDS1 col
@@ -1085,3 +1049,27 @@ migration_vs_disp <- ggplot(data=migration_drivers, aes(disp, value, color=group
         legend.spacing = unit(-0.5, 'cm'), panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), legend.key.width =unit(0.7,"line")) 
 #ggsave("figures/migration_metrics_vs_dispersion.jpg", migration_vs_disp, width=3, height=3) 
+
+#migration vs env variables
+ggplot(migration_drivers, aes(Secchi, abs(value), color=groups)) +
+  geom_point(size=3) + facet_wrap(~variable, scales = "free_y") + 
+  ylab("Migration metric") +
+  scale_color_manual("",values=c("#008585","#9BBAA0","#F2E2B0",
+                                 "#DEA868","#C7522B"), 
+                     labels=c("10-11 Jul 2019","24-25 Jul 2019",
+                              "12-13 Aug 2020", "15-16 Jun 2021",
+                              "7-8 Jul 2021"), guide=guide_legend(order=1)) +
+  guides(color = guide_legend(nrow=2,byrow=TRUE)) +
+  theme(text = element_text(size=6), 
+        axis.text = element_text(size=5, color="black"), 
+        legend.background = element_blank(), 
+        legend.key = element_blank(), 
+        legend.key.height=unit(0.3,"line"),
+        legend.margin=margin(0,0,0,0),
+        legend.box.margin=margin(-4,-4,-4,-4),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), 
+        strip.background = element_rect(fill = "transparent"), 
+        legend.position = "top", 
+        legend.spacing = unit(-0.5, 'cm'), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), legend.key.width =unit(0.7,"line"))
+  
