@@ -116,7 +116,7 @@ zoop_epi_tows$dns <- ifelse(zoop_epi_tows$time %in% c("noon1","noon2"), "n",
 zoop_avg <- zoop_epi_tows %>% group_by(groups,site,order,day,dns) %>%
   summarise_at(vars(Calanoida_density_NopL_mean,
                     Cyclopoida_density_NopL_mean,
-                    Keratella_density_NopL_mean,
+                    Keratella_density_NopL_mean,  #add diaphanosoma, pompholyx, polyarthra, and ascomorpha
                     Kellicottia_density_NopL_mean,
                     nauplius_density_NopL_mean:Bosmina_density_NopL_mean,
                     Gastropidae_density_NopL_mean:Lecane_density_NopL_mean), 
@@ -783,15 +783,59 @@ night <- c(21:23,0:5)
   
 #avg obs for each 24 hr period
 met <-read.csv(infile1,header=T) |> 
-  dplyr::filter(as.Date(DateTime) %in% c(msn_dates)) |> 
+  dplyr::mutate(DateTime = as.POSIXct(DateTime, format="%Y-%m-%d %H:%M:%S")) |> 
+  dplyr::filter((DateTime >= as.POSIXct("2019-07-10 12:00:00") & 
+                  DateTime <= as.POSIXct("2019-07-11 12:00:00")) |
+                  (DateTime >= as.POSIXct("2019-07-24 12:00:00") & 
+                     DateTime <= as.POSIXct("2019-07-25 12:00:00")) |
+                  (DateTime >= as.POSIXct("2020-08-12 12:00:00") & 
+                     DateTime <= as.POSIXct("2020-08-13 12:00:00")) |
+                  (DateTime >= as.POSIXct("2021-06-15 12:00:00") & 
+                     DateTime <= as.POSIXct("2021-06-16 12:00:00")) |
+                  (DateTime >= as.POSIXct("2021-07-07 12:00:00") & 
+                     DateTime <= as.POSIXct("2021-07-08 12:00:00"))) |> 
   dplyr::select(DateTime, AirTemp_C_Average,
                   WindSpeed_Average_m_s, WindDir_degrees) |> 
   dplyr::mutate(hour = hour(DateTime)) |> 
-  dplyr::mutate(DateTime = as.Date(DateTime)) |> 
-  dplyr::group_by(DateTime) |> 
+  dplyr::mutate(msn = ifelse(as.Date(DateTime) == as.Date(msn_dates[1]) | 
+                               as.Date(DateTime) == as.Date(msn_dates[2]), 1,
+                             ifelse(as.Date(DateTime) == as.Date(msn_dates[3]) |
+                                      as.Date(DateTime) == as.Date(msn_dates[4]), 2,
+                                    ifelse(as.Date(DateTime) == as.Date(msn_dates[5]) |
+                                             as.Date(DateTime) == as.Date(msn_dates[6]), 3,
+                                           ifelse(as.Date(DateTime) == as.Date(msn_dates[7]) |
+                                                    as.Date(DateTime) == as.Date(msn_dates[8]), 4, 5))))) |> 
+  dplyr::group_by(msn) |> 
   dplyr::summarise(AirTemp_C = mean(AirTemp_C_Average),
                    WindSpeed = mean(WindSpeed_Average_m_s))
   
+met_before <-read.csv(infile1,header=T) |> 
+  dplyr::mutate(DateTime = as.POSIXct(DateTime, format="%Y-%m-%d %H:%M:%S")) |> 
+  dplyr::filter((DateTime >= as.POSIXct("2019-07-09 12:00:00") & 
+                   DateTime <= as.POSIXct("2019-07-10 12:00:00")) |
+                  (DateTime >= as.POSIXct("2019-07-23 12:00:00") & 
+                     DateTime <= as.POSIXct("2019-07-24 12:00:00")) |
+                  (DateTime >= as.POSIXct("2020-08-11 12:00:00") & 
+                     DateTime <= as.POSIXct("2020-08-12 12:00:00")) |
+                  (DateTime >= as.POSIXct("2021-06-14 12:00:00") & 
+                     DateTime <= as.POSIXct("2021-06-15 12:00:00")) |
+                  (DateTime >= as.POSIXct("2021-07-06 12:00:00") & 
+                     DateTime <= as.POSIXct("2021-07-07 12:00:00"))) |> 
+  dplyr::select(DateTime, AirTemp_C_Average,
+                WindSpeed_Average_m_s, WindDir_degrees) |> 
+  dplyr::mutate(hour = hour(DateTime)) |> 
+  dplyr::mutate(msn = ifelse(as.Date(DateTime) == as.Date("2019-07-09") | 
+                               as.Date(DateTime) == as.Date("2019-07-10"), 1, 
+                             ifelse(as.Date(DateTime) == as.Date("2019-07-23") |
+                                      as.Date(DateTime) == as.Date("2019-07-24"), 2, 
+                                    ifelse(as.Date(DateTime) ==  as.Date("2020-08-11") |
+                                             as.Date(DateTime) ==  as.Date("2020-08-12"), 3,
+                                           ifelse(as.Date(DateTime) ==  as.Date("2021-06-14") |
+                                                    as.Date(DateTime) ==  as.Date("2021-06-15"), 4, 5))))) |> 
+  dplyr::group_by(msn) |> 
+  dplyr::summarise(AirTemp_C_before = mean(AirTemp_C_Average),
+                   WindSpeed_before = mean(WindSpeed_Average_m_s))
+
 #make an environmental driver df
 msn_drivers <- data.frame("groups" = as.character(1:5), #epi is 0.1m, hypo is 10m - avg for both noons of msn when available
      "epilimnetic_temperature" = c(ctd.final_avg$Temp_C_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==1],
@@ -845,16 +889,26 @@ msn_drivers <- data.frame("groups" = as.character(1:5), #epi is 0.1m, hypo is 10
                        mean(ctd_thermo_depth$therm_depth[ctd_thermo_depth$msn==3]),
                        mean(ctd_thermo_depth$therm_depth[ctd_thermo_depth$msn==4]),
                        mean(ctd_thermo_depth$therm_depth[ctd_thermo_depth$msn==5])),
-     "Wind_speed" = c(mean(met$WindSpeed[met$DateTime %in% c("2019-07-10", "2019-07-11")]),
-                           mean(met$WindSpeed[met$DateTime %in% c("2019-07-24", "2019-07-25")]),
-                           mean(met$WindSpeed[met$DateTime %in% c("2020-08-12", "2020-08-13")]),
-                           mean(met$WindSpeed[met$DateTime %in% c("2021-06-15", "2021-06-16")]),
-                           mean(met$WindSpeed[met$DateTime %in% c("2021-07-07", "2021-07-08")])),
-     "Air_temp" = c(mean(met$AirTemp_C[met$DateTime %in% c("2019-07-10", "2019-07-11")]),
-                         mean(met$AirTemp_C[met$DateTime %in% c("2019-07-24", "2019-07-25")]),
-                         mean(met$AirTemp_C[met$DateTime %in% c("2020-08-12", "2020-08-13")]),
-                         mean(met$AirTemp_C[met$DateTime %in% c("2021-06-15", "2021-06-16")]),
-                         mean(met$AirTemp_C[met$DateTime %in% c("2021-07-07", "2021-07-08")])),
+     "Wind_speed" = c(mean(met$WindSpeed[met$msn==1]),
+                           mean(met$WindSpeed[met$msn==2]),
+                           mean(met$WindSpeed[met$msn==3]),
+                           mean(met$WindSpeed[met$msn==4]),
+                           mean(met$WindSpeed[met$msn==5])),
+     "Air_temp" = c(mean(met$AirTemp_C[met$msn==1]),
+                         mean(met$AirTemp_C[met$msn==2]),
+                         mean(met$AirTemp_C[met$msn==3]),
+                         mean(met$AirTemp_C[met$msn==4]),
+                         mean(met$AirTemp_C[met$msn==5])),
+     "Wind_speed_antecedent" = c(mean(met_before$WindSpeed_before[met$msn==1]),
+                      mean(met_before$WindSpeed_before[met$msn==2]),
+                      mean(met_before$WindSpeed_before[met$msn==3]),
+                      mean(met_before$WindSpeed_before[met$msn==4]),
+                      mean(met_before$WindSpeed_before[met$msn==5])),
+       "Air_temp_antecedent" = c(mean(met_before$AirTemp_C_before[met$msn==1]),
+                    mean(met_before$AirTemp_C_before[met$msn==2]),
+                    mean(met_before$AirTemp_C_before[met$msn==3]),
+                    mean(met_before$AirTemp_C_before[met$msn==4]),
+                    mean(met_before$AirTemp_C_before[met$msn==5])),
     "Cladocera_DVM" = c(migration_metrics$value[
       migration_metrics$metric=="Cladocera_density_NopL" & 
       migration_metrics$migration=="DVM_avg"]),
@@ -878,7 +932,7 @@ msn_drivers <- data.frame("groups" = as.character(1:5), #epi is 0.1m, hypo is 10
 zoops_plus_drivers <- left_join(zoop_avg, msn_drivers)
 
 #fit environmental drivers onto ordination
-fit_env <- envfit(ord$sites, zoops_plus_drivers[,c(22:34)])
+fit_env <- envfit(ord$sites, zoops_plus_drivers[,c(22:36)]) #34
 
 #pull out vectors - need to multiply by the sqrt of r2 to get magnitude!
 scores <- data.frame((fit_env$vectors)$arrows * sqrt(fit_env$vectors$r), 
@@ -923,7 +977,7 @@ NMDS_day_env <- days$plot + geom_point() + theme_bw() + geom_path() +
   geom_segment(data = scores,
               aes(x = 0, xend = NMDS1, y = 0, yend = NMDS2), linewidth= 0.3,
               arrow = arrow(length = unit(0.1, "cm")), colour = "black") +
-  geom_text_repel(data = scores, aes(x = NMDS1, y = NMDS2, label = env), size = 3)
+  geom_text_repel(data = scores, aes(x = NMDS1, y = NMDS2, label = env), size = 1.5)
   
   #2 vs. 1
   #annotate(geom="text", x= 0.2, y= 0.55, label="hypolimnetic sp. cond.", size=1.5) +
@@ -973,7 +1027,7 @@ NMDS_day_env <- days$plot + geom_point() + theme_bw() + geom_path() +
   #annotate(geom="text", x= 0.67, y= -0.05, label="epilimnetic TN", size=1.5) +
   #annotate(geom="text", x= 0.71, y= -0.14, label="epilimnetic TP", size=1.5) +
   #annotate(geom="text", x= 0.43, y= -0.28, label="air temp.", size=1.5)
-#ggsave("figures/NMDS_2v1_envfit.jpg", NMDS_day_env, width=3, height=2.5) 
+#ggsave("figures/NMDS_2v1_envfit_ant_conds.jpg", NMDS_day_env, width=3, height=2.5) 
 
 #------------------------------------------------------------------------------#
 #multiplot of env variable vs NMDS1 centroids for SI

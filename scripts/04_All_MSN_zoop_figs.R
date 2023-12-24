@@ -378,3 +378,59 @@ ggplot(subset(zoop_DHM, Taxon %in% c("Cladocera", "Copepoda", "Rotifera")),
                 width=.2,position=position_dodge(.9))
 #ggsave("figures/BVR_MSNs_taxa_size.jpg", width=5, height=4) 
 
+#------------------------------------------------------------------------------#
+#figuring out dominant taxa from "raw" data files
+
+alltaxa <- c("Cyclopoida","Daphnia","Calanoida","Ascomorpha","Keratella", "nauplius",
+             "Kellicottia","Bosmina","Pompholyx","Diaphanosoma","Ceriodaphnia",
+             "Sida","Euchlanis","Polyarthra","Hexarthra","Filinia",
+             "Trichocerca","Asplanchna","Lepadella", "Synchaeta","Trichotria",
+             "Lecane", "Collotheca", "Conochiloides", "Conochilus","Chydorus",
+             "Anuraeopsis","Holopedium","Gastropus", "Monostyla","Brachionus",
+             "Tylotrocha","Notholca","Cladocera","Rotifera")
+
+summary_19 <- read.csv("./output/FCR_ZooplanktonSummary2019.csv") |> 
+  select(c(sample_ID,site_no,collect_date,Hour,DepthOfTow_m,
+           paste0(alltaxa,"_PercentOfTotal")))
+summary_20 <- read.csv("./output/FCR_ZooplanktonSummary2020.csv") |> 
+  select(c(sample_ID,site_no,collect_date,Hour,DepthOfTow_m,
+           paste0(alltaxa,"_PercentOfTotal")))
+summary_21 <- read.csv("./output/FCR_ZooplanktonSummary2021.csv") |> 
+  select(c(sample_ID,site_no,collect_date,Hour,DepthOfTow_m,
+           paste0(alltaxa,"_PercentOfTotal")))
+
+all_zoops <- bind_rows(summary_19, summary_20, summary_21)
+
+msn_dates <- c("2019-07-10", "2019-07-11", "2019-07-24",
+               "2019-07-25", "2020-08-12", "2020-08-13",
+               "2021-06-15", "2021-06-16", "2021-07-07", 
+               "2021-07-08")
+
+all_zoops_mean <- all_zoops |> 
+  filter(site_no %in% c("BVR_50","BVR_50_p") &
+           collect_date %in% msn_dates) |> 
+  select(-c(Cladocera_PercentOfTotal,Rotifera_PercentOfTotal)) |> 
+  pivot_longer(cols = Cyclopoida_PercentOfTotal:Notholca_PercentOfTotal, 
+               names_to = "variable") |> 
+  group_by(variable) |> 
+  summarise(mean_percent = mean(value, na.rm=T),
+            sd_percent = sd(value, na.rm=T))
+
+#-----------------------------------------------------------------------------#
+#choose taxa that are > x% of total (count *100 / total count)
+# 20 of them are > 0.05%
+
+ggplot(all_zoops_mean, aes(x=variable, y=mean_percent, fill=variable)) +
+  theme_bw() + geom_bar(stat="identity") + 
+  geom_errorbar( aes(ymin=mean_percent-sd_percent, ymax=mean_percent+sd_percent), 
+                 width=0.4,  alpha=0.9, size=1.3) +
+  geom_hline(yintercept=1, col="red") +
+  theme(text = element_text(size=5), 
+        axis.text = element_text(size=5, color="black"), 
+        axis.text.x = element_text(angle = 90, 
+                                   vjust = 0.5, hjust=1), 
+        strip.background = element_rect(fill = "transparent"), 
+        legend.position = "none",
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+

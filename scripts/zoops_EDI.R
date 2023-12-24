@@ -7,11 +7,8 @@ zoops2019<- read.csv('output/FCR_ZooplanktonSummary2019.csv',header = TRUE)
 zoops2020<- read.csv('output/FCR_ZooplanktonSummary2020.csv',header = TRUE)
 zoops2021<- read.csv('output/FCR_ZooplanktonSummary2021.csv',header = TRUE)
 
-#drop holopedium from 2019 so can merge files below
-zoops2019 <- zoops2019[,!grepl("Holopedium", colnames(zoops2019))]
-
 #merge all files
-all_zoops <- rbind(zoops2019, zoops2020, zoops2021)
+all_zoops <- bind_rows(zoops2019, zoops2020, zoops2021)
 
 #remove horizontal trap data
 all_zoops <- all_zoops[!c(grepl("top", all_zoops$sample_ID) | 
@@ -20,17 +17,14 @@ all_zoops <- all_zoops[!c(grepl("top", all_zoops$sample_ID) |
 #remove 20um samples
 all_zoops <- all_zoops[all_zoops$mesh_size_μm!=20,]
 
-#drop daphniidae and bsominidae bc I already have the genera
-all_zoops <- all_zoops[,!c(grepl("Daphniidae", colnames(all_zoops)) |
-                      grepl("Bosminidae", colnames(all_zoops)))]
-
 #drop percent of total cols, count cols, and se cols
 all_zoops <- all_zoops[,!c(grepl("Percent", colnames(all_zoops)) |
                              grepl("Count", colnames(all_zoops)) |
                              grepl("SE", colnames(all_zoops)))]
 
 #drop the total zoop dens/biomass cols
-all_zoops <- all_zoops[ ,-c(14:17)]
+all_zoops <- all_zoops |> select(-c(ZoopDensity_No.pL,OverallMeanSize_mm,
+                                    TotalBiomass_ug, BiomassConcentration_ugpL))
 
 #add rep column
 all_zoops$Rep <- ifelse(substrEnd(all_zoops$sample_ID,4)=="rep1" |
@@ -38,34 +32,48 @@ all_zoops$Rep <- ifelse(substrEnd(all_zoops$sample_ID,4)=="rep1" |
                           substrEnd(all_zoops$sample_ID,4)=="rep3"| 
                           substrEnd(all_zoops$sample_ID,4)=="rep4",
                         substrEnd(all_zoops$sample_ID,1),1)
+  
 
 #now convert from wide to long for dens
 all_zoops_dens <- all_zoops |> 
+  select(sample_ID:DepthOfTow_m, Rep,
+         colnames(all_zoops[grepl("density",colnames(all_zoops))])) |> 
   pivot_longer(cols = colnames(all_zoops[grepl("density", colnames(all_zoops))]), 
-               names_to = "Taxon", values_to = "Density_IndPerL") 
+               names_to = "Taxon", values_to = "Density_IndPerL") |> 
+  arrange(site_no,collect_date,Hour,DepthOfTow_m,Rep,Taxon)
 
 #convert from wide to long for size
 all_zoops_size <- all_zoops |> 
+  select(sample_ID:DepthOfTow_m, Rep,
+         colnames(all_zoops[grepl("MeanSize",colnames(all_zoops))])) |> 
   pivot_longer(cols = colnames(all_zoops[grepl("MeanSize", colnames(all_zoops))]), 
-               names_to = "Taxon", values_to = "MeanLength_mm") 
+               names_to = "Taxon", values_to = "MeanLength_mm") |> 
+  arrange(site_no,collect_date,Hour,DepthOfTow_m,Rep,Taxon)
 
 #convert from wide to long for weight
 all_zoops_weight <- all_zoops |> 
+  select(sample_ID:DepthOfTow_m, Rep,
+         colnames(all_zoops[grepl("totalbiomass_ug",colnames(all_zoops))])) |> 
   pivot_longer(cols = colnames(all_zoops[grepl("totalbiomass_ug", colnames(all_zoops))]), 
-               names_to = "Taxon", values_to = "MeanWeight_ug") 
+               names_to = "Taxon", values_to = "MeanWeight_ug") |> 
+  arrange(site_no,collect_date,Hour,DepthOfTow_m,Rep,Taxon)
 
 #convert from wide to long for biomass
 all_zoops_biom <- all_zoops |> 
+  select(sample_ID:DepthOfTow_m, Rep,
+         colnames(all_zoops[grepl("BiomassConcentration",colnames(all_zoops))])) |> 
   pivot_longer(cols = colnames(all_zoops[grepl("BiomassConcentration", 
                colnames(all_zoops))]), names_to = "Taxon",
-               values_to = "Biomass_ugL") 
+               values_to = "Biomass_ugL") |> 
+  arrange(site_no,collect_date,Hour,DepthOfTow_m,Rep,Taxon)
 
 #combine dfs
-all_zoops_final <- all_zoops_dens[,c(1:6, 77:79)]
+all_zoops_final <- all_zoops_dens
 all_zoops_final$MeanLength_mm <- all_zoops_size$MeanLength_mm
 all_zoops_final$MeanWeight_ug <- all_zoops_weight$MeanWeight_ug
 all_zoops_final$Biomass_ugL <- all_zoops_biom$Biomass_ugL
 
+#add reservoir, site, and datetime cols
 all_zoops_final$Reservoir <- ifelse(substr(all_zoops_final$sample_ID,1,1) == 
                                       "B", "BVR", "FCR")
 all_zoops_final$Site <- ifelse(grepl("dam", all_zoops_final$sample_ID), 49,
@@ -101,10 +109,6 @@ all_zoops_final <- all_zoops_final |> select(Reservoir, Site, DateTime,
                                              Density_IndPerL, MeanLength_mm,
                                              MeanWeight_ug, Biomass_ugL)
 
-#if density is 0, set mean length to 0
-all_zoops_final$MeanLength_mm <- ifelse(all_zoops_final$Density_IndPerL==0, 0, 
-                                        all_zoops_final$MeanLength_mm)
-
 #if density is not 0, but weight/biomass is 0, set to NA
 all_zoops_final$MeanWeight_ug <- ifelse(all_zoops_final$Density_IndPerL!=0 & 
                                           all_zoops_final$MeanWeight_ug==0, 
@@ -123,7 +127,7 @@ all_zoops_final$Flag_Biomass <- ifelse(is.na(all_zoops_final$Biomass_ugL), 1, 0)
 all_zoops_final <- all_zoops_final |> 
   arrange(Reservoir, DateTime, Site, CollectionMethod)
 
-#add convert datetime to character while keeping the 00 hour for midnight samples
+#convert datetime to character while keeping the 00 hour for midnight samples
 all_zoops_final$DateTime <- 
   ifelse(hour(all_zoops_final$DateTime)==0,
     paste0(as.Date(all_zoops_final$DateTime), " 00:00:01"),

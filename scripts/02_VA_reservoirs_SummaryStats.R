@@ -407,21 +407,37 @@ ZoopFinal$BiomassConcentration_ugpL <- NA
 ###original calc was biom_unadj * count/zoops_measured, but this means that smaller zoop biomass is largely overestimated because I generally measure a lot more of the large zoops (i.e., total biomass/zoops measured is skewed towards the laeger zoops). 
 
 #Create columns broken down by the following taxa
-taxaOfInterest<-c("Daphniidae","Copepoda","Calanoida","Cladocera","Cyclopoida",
-                  "Rotifera","Keratella","Kellicottia","Crustacea","Bosminidae",
-                  "nauplius","Ceriodaphnia","Daphnia","Bosmina","Ploima",
-                  "Gastropidae","Collothecidae","Conochilidae","Synchaetidae",
-                  "Trichocercidae","Lepadella","Monostyla","Lecane")
+#taxaOfInterest<-c("Daphniidae","Copepoda","Calanoida","Cladocera","Cyclopoida",
+#                  "Rotifera","Keratella","Kellicottia","Crustacea","Bosminidae",
+#                  "nauplius","Ceriodaphnia","Daphnia","Bosmina","Ploima",
+#                  "Gastropidae","Collothecidae","Conochilidae","Synchaetidae",
+#                  "Trichocercidae","Lepadella","Monostyla","Lecane")
 
-CorrespondingTaxaLevel<-c("Family","Subclass","Order","Suborder","Order",
-                          "Phylum","Genus","Genus","Subphylum","Family",
-                          "Nauplius","Genus","Genus","Genus","Order","Family",
-                          "Family","Family","Family","Family","Genus","Genus","Genus")
+alltaxa <- c("Cyclopoida","Daphnia","Calanoida","Ascomorpha","Keratella", "nauplius",
+                     "Kellicottia","Bosmina","Pompholyx","Diaphanosoma","Ceriodaphnia",
+                     "Sida","Euchlanis","Polyarthra","Hexarthra","Filinia",
+                     "Trichocerca","Asplanchna","Lepadella", "Synchaeta","Trichotria",
+                     "Lecane", "Collotheca", "Conochiloides", "Conochilus","Chydorus",
+                     "Anuraeopsis","Holopedium","Gastropus", "Monostyla","Brachionus",
+                     "Tylotrocha","Notholca","Cladocera","Rotifera")
+
+CorrespondingTaxaLevel <- c("Order","Genus","Order","Genus","Genus","Nauplius",
+                            "Genus","Genus","Genus","Genus","Genus",
+                            "Genus","Genus","Genus","Genus","Genus",
+                            "Genus","Genus","Genus","Genus","Genus",
+                            "Genus","Genus","Genus","Genus","Genus",
+                            "Genus","Genus","Genus","Genus","Genus",
+                            "Genus","Genus","Suborder","Phylum")
+
+#CorrespondingTaxaLevel<-c("Family","Subclass","Order","Suborder","Order",
+#                          "Phylum","Genus","Genus","Subphylum","Family",
+#                          "Nauplius","Genus","Genus","Genus","Order","Family",
+#                          "Family","Family","Family","Family","Genus","Genus","Genus")
 #Here crustacean is the sum of copepoda and cladocera; 
 
 #For loop that runs through all the taxa of interest and generates output (including nauplius!)
-for(taxa.index in 1:length(taxaOfInterest)){
-  taxa<-taxaOfInterest[taxa.index]
+for(taxa.index in 1:length(alltaxa)){ #taxaOfInterest
+  taxa<-alltaxa[taxa.index] #taxaOfInterest
   temp<-SizeID[SizeID[,CorrespondingTaxaLevel[taxa.index]]==taxa & 
                  !is.na(SizeID[,CorrespondingTaxaLevel[taxa.index]]),]
  
@@ -534,17 +550,11 @@ ZoopFinal$BiomassConcentration_ugpL<-ifelse(ZoopFinal$site_no=="BVR_trap" |
                                              ZoopFinal$BiomassConcentration_ugpL <- 
                                              ZoopFinal$TotalBiomass_ug / ZoopFinal$Volume_L)))
 
+
 #Replace NA with 0's for the relevant cells (count, density, biomass, biomass concentration)
-ZoopFinal[c(paste0(taxaOfInterest,"Count_n"),paste0(taxaOfInterest,"_PercentOfTotal"),
-            paste0(taxaOfInterest,"_totalbiomass_ug"),paste0(taxaOfInterest,"_density_NopL"),
-            paste0(taxaOfInterest,"_BiomassConcentration_ugpL"),
-            paste0(taxaOfInterest,"_PercentOftotalbiomassConcentration"))][
-              is.na(ZoopFinal[c(paste0(taxaOfInterest,"Count_n"),
-                                paste0(taxaOfInterest,"_PercentOfTotal"),
-                                paste0(taxaOfInterest,"_totalbiomass_ug"),
-                                paste0(taxaOfInterest,"_density_NopL"),
-                                paste0(taxaOfInterest,"_BiomassConcentration_ugpL"),
-                                paste0(taxaOfInterest,"_PercentOftotalbiomassConcentration"))])] <- 0
+ZoopFinal <- ZoopFinal |>  mutate(across(!paste0(alltaxa,"MeanSize_mm") &
+                                           !paste0(alltaxa,"SESize_mm"),
+                                         ~replace_na(., 0)))
 
 #Convert the initials to characters for export
 ZoopFinal$INT<-as.character(ZoopFinal$INT)
@@ -562,3 +572,4 @@ ZoopFinal$Calanoida_PercentOftotalbiomassConcentration
 
 #End of for loop going through the years
 }
+
