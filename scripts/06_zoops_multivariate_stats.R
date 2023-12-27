@@ -42,11 +42,22 @@ zoop_epi_tows$Hour[as.character(zoop_epi_tows$DateTime)=="2019-07-10 11:30:00"] 
 zoop_epi_tows$Hour[as.character(zoop_epi_tows$DateTime)=="2019-07-10 19:04:00"] <- 18
 zoop_epi_tows$Hour[as.character(zoop_epi_tows$DateTime)=="2021-07-08 23:54:00"] <- 0
 
+#only select taxa that make up >0.1% of total density
+dom_taxa <- c("Keratella_density_NopL","nauplius_density_NopL",
+              "Conochilus_density_NopL","Daphnia_density_NopL",
+              "Cyclopoida_density_NopL","Kellicottia_density_NopL",
+              "Ceriodaphnia_density_NopL","Conochiloides_density_NopL",
+              "Trichocerca_density_NopL","Calanoida_density_NopL",
+              "Bosmina_density_NopL","Gastropus_density_NopL",
+              "Pompholyx_density_NopL","Polyarthra_density_NopL",
+              "Monostyla_density_NopL","Collotheca_density_NopL",
+              "Lepadella_density_NopL")
+
 #now average the reps and drop rep and date cols
 zoop_epi_tows <- zoop_epi_tows |> 
-  select(!c(Rep)) |> 
+  select(Site,DateTime,date,Hour,dom_taxa) |>
   group_by(Site, date, Hour)  |> 
-  summarise_at(vars(Copepoda_density_NopL:Lecane_density_NopL),list(mean=mean))
+  summarise_at(vars(Keratella_density_NopL:Lepadella_density_NopL),list(mean=mean))
 
 #new col for time
 zoop_epi_tows$time <-ifelse(zoop_epi_tows$Hour=="12" | 
@@ -114,12 +125,7 @@ zoop_epi_tows$dns <- ifelse(zoop_epi_tows$time %in% c("noon1","noon2"), "n",
 
 #average by MSN, site, then hour
 zoop_avg <- zoop_epi_tows %>% group_by(groups,site,order,day,dns) %>%
-  summarise_at(vars(Calanoida_density_NopL_mean,
-                    Cyclopoida_density_NopL_mean,
-                    Keratella_density_NopL_mean,  #add diaphanosoma, pompholyx, polyarthra, and ascomorpha
-                    Kellicottia_density_NopL_mean,
-                    nauplius_density_NopL_mean:Bosmina_density_NopL_mean,
-                    Gastropidae_density_NopL_mean:Lecane_density_NopL_mean), 
+  summarise_at(vars(Keratella_density_NopL_mean:Lepadella_density_NopL_mean), 
                list(mean = mean))
 
 #only select data cols
@@ -257,63 +263,28 @@ ord <- ordiplot(NMDS_temporal_avg_bray,display = c('sites','species'),
 dn <- gg_ordiplot(ord, zoop_avg$day, kind = "ehull", 
                      ellipse=FALSE, hull = TRUE, plot = FALSE, pt.size=0.9) 
 
-NMDS_dn <- dn$plot + geom_point() + theme_bw() + 
-  geom_polygon(data = dn$df_hull, aes(x = x, y = y, fill = Group), alpha=0.2) +
-  geom_point(data=dn$df_mean.ord, aes(x, y), 
-             color="black", pch=21, size=2, fill=c("#08638A", "#E0542F")) +
-  theme(text = element_text(size=7), 
-        axis.text = element_text(size=7, color="black"), 
-        legend.background = element_blank(), 
-        legend.key.height=unit(0.3,"line"),
-        legend.key = element_blank(),
-        legend.box.margin=margin(-10,-10,-10,-10),
-        legend.margin=margin(-0,-0.1,-0,-0),
-        legend.direction = "horizontal",
-        axis.text.x = element_text(vjust = 0.5), 
-        axis.ticks.x = element_line(colour = c(rep("black",4), "transparent")), 
-        strip.background = element_rect(fill = "transparent"), 
-        legend.position = "top", legend.spacing = unit(-0.5, 'cm'),
-        plot.margin = unit(c(0,-0.1,0,0), 'lines'),
-        panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
-        legend.key.width =unit(0.1,"line")) + guides(fill="none") +
- annotate("text", x=-0.15, y=0.5, label= "night vs. day", 
-          fontface = "italic", size = 3) +
-  scale_fill_manual("",values=c("#08638A","#E0542F"))+
-  scale_color_manual("",values=c("#08638A", "#E0542F"),
-                     label=c('night','day')) 
-
-dns <- gg_ordiplot(ord, zoop_avg$dns, kind = "ehull", 
-                  ellipse=FALSE, hull = TRUE, plot = FALSE, pt.size=0.9) 
-
-NMDS_dns <- dns$plot + geom_point() + theme_bw() + #ylab(NULL) +
+NMDS_dns <- dns$plot + geom_point() + theme_bw() + 
   geom_polygon(data = dns$df_hull, aes(x = x, y = y, fill = Group), alpha=0.2) +
   geom_point(data=dns$df_mean.ord, aes(x, y), 
              color="black", pch=21, size=2, fill=c("#1d3557","#e63946","#a8dadc")) +
-  theme(text = element_text(size=7), 
+  theme(text = element_text(size=9), 
         axis.text = element_text(size=7, color="black"), 
         legend.background = element_blank(), 
         legend.key.height=unit(0.3,"line"),
         legend.key = element_blank(),
         legend.box.margin=margin(-10,-10,-10,-10),
         legend.margin=margin(-0,-0,-0,0),
-        legend.direction = "horizontal",
         axis.text.x = element_text(vjust = 0.5), 
         axis.ticks.x = element_line(colour = c(rep("black",4), "transparent")), 
-        #axis.text.y=element_blank(),
-        #axis.ticks.y = element_blank(),
         strip.background = element_rect(fill = "transparent"), 
-        legend.position = "top", legend.spacing = unit(-0.5, 'cm'),
+        legend.position = c(0.86,0.96), legend.spacing = unit(-0.5, 'cm'),
         plot.margin = unit(c(0,0,0,-0.1), 'lines'),
         panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
         legend.key.width =unit(0.1,"line")) + guides(fill="none") +
-  annotate("text", x= 0.05, y=0.5, label= "midnight vs. noon vs. sunrise/sunset", 
-           fontface = "italic", size = 3) +
   scale_fill_manual("",values=c("#1d3557","#e63946","#a8dadc"))+
   scale_color_manual("",values=c("#1d3557","#e63946","#a8dadc"),
                      label=c('midnight','noon',"sunrise/sunset")) 
-
-supp <- egg::ggarrange(NMDS_dn, NMDS_dns, nrow=1)
-#ggsave("figures/supNMDS_2v1.jpg",supp, width=5, height=3.5) 
+#ggsave("figures/supNMDS_2v1.jpg",NMDS_dns, width=5, height=3.5) 
 
 #-------------------------------------------------------------------------------#
 #                     Calculating euclidean distance                            #
@@ -539,8 +510,8 @@ day_box <- ggboxplot(within_day_dist, x = "group", y = "dist",
                 plot.margin = unit(c(0,-0.4,0,-0.4), 'lines'),
                 axis.text.x = element_text(angle=45, vjust=0.8, hjust=0.8),
                 axis.text.y = element_blank(), axis.ticks.y = element_blank()) +
-          annotate("text",label=c("ab","a","b","a","a"), x=c(1.3, 2.2, 3.2, 4.2, 5.2), size=4,
-                   y=c(0.46, 0.4, 0.52, 0.45, 0.45)) +
+          annotate("text",label=c("ab","ab","a","b","ab"), x=c(1.3, 2.2, 3.2, 4.2, 5.2), size=4,
+                   y=c(0.48, 0.45, 0.52, 0.45, 0.47)) +
           annotate("text", x=2.2, y=1, label= "b: sampling dates",
                     fontface = "italic", size=3) +
           guides (fill = "none")
@@ -809,32 +780,32 @@ met <-read.csv(infile1,header=T) |>
   dplyr::summarise(AirTemp_C = mean(AirTemp_C_Average),
                    WindSpeed = mean(WindSpeed_Average_m_s))
   
-met_before <-read.csv(infile1,header=T) |> 
-  dplyr::mutate(DateTime = as.POSIXct(DateTime, format="%Y-%m-%d %H:%M:%S")) |> 
-  dplyr::filter((DateTime >= as.POSIXct("2019-07-09 12:00:00") & 
-                   DateTime <= as.POSIXct("2019-07-10 12:00:00")) |
-                  (DateTime >= as.POSIXct("2019-07-23 12:00:00") & 
-                     DateTime <= as.POSIXct("2019-07-24 12:00:00")) |
-                  (DateTime >= as.POSIXct("2020-08-11 12:00:00") & 
-                     DateTime <= as.POSIXct("2020-08-12 12:00:00")) |
-                  (DateTime >= as.POSIXct("2021-06-14 12:00:00") & 
-                     DateTime <= as.POSIXct("2021-06-15 12:00:00")) |
-                  (DateTime >= as.POSIXct("2021-07-06 12:00:00") & 
-                     DateTime <= as.POSIXct("2021-07-07 12:00:00"))) |> 
-  dplyr::select(DateTime, AirTemp_C_Average,
-                WindSpeed_Average_m_s, WindDir_degrees) |> 
-  dplyr::mutate(hour = hour(DateTime)) |> 
-  dplyr::mutate(msn = ifelse(as.Date(DateTime) == as.Date("2019-07-09") | 
-                               as.Date(DateTime) == as.Date("2019-07-10"), 1, 
-                             ifelse(as.Date(DateTime) == as.Date("2019-07-23") |
-                                      as.Date(DateTime) == as.Date("2019-07-24"), 2, 
-                                    ifelse(as.Date(DateTime) ==  as.Date("2020-08-11") |
-                                             as.Date(DateTime) ==  as.Date("2020-08-12"), 3,
-                                           ifelse(as.Date(DateTime) ==  as.Date("2021-06-14") |
-                                                    as.Date(DateTime) ==  as.Date("2021-06-15"), 4, 5))))) |> 
-  dplyr::group_by(msn) |> 
-  dplyr::summarise(AirTemp_C_before = mean(AirTemp_C_Average),
-                   WindSpeed_before = mean(WindSpeed_Average_m_s))
+#met_before <-read.csv(infile1,header=T) |> 
+#  dplyr::mutate(DateTime = as.POSIXct(DateTime, format="%Y-%m-%d %H:%M:%S")) |> 
+#  dplyr::filter((DateTime >= as.POSIXct("2019-07-09 12:00:00") & 
+#                   DateTime <= as.POSIXct("2019-07-10 12:00:00")) |
+#                  (DateTime >= as.POSIXct("2019-07-23 12:00:00") & 
+#                     DateTime <= as.POSIXct("2019-07-24 12:00:00")) |
+#                  (DateTime >= as.POSIXct("2020-08-11 12:00:00") & 
+#                     DateTime <= as.POSIXct("2020-08-12 12:00:00")) |
+#                  (DateTime >= as.POSIXct("2021-06-14 12:00:00") & 
+#                     DateTime <= as.POSIXct("2021-06-15 12:00:00")) |
+#                  (DateTime >= as.POSIXct("2021-07-06 12:00:00") & 
+#                     DateTime <= as.POSIXct("2021-07-07 12:00:00"))) |> 
+#  dplyr::select(DateTime, AirTemp_C_Average,
+#                WindSpeed_Average_m_s, WindDir_degrees) |> 
+#  dplyr::mutate(hour = hour(DateTime)) |> 
+#  dplyr::mutate(msn = ifelse(as.Date(DateTime) == as.Date("2019-07-09") | 
+#                               as.Date(DateTime) == as.Date("2019-07-10"), 1, 
+#                             ifelse(as.Date(DateTime) == as.Date("2019-07-23") |
+#                                      as.Date(DateTime) == as.Date("2019-07-24"), 2, 
+#                                    ifelse(as.Date(DateTime) ==  as.Date("2020-08-11") |
+#                                             as.Date(DateTime) ==  as.Date("2020-08-12"), 3,
+#                                           ifelse(as.Date(DateTime) ==  as.Date("2021-06-14") |
+#                                                    as.Date(DateTime) ==  as.Date("2021-06-15"), 4, 5))))) |> 
+#  dplyr::group_by(msn) |> 
+#  dplyr::summarise(AirTemp_C_before = mean(AirTemp_C_Average),
+#                   WindSpeed_before = mean(WindSpeed_Average_m_s))
 
 #make an environmental driver df
 msn_drivers <- data.frame("groups" = as.character(1:5), #epi is 0.1m, hypo is 10m - avg for both noons of msn when available
@@ -899,16 +870,16 @@ msn_drivers <- data.frame("groups" = as.character(1:5), #epi is 0.1m, hypo is 10
                          mean(met$AirTemp_C[met$msn==3]),
                          mean(met$AirTemp_C[met$msn==4]),
                          mean(met$AirTemp_C[met$msn==5])),
-     "Wind_speed_antecedent" = c(mean(met_before$WindSpeed_before[met$msn==1]),
-                      mean(met_before$WindSpeed_before[met$msn==2]),
-                      mean(met_before$WindSpeed_before[met$msn==3]),
-                      mean(met_before$WindSpeed_before[met$msn==4]),
-                      mean(met_before$WindSpeed_before[met$msn==5])),
-       "Air_temp_antecedent" = c(mean(met_before$AirTemp_C_before[met$msn==1]),
-                    mean(met_before$AirTemp_C_before[met$msn==2]),
-                    mean(met_before$AirTemp_C_before[met$msn==3]),
-                    mean(met_before$AirTemp_C_before[met$msn==4]),
-                    mean(met_before$AirTemp_C_before[met$msn==5])),
+     #"Wind_speed_antecedent" = c(mean(met_before$WindSpeed_before[met$msn==1]),
+     #                 mean(met_before$WindSpeed_before[met$msn==2]),
+     #                 mean(met_before$WindSpeed_before[met$msn==3]),
+     #                 mean(met_before$WindSpeed_before[met$msn==4]),
+     #                 mean(met_before$WindSpeed_before[met$msn==5])),
+     #  "Air_temp_antecedent" = c(mean(met_before$AirTemp_C_before[met$msn==1]),
+     #               mean(met_before$AirTemp_C_before[met$msn==2]),
+     #               mean(met_before$AirTemp_C_before[met$msn==3]),
+     #               mean(met_before$AirTemp_C_before[met$msn==4]),
+     #               mean(met_before$AirTemp_C_before[met$msn==5])),
     "Cladocera_DVM" = c(migration_metrics$value[
       migration_metrics$metric=="Cladocera_density_NopL" & 
       migration_metrics$migration=="DVM_avg"]),
@@ -932,7 +903,7 @@ msn_drivers <- data.frame("groups" = as.character(1:5), #epi is 0.1m, hypo is 10
 zoops_plus_drivers <- left_join(zoop_avg, msn_drivers)
 
 #fit environmental drivers onto ordination
-fit_env <- envfit(ord$sites, zoops_plus_drivers[,c(22:36)]) #34
+fit_env <- envfit(ord$sites, zoops_plus_drivers[,c(23:35)]) 
 
 #pull out vectors - need to multiply by the sqrt of r2 to get magnitude!
 scores <- data.frame((fit_env$vectors)$arrows * sqrt(fit_env$vectors$r), 
@@ -977,57 +948,55 @@ NMDS_day_env <- days$plot + geom_point() + theme_bw() + geom_path() +
   geom_segment(data = scores,
               aes(x = 0, xend = NMDS1, y = 0, yend = NMDS2), linewidth= 0.3,
               arrow = arrow(length = unit(0.1, "cm")), colour = "black") +
-  geom_text_repel(data = scores, aes(x = NMDS1, y = NMDS2, label = env), size = 1.5)
+  #geom_text_repel(data = scores, aes(x = NMDS1, y = NMDS2, label = env), size = 1.5)
   
   #2 vs. 1
-  #annotate(geom="text", x= 0.2, y= 0.55, label="hypolimnetic sp. cond.", size=1.5) +
-  #annotate(geom="text", x= -0.16, y= 0.5, label="epilimnetic chl.", size=1.5) +
-  #annotate(geom="text", x= 0.17, y= 0.45, label="epilimnetic sp. cond.", size=1.5) +
-  #annotate(geom="text", x= -0.2, y= -0.32, label="wind speed", size=1.5) +
-  #geom_segment(aes(x= -0.2, y= -0.3, xend= -0.2, yend= -0.11), linewidth=0.2)+
-  #annotate(geom="text", x= -0.45, y= 0.06, label="Secchi", size=1.5) +
-  #annotate(geom="text", x= -0.5, y= 0.38, label="thermocline depth", size=1.5) +
-  #annotate(geom="text", x= 0.7, y= 0.08, label="epilimnetic PAR", size=1.5) +
-  #annotate(geom="text", x= 0.3, y= 0.28, label="epilimnetic temp.", size=1.5) +
-  #annotate(geom="text", x= 0.7, y= 0.01, label="hypolimnetic chl.", size=1.5) +
-  #annotate(geom="text", x= 0.72, y= -0.12, label="hypolimnetic temp.", size=1.5) +
-  #annotate(geom="text", x= 0.45, y= -0.26, label="epilimnetic TN", size=1.5) +
-  #annotate(geom="text", x= 0.76, y= -0.26, label="epilimnetic TP", size=1.5) +
-  #annotate(geom="text", x= 0.51, y= -0.07, label="air temp.", size=1.5) 
+  annotate(geom="text", x= 0.35, y= 0.21, label="hypolimnetic sp. cond.", size=1.5) +
+  annotate(geom="text", x= 0.37, y= 0.12, label="epilimnetic chl.", size=1.5) +
+  annotate(geom="text", x= 0.25, y= 0.03, label="epilimnetic sp. cond.", size=1.5) +
+  annotate(geom="text", x= 0, y= 0.3, label="wind speed", size=1.5) +
+  annotate(geom="text", x= -0.25, y= 0.5, label="Secchi", size=1.5) +
+  annotate(geom="text", x= -0.53, y= 0.5, label="thermocline depth", size=1.5) +
+  annotate(geom="text", x= 0.73, y= -0.32, label="epilimnetic PAR", size=1.5) +
+  annotate(geom="text", x= 0.25, y= -0.29, label="epilimnetic temp.", size=1.5) +
+  annotate(geom="text", x= 0.71, y= -0.45, label="hypolimnetic chl.", size=1.5) +
+  annotate(geom="text", x= 0.7, y= -0.6, label="hypolimnetic temp.", size=1.5) +
+  annotate(geom="text", x= 0.6, y= -0.65, label="epilimnetic TN", size=1.5) +
+  annotate(geom="text", x= 0.55, y= -0.7, label="epilimnetic TP", size=1.5) +
+  annotate(geom="text", x= 0, y= -0.39, label="air temp.", size=1.5) 
   
   #3 vs. 1
-  #annotate(geom="text", x= -0.27, y= -0.3, label="hypolimnetic sp. cond.", size=1.5) +
-  #annotate(geom="text", x= -0.25, y= -0.4, label="epilimnetic chl.", size=1.5) +
-  #annotate(geom="text", x= -0.29, y= -0.36, label="epilimnetic sp. cond.", size=1.5) +
-  #annotate(geom="text", x= -0.3, y=  0.2, label="wind speed", size=1.5) +
-  #annotate(geom="text", x= -0.37, y= 0.5, label="Secchi", size=1.5) +
-  #annotate(geom="text", x= -0.52, y= 0.27, label="thermocline depth", size=1.5) +
-  #annotate(geom="text", x= 0.7, y= -0.15, label="epilimnetic PAR", size=1.5) +
-  #geom_segment(aes(x= 0.7, y= -0.16, xend= 0.65, yend= -0.34), linewidth=0.2)+
-  #annotate(geom="text", x= 0.2, y= -0.43, label="epilimnetic temp.", size=1.5) +
-  #annotate(geom="text", x= 0.5, y= -0.1, label="hypolimnetic chl.", size=1.5) +
-  #geom_segment(aes(x= 0.5, y= -0.11, xend= 0.62, yend= -0.33), linewidth=0.2)+
-  #annotate(geom="text", x= 0.7, y= -0.24, label="hypolimnetic temp.", size=1.5) +
-  #annotate(geom="text", x= 0.45, y= -0.48, label="epilimnetic TN", size=1.5) +
-  #annotate(geom="text", x= 0.76, y= -0.47, label="epilimnetic TP", size=1.5) +
-  #annotate(geom="text", x= 0.29, y= -0.3, label="air temp.", size=1.5) +
-  #geom_segment(aes(x= 0.29, y= -0.29, xend= 0.4, yend= -0.26), linewidth=0.2)
+  #annotate(geom="text", x= 0.45, y= 0.36, label="hypolimnetic sp. cond.", size=1.5) +
+  #geom_segment(aes(x = 0.25, y = 0.23, xend = 0.28, yend =0.34), linewidth= 0.4) +
+  #annotate(geom="text", x=  0.45, y= 0.32, label="epilimnetic chl.", size=1.5) +
+  #geom_segment(aes(x = 0.29, y = 0.24, xend = 0.34, yend =0.3), linewidth= 0.4) +
+  #annotate(geom="text", x=  0.01, y= 0.37, label="epilimnetic sp. cond.", size=1.5) +
+  #annotate(geom="text", x= -0.19, y= -0.33, label="wind speed", size=1.5) +
+  #annotate(geom="text", x= -0.32, y= -0.23, label="Secchi", size=1.5) +
+  #annotate(geom="text", x= -0.5, y= 0.17, label="thermocline depth", size=1.5) +
+  #annotate(geom="text", x= 0.71, y= -0.03, label="epilimnetic PAR", size=1.5) +
+  #annotate(geom="text", x= 0.17, y= 0.41, label="epilimnetic temp.", size=1.5) +
+  #annotate(geom="text", x= 0.69, y= 0.23, label="hypolimnetic chl.", size=1.5) +
+  #annotate(geom="text", x= 0.72, y= 0.10, label="hypolimnetic temp.", size=1.5) +
+  #annotate(geom="text", x= 0.56, y= 0.18, label="epilimnetic TN", size=1.5) +
+  #annotate(geom="text", x= 0.58, y= 0.27, label="epilimnetic TP", size=1.5) +
+  #annotate(geom="text", x= 0.05, y= 0.33, label="air temp.", size=1.5) 
 
   #4 vs. 1
-  #annotate(geom="text", x= 0.3, y= 0.38, label="hypolimnetic sp. cond.", size=1.5) +
-  #annotate(geom="text", x= -0.09, y= 0.36, label="epilimnetic chl.", size=1.5) +
-  #annotate(geom="text", x= 0.16, y= 0.18, label="epilimnetic sp. cond.", size=1.5) +
-  #annotate(geom="text", x= -0.25, y= 0.23, label="wind speed", size=1.5) +
-  #annotate(geom="text", x= -0.46, y= 0.06, label="Secchi", size=1.5) +
-  #annotate(geom="text", x= -0.55, y= -0.06, label="thermocline depth", size=1.5) +
-  #annotate(geom="text", x= 0.73, y= 0.35, label="epilimnetic PAR", size=1.5) +
-  #annotate(geom="text", x= 0.42, y= -0.12, label="epilimnetic temp.", size=1.5) +
-  #annotate(geom="text", x= 0.7, y= 0.03, label="hypolimnetic chl.", size=1.5) +
+  #annotate(geom="text", x= 0.42, y= -0.66, label="hypolimnetic sp. cond.", size=1.5) +
+  #annotate(geom="text", x= 0.09, y= -0.67, label="epilimnetic chl.", size=1.5) +
+  #annotate(geom="text", x= -0.02, y= -0.55, label="epilimnetic sp. cond.", size=1.5) +
+  #annotate(geom="text", x= -0.1, y= -0.12, label="wind speed", size=1.5) +
+  #annotate(geom="text", x= -0.32, y= 0.17, label="Secchi", size=1.5) +
+  #annotate(geom="text", x= -0.51, y= -0.19, label="thermocline depth", size=1.5) +
+  #annotate(geom="text", x= 0.74, y= -0.14, label="epilimnetic PAR", size=1.5) +
+  #annotate(geom="text", x= 0.27, y= -0.23, label="epilimnetic temp.", size=1.5) +
+  #annotate(geom="text", x= 0.63, y= -0.02, label="hypolimnetic chl.", size=1.5) +
   #annotate(geom="text", x= 0.71, y= 0.1, label="hypolimnetic temp.", size=1.5) +
-  #annotate(geom="text", x= 0.67, y= -0.05, label="epilimnetic TN", size=1.5) +
-  #annotate(geom="text", x= 0.71, y= -0.14, label="epilimnetic TP", size=1.5) +
-  #annotate(geom="text", x= 0.43, y= -0.28, label="air temp.", size=1.5)
-#ggsave("figures/NMDS_2v1_envfit_ant_conds.jpg", NMDS_day_env, width=3, height=2.5) 
+  #annotate(geom="text", x= 0.62, y= 0.04, label="epilimnetic TN", size=1.5) +
+  #annotate(geom="text", x= 0.46, y= 0.14, label="epilimnetic TP", size=1.5) +
+  #annotate(geom="text", x= 0.1, y= 0.17, label="air temp.", size=1.5)
+#ggsave("figures/NMDS_2v1_envfit.jpg", NMDS_day_env, width=3, height=2.5) 
 
 #------------------------------------------------------------------------------#
 #multiplot of env variable vs NMDS1 centroids for SI
@@ -1105,19 +1074,17 @@ migration_vs_disp <- ggplot(data=migration_drivers, aes(disp, value, color=group
 #ggsave("figures/migration_metrics_vs_dispersion.jpg", migration_vs_disp, width=3, height=3) 
 
 #migration vs env variables
-ggplot(migration_drivers, aes(Secchi, abs(value), color=groups)) +
-  geom_point(size=3) + facet_wrap(~variable, scales = "free_y") + 
-  ylab("Migration metric") +
-  scale_color_manual("",values=c("#008585","#9BBAA0","#F2E2B0",
-                                 "#DEA868","#C7522B"), 
-                     labels=c("10-11 Jul 2019","24-25 Jul 2019",
-                              "12-13 Aug 2020", "15-16 Jun 2021",
-                              "7-8 Jul 2021"), guide=guide_legend(order=1)) +
-  guides(color = guide_legend(nrow=2,byrow=TRUE)) +
-  theme(text = element_text(size=6), 
-        axis.text = element_text(size=5, color="black"), 
-        legend.background = element_blank(), 
-        legend.key = element_blank(), 
+migration_vs_env <- ggplot(migration_drivers, aes(Air_temp, abs(value), color=groups)) +
+    geom_point() + facet_wrap(~variable, scales = "free_y") + 
+    ylab("Migration metric") + #xlab("Wind Speed (m/s)") +
+    scale_color_manual("",values=c("#008585","#9BBAA0","#F2E2B0",
+                                   "#DEA868","#C7522B"), 
+                       labels=c("10-11 Jul 2019","24-25 Jul 2019",
+                                "12-13 Aug 2020", "15-16 Jun 2021",
+                                "7-8 Jul 2021"), guide=guide_legend(order=1)) +
+    guides(color = guide_legend(nrow=2,byrow=TRUE)) + 
+  theme(text = element_text(size=6), axis.text = element_text(size=5, color="black"), 
+        legend.background = element_blank(), legend.key = element_blank(), 
         legend.key.height=unit(0.3,"line"),
         legend.margin=margin(0,0,0,0),
         legend.box.margin=margin(-4,-4,-4,-4),
@@ -1125,5 +1092,6 @@ ggplot(migration_drivers, aes(Secchi, abs(value), color=groups)) +
         strip.background = element_rect(fill = "transparent"), 
         legend.position = "top", 
         legend.spacing = unit(-0.5, 'cm'), panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(), legend.key.width =unit(0.7,"line"))
-  
+        panel.grid.minor = element_blank(), legend.key.width =unit(0.7,"line")) 
+ggsave("figures/migration_metrics_vs_air_temp.jpg", migration_vs_env, width=3, height=3)
+

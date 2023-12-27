@@ -88,7 +88,7 @@ all_DVM$Hour <- ifelse(all_DVM$Hour=="noon" &
 names(all_DVM)[names(all_DVM)=="Hour"] <- "time"
 
 #not sure if this is the right call, but going to set all negative values to 0 bc they are not real and due to additive error across all steps
-all_DVM$value[all_DVM$value < 0] <- 0 #n=6
+all_DVM$value[all_DVM$value < 0] <- 0 #n=54...
 
 #shorten metric name
 all_DVM$metric <- ifelse(all_DVM$WaterColumn=="epilimnion", substr(all_DVM$metric,1,nchar(all_DVM$metric)-13),substr(all_DVM$metric,1,nchar(all_DVM$metric)-14))
@@ -184,32 +184,33 @@ DHM_metrics <- DHM_metrics_noon1 |>
 
 #only select cladocerans, copepods, and rotifers
 DHM_metrics <- DHM_metrics |> 
-  filter(Taxon %in% c("Calanoida","Cyclopoida","nauplius",  "Bosmina",
-                      "Ceriodaphnia", "Daphnia","Collothecidae", "Conochilidae",
-                      "Gastropidae", "Kellicottia", "Keratella","Lecane",
-                      "Lepadella", "Monostyla", "Synchaetidae", "Trichocercidae"))
+  filter(Taxon %in% c("Calanoida","Cyclopoida","nauplius", "Bosmina", "Polyarthra",
+                      "Ceriodaphnia", "Daphnia","Collotheca", "Conochiloides",
+                      "Conochilus", "Gastropus","Kellicottia", "Keratella",
+                      "Lepadella", "Monostyla",  "Trichocerca", "Pompholyx"))
   #filter(Taxon %in% c("Cladocera", "Copepoda", "Rotifera"))
 
 DVM_metrics <- DVM_metrics |> 
-  filter(grepl("Calanoida",DVM_metrics$metric) |
-           grepl("Cyclopoida",DVM_metrics$metric) |
-           grepl("nauplius", DVM_metrics$metric) |
-           grepl("Bosmina", DVM_metrics$metric) |
-           grepl("Ceriodaphnia", DVM_metrics$metric) |
-           grepl("Daphnia", DVM_metrics$metric) |
-           grepl("Collothecidae", DVM_metrics$metric) |
-           grepl("Conochilidae", DVM_metrics$metric) |
-           grepl("Gastropidae", DVM_metrics$metric) |
-           grepl("Kellicottia", DVM_metrics$metric) |
-           grepl("Keratella", DVM_metrics$metric) |
-           grepl("Lecane", DVM_metrics$metric) |
-           grepl("Lepadella", DVM_metrics$metric) |
-           grepl("Monostyla", DVM_metrics$metric) |
-           grepl("Synchaetidae", DVM_metrics$metric) |
-           grepl("Trichocercidae", DVM_metrics$metric))
-#  filter(grepl("Cladocera",DVM_metrics$metric) |
-#          grepl("Copepoda",DVM_metrics$metric) |
-#          grepl("Rotifera", DVM_metrics$metric))
+ filter(grepl("Calanoida",DVM_metrics$metric) |
+          grepl("Cyclopoida",DVM_metrics$metric) |
+          grepl("nauplius", DVM_metrics$metric) |
+          grepl("Bosmina", DVM_metrics$metric) |
+          grepl("Polyarthra", DVM_metrics$metric) |
+          grepl("Ceriodaphnia", DVM_metrics$metric) |
+          grepl("Daphnia", DVM_metrics$metric) |
+          grepl("Collotheca", DVM_metrics$metric) |
+          grepl("Conochiloides", DVM_metrics$metric) |
+          grepl("Conochilus", DVM_metrics$metric) |
+          grepl("Gastropus", DVM_metrics$metric) |
+          grepl("Kellicottia", DVM_metrics$metric) |
+          grepl("Keratella", DVM_metrics$metric) |
+          grepl("Lepadella", DVM_metrics$metric) |
+          grepl("Monostyla", DVM_metrics$metric) |
+          grepl("Trichocerca", DVM_metrics$metric) |
+          grepl("Pompholyx", DVM_metrics$metric))
+  #filter(grepl("Cladocera",DVM_metrics$metric) |
+  #       grepl("Copepoda",DVM_metrics$metric) |
+  #       grepl("Rotifera", DVM_metrics$metric))
 
 #average noons for dvm and dhm dfs
 DHM_metrics$density_NopL <- rowMeans(DHM_metrics[,c(3,5)], na.rm=TRUE)
@@ -279,16 +280,17 @@ migration_long$metric <- factor(migration_long$metric , levels = c(
   "Calanoida_BiomassConcentration_ugpL", "Calanoida_density_NopL",
   "Cyclopoida_BiomassConcentration_ugpL", "Cyclopoida_density_NopL",
   "nauplius_BiomassConcentration_ugpL", "nauplius_density_NopL",
-  "Collothecidae_BiomassConcentration_ugpL", "Collothecidae_density_NopL",
-  "Conochilidae_BiomassConcentration_ugpL", "Conochilidae_density_NopL",
-  "Gastropidae_BiomassConcentration_ugpL", "Gastropidae_density_NopL",
+  "Collotheca_BiomassConcentration_ugpL", "Collotheca_density_NopL",
+  "Conochiloides_BiomassConcentration_ugpL", "Conochiloides_density_NopL",
+  "Conochilus_BiomassConcentration_ugpL", "Conochilus_density_NopL",
+  "Gastropus_BiomassConcentration_ugpL", "Gastropus_density_NopL",
   "Kellicottia_BiomassConcentration_ugpL", "Kellicottia_density_NopL",
   "Keratella_BiomassConcentration_ugpL", "Keratella_density_NopL" ,
-  "Lecane_BiomassConcentration_ugpL", "Lecane_density_NopL",
   "Lepadella_BiomassConcentration_ugpL", "Lepadella_density_NopL",
   "Monostyla_BiomassConcentration_ugpL", "Monostyla_density_NopL",
-  "Synchaetidae_BiomassConcentration_ugpL", "Synchaetidae_density_NopL",
-  "Trichocercidae_BiomassConcentration_ugpL", "Trichocercidae_density_NopL"))
+  "Trichocerca_BiomassConcentration_ugpL", "Trichocerca_density_NopL",
+  "Polyarthra_BiomassConcentration_ugpL", "Polyarthra_density_NopL",
+  "Pompholyx_BiomassConcentration_ugpL", "Pompholyx_density_NopL"))
 
 #change facet labels
 #metric_taxa <-c("cladocerans","cladocerans","copepods",
@@ -296,14 +298,33 @@ migration_long$metric <- factor(migration_long$metric , levels = c(
 
 metric_taxa <- c("Bosmina", "Bosmina", "Calanoida","Calanoida", 
                  "Ceriodaphnia", "Ceriodaphnia", "Collotheca", "Collotheca",
-                 "Conochilus", "Conochilus", "Cyclopoida", "Cyclopoida",
-                 "Daphnia", "Daphnia", "Gastropus", "Gastropus",
-                 "Kellicottia", "Kellicottia", "Keratella", "Keratella",
-                 "Lecane", "Lecane", "Lepadella", "Lepadella",
-                 "Monostyla", "Monostyla", "Synchaeta", "Synchaeta",
-                  "Trichocerca", "Trichocerca", "nauplius", "nauplius")
+                 "Conochiloides", "Conochiloides", "Conochilus", "Conochilus",
+                 "Cyclopoida", "Cyclopoida", "Daphnia", "Daphnia",
+                 "Gastropus", "Gastropus", "Kellicottia", "Kellicottia",
+                 "Keratella", "Keratella", "Lepadella", "Lepadella",
+                 "Monostyla", "Monostyla", "Polyarthra", "Polyarthra",
+                 "Pompholyx", "Pompholyx", "Trichocerca", "Trichocerca",
+                 "nauplius", "nauplius")
 
 names(metric_taxa) <- c(unique(migration_long$metric))
+
+migration_long$metric_parsed <- c(rep("italic(Bosmina)",10), 
+                                  rep('Calanoida',10), 
+                                  rep("italic(Ceriodaphnia)",10),
+                                  rep("italic(Collotheca)",10),
+                                  rep("italic(Conochiloides)",10),
+                                  rep("italic(Conochilus)", 10),
+                                  rep('Cyclopoida', 10),
+                                  rep("italic(Daphnia)",10),
+                                  rep("italic(Gastropus)",10),
+                                  rep("italic(Kellicottia)",10),
+                                  rep("italic(Keratella)",10),
+                                  rep("italic(Lepadella)",10),
+                                  rep("italic(Monostyla)",10),
+                                  rep("italic(Polyarthra)",10),
+                                  rep("italic(Pompholyx)",10),
+                                  rep("italic(Trichocerca)", 10),
+                                  rep('nauplius',10))
 
 #plot migration metrics --> Figure 9
 ggplot(subset(migration_long, grepl("density",metric, ignore.case=T)), 
@@ -319,27 +340,19 @@ ggplot(subset(migration_long, grepl("density",metric, ignore.case=T)),
   theme(text = element_text(size=8), axis.text = element_text(size=7, color="black"), 
         legend.background = element_blank(), legend.key = element_blank(), 
         legend.key.height=unit(0.3,"line"), 
-        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1), 
+        axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1), 
         strip.background = element_rect(fill = "transparent"), 
         plot.margin = unit(c(0,3,0,0), 'lines'),
         legend.position = c(0.93,0.98), #c(0.92,0.94) 
         legend.spacing = unit(-0.5, 'cm'),
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
         legend.key.width =unit(0.7,"line")) + guides(fill="none", color='none') +
-  facet_wrap(~metric, labeller = labeller(metric=metric_taxa)) + ylab("Density migration metric") +
-  #geom_text(aes(x=17, y=c(rep(0,38), 0.4, -0.4,
-  #                        rep(0,38), 0.4, -0.4,
-  #                        rep(0,38), 0.4, -0.4,
-  #                        rep(0,38), 0.4, -0.4), 
-  #              label=c(rep(NA,38),"Typical \nMigration","Reverse \nMigration", 
-  #                      rep(NA,38),"Typical \nMigration","Reverse \nMigration", 
-  #                      rep(NA,38),"Typical \nMigration","Reverse \nMigration", 
-  #                      rep(NA,38),"Typical \nMigration","Reverse \nMigration")),
-  #          hjust = 0, size = 3, color="black") + 
+  facet_wrap(.~metric_parsed, labeller = label_parsed) + 
+               ylab("Density migration metric") +
   #geom_text(aes(x=5.9, y=c(rep(0,28),0.4,-0.4), label=c(rep(NA,28),"Typical \nMigration", "Reverse \nMigration")), 
   #          hjust = 0, size = 3, color="black") + 
   coord_cartesian(xlim = c(1, 5), clip = 'off')
-ggsave("figures/BVR_MSNs_migration_metrics_dens_16taxa.jpg", width=5, height=4) 
+ggsave("figures/BVR_MSNs_migration_metrics_dens_17taxa.jpg", width=5, height=4) 
 #ggsave("figures/BVR_MSNs_migration_metrics_dens_3taxa.jpg", width=5, height=4) 
 
 #Figure S10

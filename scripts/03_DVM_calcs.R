@@ -70,14 +70,14 @@ zoop.repmeans <- zoop %>% select(sample_ID,site_no,collect_date,Hour,
                    TotalBiomass_ug,Cladocera_density_NopL, 
                    Cladocera_BiomassConcentration_ugpL, 
                    Cladocera_totalbiomass_ug, Cladocera_PercentOfTotal,
+                   Copepoda_density_NopL, Copepoda_BiomassConcentration_ugpL, 
+                   Copepoda_totalbiomass_ug, Copepoda_PercentOfTotal,
                    Cyclopoida_density_NopL, Cyclopoida_BiomassConcentration_ugpL, 
                    Cyclopoida_totalbiomass_ug, Cyclopoida_PercentOfTotal,
                    Rotifera_density_NopL, Rotifera_totalbiomass_ug, 
                    Rotifera_BiomassConcentration_ugpL,Rotifera_PercentOfTotal,
                    Calanoida_PercentOfTotal, Calanoida_density_NopL, 
                    Calanoida_BiomassConcentration_ugpL, Calanoida_totalbiomass_ug,
-                   Copepoda_PercentOfTotal, Copepoda_density_NopL, 
-                   Copepoda_BiomassConcentration_ugpL, Copepoda_totalbiomass_ug,
                    nauplius_PercentOfTotal, nauplius_density_NopL, 
                    nauplius_BiomassConcentration_ugpL, nauplius_totalbiomass_ug,
                    Keratella_PercentOfTotal, Keratella_density_NopL,
@@ -90,24 +90,26 @@ zoop.repmeans <- zoop %>% select(sample_ID,site_no,collect_date,Hour,
                    Daphnia_BiomassConcentration_ugpL, Daphnia_totalbiomass_ug,
                    Bosmina_PercentOfTotal, Bosmina_density_NopL, 
                    Bosmina_BiomassConcentration_ugpL, Bosmina_totalbiomass_ug,
-                   Gastropidae_PercentOfTotal, Gastropidae_density_NopL,
-                   Gastropidae_BiomassConcentration_ugpL, Gastropidae_totalbiomass_ug,
-                   Collothecidae_PercentOfTotal, Collothecidae_density_NopL, 
-                   Collothecidae_BiomassConcentration_ugpL, Collothecidae_totalbiomass_ug,
-                   Conochilidae_PercentOfTotal, Conochilidae_density_NopL,
-                   Conochilidae_BiomassConcentration_ugpL, Conochilidae_totalbiomass_ug,
-                   Synchaetidae_PercentOfTotal, Synchaetidae_density_NopL, 
-                   Synchaetidae_BiomassConcentration_ugpL, Synchaetidae_totalbiomass_ug,
-                   Trichocercidae_PercentOfTotal, Trichocercidae_density_NopL,
-                   Trichocercidae_BiomassConcentration_ugpL, Trichocercidae_totalbiomass_ug,
+                   Gastropus_PercentOfTotal, Gastropus_density_NopL,
+                   Gastropus_BiomassConcentration_ugpL, Gastropus_totalbiomass_ug,
+                   Collotheca_PercentOfTotal, Collotheca_density_NopL, 
+                   Collotheca_BiomassConcentration_ugpL, Collotheca_totalbiomass_ug,
+                   Conochiloides_PercentOfTotal, Conochiloides_density_NopL,
+                   Conochiloides_BiomassConcentration_ugpL, Conochiloides_totalbiomass_ug,
+                   Conochilus_PercentOfTotal, Conochilus_density_NopL,
+                   Conochilus_BiomassConcentration_ugpL, Conochilus_totalbiomass_ug,
+                   Trichocerca_PercentOfTotal, Trichocerca_density_NopL,
+                   Trichocerca_BiomassConcentration_ugpL, Trichocerca_totalbiomass_ug,
                    Lepadella_PercentOfTotal, Lepadella_density_NopL, 
                    Lepadella_BiomassConcentration_ugpL, Lepadella_totalbiomass_ug,
                    Monostyla_PercentOfTotal, Monostyla_density_NopL,
                    Monostyla_BiomassConcentration_ugpL, Monostyla_totalbiomass_ug,
-                   Lecane_PercentOfTotal, Lecane_density_NopL,
-                   Lecane_BiomassConcentration_ugpL, Lecane_totalbiomass_ug,) %>%
+                   Polyarthra_PercentOfTotal, Polyarthra_density_NopL,
+                   Polyarthra_BiomassConcentration_ugpL, Polyarthra_totalbiomass_ug,
+                   Pompholyx_PercentOfTotal, Pompholyx_density_NopL,
+                   Pompholyx_BiomassConcentration_ugpL, Pompholyx_totalbiomass_ug) %>%
   group_by(sample_ID, site_no, Hour, collect_date) %>%
-  summarise_at(vars(ZoopDensity_No.pL:Lecane_totalbiomass_ug), 
+  summarise_at(vars(ZoopDensity_No.pL:Pompholyx_totalbiomass_ug), 
                list(rep.mean=mean, rep.SE=stderr))
 
 #get hour into posixct
@@ -121,13 +123,13 @@ zoop.repmeans$Hour <- as.POSIXct(zoop.repmeans$Hour)
 
 #sum up counts by sample/site/day for DVM analyses + figs
 BVR_counts <- zoop %>% select(sample_ID,site_no,collect_date,Hour, OverallCount_n,
-  CladoceraCount_n, CyclopoidaCount_n, RotiferaCount_n, CalanoidaCount_n, 
-  CopepodaCount_n, naupliusCount_n, KeratellaCount_n, KellicottiaCount_n,
-  CeriodaphniaCount_n, DaphniaCount_n, BosminaCount_n, GastropidaeCount_n,
-  CollothecidaeCount_n, ConochilidaeCount_n, SynchaetidaeCount_n,
-  TrichocercidaeCount_n, LepadellaCount_n, MonostylaCount_n, LecaneCount_n) %>%
+  CladoceraCount_n, CopepodaCount_n, CyclopoidaCount_n, RotiferaCount_n, 
+  CalanoidaCount_n, naupliusCount_n, KeratellaCount_n, KellicottiaCount_n,
+  CeriodaphniaCount_n, DaphniaCount_n, BosminaCount_n, GastropusCount_n,
+  CollothecaCount_n, ConochiloidesCount_n, ConochilusCount_n, TrichocercaCount_n,
+  LepadellaCount_n, MonostylaCount_n, PolyarthraCount_n, PompholyxCount_n) %>%
   group_by(sample_ID, site_no, Hour, collect_date) %>%
-  summarise_at(vars(OverallCount_n:LecaneCount_n), list(rep.mean=mean, rep.SE=stderr))
+  summarise_at(vars(OverallCount_n:PompholyxCount_n), list(rep.mean=mean, rep.SE=stderr))
 
 #add unadjusted volume
 BVR_counts$Volume_unadj<- (zoop %>% select(sample_ID,site_no,collect_date,Hour, 
@@ -150,7 +152,7 @@ BVR_counts<- BVR_counts[order(match(paste0(BVR_counts$sample_ID,
                                            zoop.repmeans$collect_date))),]
 
 #add counts and vol to zoop.repmeans
-zoop.repmeans[,paste0(colnames(BVR_counts[c(5:24,45,46)]))] <- BVR_counts[c(5:24, 45,46)]
+zoop.repmeans[,paste0(colnames(BVR_counts[c(5:25,47,48)]))] <- BVR_counts[c(5:25, 47,48)]
 
 #new dfs for DVM data (BVR_pelagic_DVM_raw is just raw # or ug; BVR_pelagic_DVM_vol_calculated is #/L and ug/L)
 BVR_pelagic_DVM<- zoop.repmeans[(zoop.repmeans$site_no=="BVR_50" |
@@ -269,12 +271,8 @@ matchingcols <- match(substr(c("sample_ID","site_no","Hour","collect_date",
 matchingcols[is.na(matchingcols)] <-
   c(which(colnames(DVM_samples_raw)=="OverallCount_n"),
     which(colnames(DVM_samples_raw)=="DaphniaCount_n"),
-    which(colnames(DVM_samples_raw)=="BosminaCount_n"),
-    which(colnames(DVM_samples_raw)=="LecaneCount_n"))
-
-#and fix trichocercidae total biomass
-matchingcols[41] <- 176
-
+    which(colnames(DVM_samples_raw)=="BosminaCount_n"))
+  
 DVM_samples_raw<- DVM_samples_raw[,unique(matchingcols)]
 
 DVM_samples_dens <- zoop[(substrEnd(zoop$sample_ID,4)=="noon" | 
@@ -286,9 +284,6 @@ DVM_samples_dens <- zoop[(substrEnd(zoop$sample_ID,4)=="noon" |
 matchingcols <- match(substr(c("sample_ID","site_no","Hour","collect_date",
                                density.percent) ,1,15),
                       substr(colnames(DVM_samples_dens),1,15))
-
-#manually change trichocercidae dens query bc pulling the wrong match
-matchingcols[20] <- 177
 
 DVM_samples_dens<- DVM_samples_dens[,unique(matchingcols)] 
 
@@ -364,11 +359,11 @@ for(k in 1:length(FullSamples)){
 
 #wide to long for both dfs separately
 BVR.DVM.calcs.long <-  BVR.DVM.calcs %>% gather(metric,value, 
-  ZoopDensity_No.pL_rep.mean_epi:Lecane_density_NopL_rep.mean_hypo_percent_density) %>%
-    mutate(DateTime = strftime(Hour, "%m-%d-%Y %H:%M"))
+  ZoopDensity_No.pL_rep.mean_epi:Pompholyx_density_NopL_rep.mean_hypo_percent_density) %>%
+    mutate(DateTime = strftime(Hour, "%m-%d-%Y %H:%M")) 
 
 BVR.DVM.calcs.SE.long <-  BVR.DVM.calcs.SE %>% gather(taxa.metric,SE,
-  ZoopDensity_No.pL_rep.mean_epi_SE:Lecane_density_NopL_hypo_percent_density_SE)
+  ZoopDensity_No.pL_rep.mean_epi_SE:Pompholyx_density_NopL_hypo_percent_density_SE) 
 
 #add the SE column from df2 to df1 for combined df
 BVR.DVM.calcs.long$SE <- BVR.DVM.calcs.SE.long$SE

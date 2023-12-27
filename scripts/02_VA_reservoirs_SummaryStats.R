@@ -419,7 +419,7 @@ alltaxa <- c("Cyclopoida","Daphnia","Calanoida","Ascomorpha","Keratella", "naupl
                      "Trichocerca","Asplanchna","Lepadella", "Synchaeta","Trichotria",
                      "Lecane", "Collotheca", "Conochiloides", "Conochilus","Chydorus",
                      "Anuraeopsis","Holopedium","Gastropus", "Monostyla","Brachionus",
-                     "Tylotrocha","Notholca","Cladocera","Rotifera")
+                     "Tylotrocha","Notholca","Cladocera", "Copepoda", "Rotifera")
 
 CorrespondingTaxaLevel <- c("Order","Genus","Order","Genus","Genus","Nauplius",
                             "Genus","Genus","Genus","Genus","Genus",
@@ -427,7 +427,7 @@ CorrespondingTaxaLevel <- c("Order","Genus","Order","Genus","Genus","Nauplius",
                             "Genus","Genus","Genus","Genus","Genus",
                             "Genus","Genus","Genus","Genus","Genus",
                             "Genus","Genus","Genus","Genus","Genus",
-                            "Genus","Genus","Suborder","Phylum")
+                            "Genus","Genus","Suborder", "Subclass","Phylum")
 
 #CorrespondingTaxaLevel<-c("Family","Subclass","Order","Suborder","Order",
 #                          "Phylum","Genus","Genus","Subphylum","Family",

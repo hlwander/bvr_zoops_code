@@ -101,16 +101,18 @@ sites <- c("Pelagic","Littoral")
 names(sites) <- c(50, 51)
 
 taxa_list <- c("Bosmina","Ceriodaphnia","Daphnia","Calanoida",
-               "Cyclopoida","nauplius","Collothecidae","Conochilidae",
-               "Gastropidae","Kellicottia","Keratella","Lecane","Lepadella",
-               "Monostyla","Synchaetidae","Trichocercidae")
+               "Cyclopoida","nauplius","Collotheca","Conochiloides","Conochilus",
+               "Gastropus","Kellicottia","Keratella","Lepadella",
+               "Monostyla","Trichocerca","Polyarthra","Pompholyx")
 
 #rename taxon
-taxon <- c("Bosmina","Calanoida","Ceriodaphnia", "cladocerans",
-           "Collotheca","Conochilus","copepods","Crustacea","Cyclopoida",
-           "Daphnia","Gastropus","Kellicottia","Keratella","Lecane",
-           "Lepadella","Monostyla","Ploima","rotifers","Synchaeta",
-           "Trichocerca","nauplius")
+taxon <- c("Anuraeopsis","Ascomorpha","Asplanchna","Bosmina","Brachionus",
+           "Calanoida","Ceriodaphnia","Chydorus" ,"cladocerans","Collotheca",
+           "Conochiloides","Conochilus","copepods","Cyclopoida", "Daphnia",
+           "Diaphanosoma","Euchlanis","Filinia","Gastropus","Hexarthra",
+           "Holopedium","Kellicottia","Keratella","Lecane","Lepadella",
+           "Monostyla","Notholca","Polyarthra","Pompholyx","rotifers","Sida",
+           "Synchaeta","Trichocerca","Trichotria","Tylotrocha","nauplius")
 names(taxon) <- unique(zoop_DHM$Taxon)
 
 #------------------------------------------------------------------------------#
@@ -210,7 +212,7 @@ zoop_biom_prop <- zoop_dens_stand |>  group_by(Taxon, Site, MSN) |>
 
 range(zoop_biom_prop$biom_prop[zoop_biom_prop$Taxon=="Cladocera"])
 range(zoop_biom_prop$biom_prop[zoop_biom_prop$Taxon=="Copepoda"])
-range(zoop_biom_prop$biom_prop[zoop_biom_prop$Taxon=="Rotifera"]) #2-53%
+range(zoop_biom_prop$biom_prop[zoop_biom_prop$Taxon=="Rotifera"]) #2-51%
 
 #rename taxon
 taxon <- c("cladocerans","copepods", "rotifers")
@@ -423,8 +425,8 @@ all_zoops_mean <- all_zoops |>
 ggplot(all_zoops_mean, aes(x=variable, y=mean_percent, fill=variable)) +
   theme_bw() + geom_bar(stat="identity") + 
   geom_errorbar( aes(ymin=mean_percent-sd_percent, ymax=mean_percent+sd_percent), 
-                 width=0.4,  alpha=0.9, size=1.3) +
-  geom_hline(yintercept=1, col="red") +
+                 width=0.4,  alpha=0.9, linewidth=1.3) +
+  geom_hline(yintercept=0.1, col="red") +
   theme(text = element_text(size=5), 
         axis.text = element_text(size=5, color="black"), 
         axis.text.x = element_text(angle = 90, 
