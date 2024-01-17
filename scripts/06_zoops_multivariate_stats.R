@@ -260,7 +260,7 @@ fig5 <- egg::ggarrange(NMDS_site, NMDS_day, NMDS_hour, nrow=1)
 #supplemental nmds comparing day and night + day, night, and sunset/sunrise
 ord <- ordiplot(NMDS_temporal_avg_bray,display = c('sites','species'),
                 choices = c(1,2),type = "n")
-dn <- gg_ordiplot(ord, zoop_avg$day, kind = "ehull", 
+dns <- gg_ordiplot(ord, zoop_avg$dns, kind = "ehull", 
                      ellipse=FALSE, hull = TRUE, plot = FALSE, pt.size=0.9) 
 
 NMDS_dns <- dns$plot + geom_point() + theme_bw() + 

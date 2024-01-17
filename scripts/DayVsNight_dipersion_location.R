@@ -34,7 +34,7 @@ ord_day <- ordiplot(NMDS_temporal_day_bray,display = c('sites','species'),
 sites_day <- gg_ordiplot(ord_day, zoop_day$site, kind = "ehull", 
                          ellipse=FALSE, hull = TRUE, plot = FALSE, pt.size=0.9) 
 
-NMDS_site_day <- sites_day$plot + geom_point() + theme_bw() + 
+NMDS_site_day <- sites_day$plot + geom_point() + theme_bw() + xlab(NULL) +
   geom_polygon(data = sites_day$df_hull, aes(x = x, y = y, fill = Group), alpha=0.2) +
   geom_point(data=sites_day$df_mean.ord, aes(x, y), 
              color="black", pch=21, size=2, fill=c("#882255","#3399CC")) +
@@ -50,10 +50,10 @@ NMDS_site_day <- sites_day$plot + geom_point() + theme_bw() +
         axis.ticks.x = element_line(colour = c(rep("black",4), "transparent")), 
         strip.background = element_rect(fill = "transparent"), 
         legend.position = "top", legend.spacing = unit(-0.5, 'cm'),
-        plot.margin = unit(c(0,-0.1,0,0), 'lines'),
+        plot.margin = unit(c(t=1,r=-0.2,b=0,l=0), 'lines'),
         panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
         legend.key.width =unit(0.1,"line")) + guides(fill="none") +
-  annotate("text", x=-0.15, y=0.5, label= "a: sites", 
+  annotate("text", x=-0.15, y=0.5, label= "sites", 
            fontface = "italic", size = 3) +
   scale_fill_manual("",values=c("#882255","#3399CC"))+
   scale_color_manual("",values=c("#882255","#3399CC"),
@@ -62,7 +62,8 @@ NMDS_site_day <- sites_day$plot + geom_point() + theme_bw() +
 days_day <- gg_ordiplot(ord_day, zoop_day$groups, kind = "ehull", 
                         ellipse=FALSE, hull = TRUE, plot = FALSE, pt.size=0.9) 
 
-NMDS_day_day <- days_day$plot + geom_point() + theme_bw() + geom_path() + ylab(NULL) +
+NMDS_day_day <- days_day$plot + geom_point() + theme_bw() + 
+  geom_path() + ylab(NULL) + xlab(NULL) +
   geom_polygon(data = days_day$df_hull, aes(x = x, y = y, fill = Group), alpha=0.2) +
   geom_point(data=days_day$df_mean.ord, aes(x, y), 
              color="black", pch=21, size=2, 
@@ -81,10 +82,10 @@ NMDS_day_day <- days_day$plot + geom_point() + theme_bw() + geom_path() + ylab(N
         axis.ticks.y = element_blank(),
         strip.background = element_rect(fill = "transparent"), 
         legend.position = "top", legend.spacing = unit(-0.5, 'cm'),
-        plot.margin = unit(c(0,-0.1,0,-0.1), 'lines'),
+        plot.margin = unit(c(t=1,r=-0.2,b=0,l=-0.2), 'lines'),
         panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
         legend.key.width =unit(0.1,"line")) + 
-  annotate("text", x=-0.02, y=0.5, label= "b: sampling dates", 
+  annotate("text", x=-0.02, y=0.5, label= "sampling dates", 
            fontface = "italic", size = 3) +
   guides(fill="none", color = guide_legend(ncol=2)) +
   scale_fill_manual("",values=c("#008585","#89B199","#EFECBF","#DB9B5A","#C7522B"))+
@@ -99,7 +100,8 @@ hours_day <- gg_ordiplot(ord_day, zoop_day$order, kind = "ehull",
 hours_day$df_hull$Group <- factor(hours_day$df_hull$Group, levels = 
                                     c(unique(hours_day$df_hull$Group)))
 
-NMDS_hour_day <- hours_day$plot + geom_point() + theme_bw() + geom_path() + ylab(NULL) +
+NMDS_hour_day <- hours_day$plot + geom_point() + theme_bw() + 
+  geom_path() + ylab(NULL) + xlab(NULL) +
   geom_polygon(data = hours_day$df_hull, aes(x = x, y = y, fill = Group), alpha=0.2) +
   geom_point(data=hours_day$df_mean.ord, aes(x, y), 
              color="black", pch=21, size=2, fill=hcl.colors(7,"sunset")) +
@@ -117,17 +119,15 @@ NMDS_hour_day <- hours_day$plot + geom_point() + theme_bw() + geom_path() + ylab
         axis.ticks.y = element_blank(),
         strip.background = element_rect(fill = "transparent"), 
         legend.position = "top", legend.spacing = unit(-0.5, 'cm'),
-        plot.margin = unit(c(0,0,0,-0.1), 'lines'),
+        plot.margin = unit(c(t=1,r=0,b=0,l=-0.2), 'lines'),
         panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
         legend.key.width =unit(0.1,"line")) + guides(fill="none") +
-  annotate("text", x=0, y=0.5, label= "c: hours of the day",
+  annotate("text", x=0, y=0.5, label= "hours of the day",
            fontface = "italic", size=3) +
   scale_fill_manual("",values=hcl.colors(7,"sunset"))+
   scale_color_manual("",values=hcl.colors(7,"sunset"),
                      label=c('12pm','6pm','7pm','8pm','6am','7am','12pm'))
 
-fig5 <- egg::ggarrange(NMDS_site_day, NMDS_day_day, NMDS_hour_day, nrow=1)
-#ggsave("figures/DAYONLY_NMDS_multipanel_2v1.jpg",fig5, width=5, height=3.5) 
 
 
 ord_night <- ordiplot(NMDS_temporal_night_bray,display = c('sites','species'),
@@ -135,7 +135,7 @@ ord_night <- ordiplot(NMDS_temporal_night_bray,display = c('sites','species'),
 sites_night <- gg_ordiplot(ord_night, zoop_night$site, kind = "ehull", 
                            ellipse=FALSE, hull = TRUE, plot = FALSE, pt.size=0.9) 
 
-NMDS_site_night <- sites_night$plot + geom_point() + theme_bw() + 
+NMDS_site_night <- sites_night$plot + geom_point() + theme_bw() + xlim(c(-0.5,0.5)) +
   geom_polygon(data = sites_night$df_hull, aes(x = x, y = y, fill = Group), alpha=0.2) +
   geom_point(data=sites_night$df_mean.ord, aes(x, y), 
              color="black", pch=21, size=2, fill=c("#882255","#3399CC")) +
@@ -150,12 +150,10 @@ NMDS_site_night <- sites_night$plot + geom_point() + theme_bw() +
         axis.text.x = element_text(vjust = 0.5), 
         axis.ticks.x = element_line(colour = c(rep("black",4), "transparent")), 
         strip.background = element_rect(fill = "transparent"), 
-        legend.position = "top", legend.spacing = unit(-0.5, 'cm'),
-        plot.margin = unit(c(0,-0.1,0,0), 'lines'),
+        legend.position = "none", legend.spacing = unit(-0.5, 'cm'),
+        plot.margin = unit(c(t=0,r=-0.2,b=0,l=0), 'lines'),
         panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
         legend.key.width =unit(0.1,"line")) + guides(fill="none") +
-  annotate("text", x=-0.15, y=0.5, label= "a: sites", 
-           fontface = "italic", size = 3) +
   scale_fill_manual("",values=c("#882255","#3399CC"))+
   scale_color_manual("",values=c("#882255","#3399CC"),
                      label=c('littoral','pelagic')) 
@@ -163,7 +161,8 @@ NMDS_site_night <- sites_night$plot + geom_point() + theme_bw() +
 days_night <- gg_ordiplot(ord_night, zoop_night$groups, kind = "ehull", 
                           ellipse=FALSE, hull = TRUE, plot = FALSE, pt.size=0.9) 
 
-NMDS_day_night <- days_night$plot + geom_point() + theme_bw() + geom_path() + ylab(NULL) +
+NMDS_day_night <- days_night$plot + geom_point() + theme_bw() + 
+  geom_path() + ylab(NULL) + xlim(c(-0.5,0.5)) +
   geom_polygon(data = days_night$df_hull, aes(x = x, y = y, fill = Group), alpha=0.2) +
   geom_point(data=days_night$df_mean.ord, aes(x, y), 
              color="black", pch=21, size=2, 
@@ -181,12 +180,10 @@ NMDS_day_night <- days_night$plot + geom_point() + theme_bw() + geom_path() + yl
         axis.text.y=element_blank(),
         axis.ticks.y = element_blank(),
         strip.background = element_rect(fill = "transparent"), 
-        legend.position = "top", legend.spacing = unit(-0.5, 'cm'),
-        plot.margin = unit(c(0,-0.1,0,-0.1), 'lines'),
+        legend.position = "none", legend.spacing = unit(-0.5, 'cm'),
+        plot.margin = unit(c(t=0,r=-0.2,b=0,l=-0.2), 'lines'),
         panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
         legend.key.width =unit(0.1,"line")) + 
-  annotate("text", x=-0.02, y=0.5, label= "b: sampling dates", 
-           fontface = "italic", size = 3) +
   guides(fill="none", color = guide_legend(ncol=2)) +
   scale_fill_manual("",values=c("#008585","#89B199","#EFECBF","#DB9B5A","#C7522B"))+
   scale_color_manual("",values=c("#008585","#89B199","#EFECBF","#DB9B5A","#C7522B"),
@@ -200,7 +197,8 @@ hours_night <- gg_ordiplot(ord_night, zoop_night$order, kind = "ehull",
 hours_night$df_hull$Group <- factor(hours_night$df_hull$Group, levels = 
                                       c(unique(hours_night$df_hull$Group)))
 
-NMDS_hour_night <- hours_night$plot + geom_point() + theme_bw() + geom_path() + ylab(NULL) +
+NMDS_hour_night <- hours_night$plot + geom_point() + theme_bw() + 
+  geom_path() + ylab(NULL) + xlim(c(-0.5,0.5)) +
   geom_polygon(data = hours_night$df_hull, aes(x = x, y = y, fill = Group), alpha=0.2) +
   geom_point(data=hours_night$df_mean.ord, aes(x, y), 
              color="black", pch=21, size=2, fill=hcl.colors(4,"sunset")) +
@@ -217,20 +215,21 @@ NMDS_hour_night <- hours_night$plot + geom_point() + theme_bw() + geom_path() + 
         axis.text.y=element_blank(),
         axis.ticks.y = element_blank(),
         strip.background = element_rect(fill = "transparent"), 
-        legend.position = "top", legend.spacing = unit(-0.5, 'cm'),
-        plot.margin = unit(c(0,0,0,-0.1), 'lines'),
+        legend.position = "none", legend.spacing = unit(-0.5, 'cm'),
+        plot.margin = unit(c(t=0,r=0,b=0,l=-0.2), 'lines'),
         panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
         legend.key.width =unit(0.1,"line")) + guides(fill="none") +
-  annotate("text", x=0, y=0.5, label= "c: hours of the day",
-           fontface = "italic", size=3) +
   scale_fill_manual("",values=hcl.colors(4,"sunset"))+
   scale_color_manual("",values=hcl.colors(4,"sunset"),
                      label=c('9pm','12am','4am','5am'))
 
-fig5 <- egg::ggarrange(NMDS_site_night, NMDS_day_night, NMDS_hour_night, nrow=1)
-#ggsave("figures/NIGHTONLY_NMDS_multipanel_2v1.jpg",fig5, width=5, height=3.5) 
-#------------------------------------------------------------------------------#
 
+fig5 <- egg::ggarrange(NMDS_site_day, NMDS_day_day, NMDS_hour_day, 
+                       NMDS_site_night, NMDS_day_night, NMDS_hour_night,
+                       nrow=2,labels = c('a', '','','b','',''),
+                       heights = c(1,1))
+  
+#ggsave("figures/DAYNIGHT_NMDS_multipanel_2v1.jpg",fig5, width=5, height=3.5) 
 
 #-------------------------------------------------------------------------------#
 #                     Calculating euclidean distance  (DAY)                          #
@@ -340,6 +339,8 @@ disp_box_day <- ggboxplot(disp_df_day, x = "group", y = "value",
                  sd(disp_df_day$value[disp_df_day$group=="day_disp"]),
                mean(disp_df_day$value[disp_df_day$group=="hour_disp"]) + 
                  sd(disp_df_day$value[disp_df_day$group=="hour_disp"]))) +
+  annotate("text", x=2, y=0.5, label= "Day",
+           fontface = "italic", size=5) +
   guides(fill = "none") 
 
 pair_box_day <- ggboxplot(pair_df_day, x = "group", y = "value", 
@@ -470,6 +471,8 @@ disp_box_night <- ggboxplot(disp_df_night, x = "group", y = "value",
                  sd(disp_df_night$value[disp_df_night$group=="day_disp"]),
                mean(disp_df_night$value[disp_df_night$group=="hour_disp"]) + 
                  sd(disp_df_night$value[disp_df_night$group=="hour_disp"]))) +
+  annotate("text", x=2, y=0.58, label= "Night",
+           fontface = "italic", size=5) +
   guides(fill = "none") 
 
 pair_box_night <- ggboxplot(pair_df_night, x = "group", y = "value", 
