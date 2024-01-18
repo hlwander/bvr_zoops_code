@@ -179,8 +179,8 @@ zoopdens$CollectionMethod <- ifelse(grepl("schind", zoopdens$sample_ID),
 #start depth
 zoopdens <- zoopdens |> rename(StartDepth_m = DepthOfTow_m)
 
-#end depth is 0 for tows and start depth for schindlers 
-zoopdens$EndDepth_m <- ifelse(zoopdens$CollectionMethod=="Tow", 0,
+#end depth is 0.1 for tows and start depth for schindlers 
+zoopdens$EndDepth_m <- ifelse(zoopdens$CollectionMethod=="Tow", 0.1,
                               zoopdens$StartDepth_m)
 
 #add column for rep # - need this bc not all reps have different collection times recorded...
