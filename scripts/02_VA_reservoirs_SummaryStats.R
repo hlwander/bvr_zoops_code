@@ -269,16 +269,17 @@ for(k in 1:length(SizeID$TaxaID)){
   if(!is.na(SizeID[k,"Phylum"]) & SizeID[k,"Phylum"]=="Rotifera"){
     #loop through each taxa starting with species and ending with Phylum
     for(taxa in length(names(ZoopTaxonomy)):1){
-      #If there is an id there and that matches an id in the conversion dataframe, 
-      #then do the conversion using the median value 
+      #If there is at least one id there and that matches an id in the conversion dataframe, 
+      #then do the conversion using ALL parameter values and take the median
       if(!is.na(SizeID[k,names(ZoopTaxonomy)[taxa]])&SizeID[k,names(ZoopTaxonomy)[taxa]]  %in% 
          as.matrix(RotiferBiomassConversions[names(ZoopTaxonomy)[taxa]])){
-        #Find the median of all values of that taxa
-        conversion.parameter.a<-median(RotiferBiomassConversions$Parameter_vol.a3[
+        #Find all values of that taxa
+        conversion.parameter.a <- RotiferBiomassConversions$Parameter_vol.a3[
           RotiferBiomassConversions[,names(ZoopTaxonomy)[taxa]]==SizeID[
-            k,names(ZoopTaxonomy)[taxa]]],na.rm=T)
+            k,names(ZoopTaxonomy)[taxa]]]
         #Convert to biovolume using the Volume (mm3) = parameter * length^3
-        Volume_mm3<-conversion.parameter.a * (SizeID[k,"Size_mm"])^3
+        vols <- conversion.parameter.a * (SizeID[k,"Size_mm"])^3
+        Volume_mm3 <- median(vols, na.rm = T) #Save median value
         #Convert from volume to fresh weight using a specific gravity of 1 kg/m3 (1000 ug/mm3)
         Freshweight_ug<-Volume_mm3*1000
         #Convert to dry weight assuming ratio of 0.1 (dry:wet) - dry weight = wet * 0.1
@@ -297,10 +298,10 @@ for(k in 1:length(SizeID$TaxaID)){
     if(!is.na(SizeID$Nauplius[k]) & SizeID$Nauplius[k]=="nauplius" & 
        SizeID$Subclass[k]=="Copepoda"){  
       #Find the conversion for Copepod nauplius
-      conversion.parameter.b<-CrustaceanBiomassConversions$b[
+      conversion.parameter.b <- CrustaceanBiomassConversions$b[
         is.na(CrustaceanBiomassConversions$Genus)]
       #choose the a that matches that b
-      conversion.parameter.a<-CrustaceanBiomassConversions$a[
+      conversion.parameter.a <- CrustaceanBiomassConversions$a[
         is.na(CrustaceanBiomassConversions$Genus)]
       #Convert to dry mass using the equation w=e^(a+b(ln(L)) where L is length in mm
       SizeID[k,"Biomass_ug"]<-conversion.parameter.a*(SizeID[k,"Size_mm"]^conversion.parameter.b)
@@ -309,23 +310,24 @@ for(k in 1:length(SizeID$TaxaID)){
       #loop through each taxa starting with species and ending with Phylum
       for(taxa in length(names(ZoopTaxonomy)):1){
         #If there is an id there and that matches an id in the conversion dataframe, 
-        #then do the conversion using the median value 
+        #then do the conversion using the ALL values and take the median
         if(!is.na(SizeID[k,names(ZoopTaxonomy)[taxa]]) & 
            SizeID[k,names(ZoopTaxonomy)[taxa]] %in% 
            as.matrix(CrustaceanBiomassConversions[names(ZoopTaxonomy)[taxa]])){
           #Remove NAs from the data frame
           temp.CrustaceanBiomassConversions<-CrustaceanBiomassConversions[
             !is.na(CrustaceanBiomassConversions[,names(ZoopTaxonomy)[taxa]]),]
-          #Find the median of all values of that taxa for b
-          conversion.parameter.b<-median.zoop(temp.CrustaceanBiomassConversions$b[
+          #Find all values of that taxa for b
+          conversion.parameter.b<-temp.CrustaceanBiomassConversions$b[
             temp.CrustaceanBiomassConversions[,names(ZoopTaxonomy)[taxa]]==SizeID[
-              k,names(ZoopTaxonomy)[taxa]]])
-          #choose the a that matches that b, use median.zoop in case there are several of that taxa with the same slope
-          conversion.parameter.a<-median.zoop(temp.CrustaceanBiomassConversions$a[
-            temp.CrustaceanBiomassConversions$b==conversion.parameter.b&temp.CrustaceanBiomassConversions[
-              ,names(ZoopTaxonomy)[taxa]]==SizeID[k,names(ZoopTaxonomy)[taxa]]])
+              k,names(ZoopTaxonomy)[taxa]]]
+          #Find all values of that taxa for a
+          conversion.parameter.a<-temp.CrustaceanBiomassConversions$a[
+            temp.CrustaceanBiomassConversions[,names(ZoopTaxonomy)[taxa]]==SizeID[
+              k,names(ZoopTaxonomy)[taxa]]]
           #Convert to dry mass using the equation w=e^(a+b(ln(L)) where L is length in mm
-          SizeID[k,"Biomass_ug"]<-conversion.parameter.a*(SizeID[k,"Size_mm"]^conversion.parameter.b)
+          sizes <- conversion.parameter.a*(SizeID[k,"Size_mm"]^conversion.parameter.b)
+          SizeID[k,"Biomass_ug"]<-median(sizes, na.rm = T) #use median value
           
           #break the for loop
           break
