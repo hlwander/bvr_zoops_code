@@ -10,7 +10,7 @@ zoop_summary$DateTime <- as.POSIXct(zoop_summary$DateTime,
 #create column with just date for subsetting
 zoop_summary$date <- as.Date(zoop_summary$DateTime)
 
-#only select 2019-2022 MSN data
+#only select 2019-2021 MSN data
 zoop_summary <- zoop_summary |> 
   filter(date %in% c("2019-07-10", "2019-07-11", "2019-07-24",
                      "2019-07-25", "2020-08-12", "2020-08-13",
@@ -96,62 +96,6 @@ zoop_DHM$MSN <- ifelse(zoop_DHM$date=="2019-07-10" |
                               zoop_DHM$date=="2020-08-13",3,
                      ifelse(zoop_DHM$date=="2021-06-15" | 
                               zoop_DHM$date=="2021-06-16",4,5))))
-
-sites <- c("Pelagic","Littoral")
-names(sites) <- c(50, 51)
-
-taxa_list <- c("Bosmina","Ceriodaphnia","Daphnia","Calanoida",
-               "Cyclopoida","nauplius","Collotheca","Conochiloides","Conochilus",
-               "Gastropus","Kellicottia","Keratella","Lepadella",
-               "Monostyla","Trichocerca","Polyarthra","Pompholyx")
-
-#rename taxon
-taxon <- c("Anuraeopsis","Ascomorpha","Asplanchna","Bosmina","Brachionus",
-           "Calanoida","Ceriodaphnia","Chydorus" ,"cladocerans","Collotheca",
-           "Conochiloides","Conochilus","copepods","Cyclopoida", "Daphnia",
-           "Diaphanosoma","Euchlanis","Filinia","Gastropus","Hexarthra",
-           "Holopedium","Kellicottia","Keratella","Lecane","Lepadella",
-           "Monostyla","Notholca","Polyarthra","Pompholyx","rotifers","Sida",
-           "Synchaeta","Trichocerca","Trichotria","Tylotrocha","nauplius")
-names(taxon) <- unique(zoop_DHM$Taxon)
-
-#------------------------------------------------------------------------------#
-#Figure for zoop density for each MSN 24-hours --> Figure S4
-ggplot(subset(zoop_DHM, Taxon %in% taxa_list),
-                #c("Cladocera","Copepoda","Rotifera")),
-                aes(Hour,Density_IndPerL_rep.mean, color=as.factor(MSN))) + 
-  geom_rect(aes(xmin=as.POSIXct("2022-10-15 11:30:00"),
-                xmax=as.POSIXct("2022-10-15 20:41:00"), ymin=-Inf, ymax= Inf, 
-                fill= "Noon"),color=NA) +
-  geom_rect(aes(xmin=as.POSIXct("2022-10-15 20:42:00"),
-                xmax=as.POSIXct("2022-10-16 06:10:00"), 
-                ymin=-Inf, ymax= Inf, fill= "Midnight"),color=NA) +
-  geom_rect(aes(xmin=as.POSIXct("2022-10-16 06:11:00"),
-                xmax=as.POSIXct("2022-10-16 12:30:00"), 
-                ymin=-Inf, ymax= Inf, fill= "Noon"),color=NA) +
-  geom_point(size=2) + theme_bw() + facet_grid(Site~Taxon,scales="free_y",
-                labeller = labeller(Site=sites, Taxon=taxon)) + 
-  xlab("")+ coord_cartesian(clip = 'off') +
-  theme(text = element_text(size=8), 
-        axis.text = element_text(size=7, color="black"), 
-        legend.background = element_blank(), legend.key = element_blank(), 
-        legend.key.height=unit(0.3,"line"),
-        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), 
-        strip.background = element_rect(fill = "transparent"), 
-        legend.position = c(0.1,0.92), legend.spacing = unit(-0.5, 'cm'),
-        panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
-        legend.key.width =unit(0.7,"line"))+ 
-  scale_x_datetime(expand = c(0,0),labels = date_format("%H-%M",tz="EST5EDT")) +
-  scale_color_manual("",values=c("#008585","#9BBAA0","#F2E2B0","#DEA868","#C7522B"), 
-                     labels=c("10-11 Jul 2019","24-25 Jul 2019",
-                              "12-13 Aug 2020","15-16 Jun 2021","7-8 Jul 2021"), 
-                     guide=guide_legend(order=1)) + 
-  geom_line()+ ylab("Density (Individuals/L)") + 
-  scale_fill_manual("",values=c("#CCCCCC","white"), guide = "none")+
-  geom_errorbar(aes(ymin=Density_IndPerL_rep.mean - Density_IndPerL_rep.SE, 
-                    ymax=Density_IndPerL_rep.mean + Density_IndPerL_rep.SE), 
-                width=.2,position=position_dodge(.9))
-#ggsave("figures/BVR_MSNs_16taxa_density.jpg", width=8, height=4) 
 
 #list of night hours
 night <- c(21,22,23,0,1,2,3,4,5)
@@ -420,7 +364,7 @@ all_zoops_mean <- all_zoops |>
 
 #-----------------------------------------------------------------------------#
 #choose taxa that are > x% of total (count *100 / total count)
-# 20 of them are > 0.05%
+# 17 of them are > 0.1%
 
 ggplot(all_zoops_mean, aes(x=variable, y=mean_percent, fill=variable)) +
   theme_bw() + geom_bar(stat="identity") + 
@@ -436,3 +380,51 @@ ggplot(all_zoops_mean, aes(x=variable, y=mean_percent, fill=variable)) +
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())
 
+#------------------------------------------------------------------------------#
+#response to reviewers figure - seasonal variability in zoop dens
+
+source("scripts/01_install.R")
+
+zoops_msn <- zoop_summary |> filter(year(DateTime) %in% c(2019,2020,2021),
+                                    CollectionMethod=="Tow" & Reservoir %in% c("BVR") &
+                                             StartDepth_m > 7.1) |> 
+                                      select(-c(Site,EndDepth_m,CollectionMethod))
+
+#average reps when appropriate
+zoops_final_post <- zoops_msn |> 
+  mutate(DateTime = as.POSIXct(DateTime, format="%Y-%m-%d %H:%M:%S", tz="UTC")) |> 
+  filter(hour(DateTime) %in% c(9,10,11,12,13,14)) |> #drop nighttime samples
+  mutate(DateTime = as.Date(DateTime)) |> 
+  group_by(Reservoir, DateTime, StartDepth_m, Taxon) |> 
+  summarise(Density_IndPerL = mean(Density_IndPerL))
+
+#new df with just total density, avg by month + calculate sd
+bvr_total_zoops <- zoops_final_post |> group_by(Reservoir, DateTime) |> 
+  summarise(Total = sum(Density_IndPerL[Taxon %in% c("Cladocera","Copeoda","Rotifera")])) |> 
+  ungroup() |> 
+  mutate(year = format(DateTime, "%Y"),
+         month = format(DateTime, "%m")) |> 
+  group_by(year, month) |> 
+  summarise(Total_avg = mean(Total),
+            Total_sd = sd(Total))
+
+#look at doy on x and year by color
+ggplot(bvr_total_zoops, aes(as.Date(paste0("2023-",month,"-01")),
+                            Total_avg, color=as.factor(year))) + 
+  theme_bw() + xlab("Month") + ylab ("Zooplankton (#/L)") +
+  theme(text = element_text(size=14), 
+        axis.text = element_text(size=7, color="black"), 
+        legend.background = element_blank(), 
+        legend.key.height=unit(0.3,"line"),
+        legend.direction = "vertical",
+        axis.text.x = element_text(vjust = 0.5), 
+        axis.ticks.x = element_line(colour = c(rep("black",4), "transparent")), 
+        strip.background = element_rect(fill = "transparent"), 
+        legend.position = c(0.88,0.9), legend.spacing = unit(-0.5, 'cm'),
+        panel.grid.major = element_blank(),panel.grid.minor = element_blank()) +
+  geom_point() +
+  geom_line(linewidth=1.2) + 
+  scale_x_date(date_breaks="2 month", date_labels="%b") +
+  #geom_errorbar(aes(ymin = Total_avg -Total_sd, ymax = Total_avg+Total_sd)) +
+  scale_color_manual("",values=natparks.pals("Banff", 3)) 
+#ggsave("figures/MSN_monthly_tot_dens.jpg", width=5, height=4) 

@@ -43,7 +43,7 @@ zoop_epi_tows$Hour[as.character(zoop_epi_tows$DateTime)=="2019-07-10 19:04:00"] 
 zoop_epi_tows$Hour[as.character(zoop_epi_tows$DateTime)=="2021-07-08 23:54:00"] <- 0
 
 #only select taxa that make up >0.1% of total density
-dom_taxa <- c("Keratella_density_NopL","nauplius_density_NopL",
+dom_taxa <- c("Keratella_density_NopL","Nauplius_density_NopL",
               "Conochilus_density_NopL","Daphnia_density_NopL",
               "Cyclopoida_density_NopL","Kellicottia_density_NopL",
               "Ceriodaphnia_density_NopL","Conochiloides_density_NopL",
