@@ -184,33 +184,33 @@ DHM_metrics <- DHM_metrics_noon1 |>
 
 #only select cladocerans, copepods, and rotifers
 DHM_metrics <- DHM_metrics |> 
-  #filter(Taxon %in% c("Calanoida","Cyclopoida","nauplius", "Bosmina", "Polyarthra",
-  #                    "Ceriodaphnia", "Daphnia","Collotheca", "Conochiloides",
-  #                    "Conochilus", "Gastropus","Kellicottia", "Keratella",
-  #                    "Lepadella", "Monostyla",  "Trichocerca", "Pompholyx"))
-  filter(Taxon %in% c("Cladocera", "Copepoda", "Rotifera"))
+  filter(Taxon %in% c("Calanoida","Cyclopoida","Nauplius", "Bosmina", "Polyarthra",
+                      "Ceriodaphnia", "Daphnia","Collotheca", "Conochiloides",
+                      "Conochilus", "Gastropus","Kellicottia", "Keratella",
+                      "Lepadella", "Monostyla",  "Trichocerca", "Pompholyx"))
+  #filter(Taxon %in% c("Cladocera", "Copepoda", "Rotifera"))
 
 DVM_metrics <- DVM_metrics |> 
- #filter(grepl("Calanoida",DVM_metrics$metric) |
- #         grepl("Cyclopoida",DVM_metrics$metric) |
- #         grepl("nauplius", DVM_metrics$metric) |
- #         grepl("Bosmina", DVM_metrics$metric) |
- #         grepl("Polyarthra", DVM_metrics$metric) |
- #         grepl("Ceriodaphnia", DVM_metrics$metric) |
- #         grepl("Daphnia", DVM_metrics$metric) |
- #         grepl("Collotheca", DVM_metrics$metric) |
- #         grepl("Conochiloides", DVM_metrics$metric) |
- #         grepl("Conochilus", DVM_metrics$metric) |
- #         grepl("Gastropus", DVM_metrics$metric) |
- #         grepl("Kellicottia", DVM_metrics$metric) |
- #         grepl("Keratella", DVM_metrics$metric) |
- #         grepl("Lepadella", DVM_metrics$metric) |
- #         grepl("Monostyla", DVM_metrics$metric) |
- #         grepl("Trichocerca", DVM_metrics$metric) |
- #         grepl("Pompholyx", DVM_metrics$metric))
-  filter(grepl("Cladocera",DVM_metrics$metric) |
-         grepl("Copepoda",DVM_metrics$metric) |
-         grepl("Rotifera", DVM_metrics$metric))
+ filter(grepl("Calanoida",DVM_metrics$metric) |
+          grepl("Cyclopoida",DVM_metrics$metric) |
+          grepl("nauplius", DVM_metrics$metric) |
+          grepl("Bosmina", DVM_metrics$metric) |
+          grepl("Polyarthra", DVM_metrics$metric) |
+          grepl("Ceriodaphnia", DVM_metrics$metric) |
+          grepl("Daphnia", DVM_metrics$metric) |
+          grepl("Collotheca", DVM_metrics$metric) |
+          grepl("Conochiloides", DVM_metrics$metric) |
+          grepl("Conochilus", DVM_metrics$metric) |
+          grepl("Gastropus", DVM_metrics$metric) |
+          grepl("Kellicottia", DVM_metrics$metric) |
+          grepl("Keratella", DVM_metrics$metric) |
+          grepl("Lepadella", DVM_metrics$metric) |
+          grepl("Monostyla", DVM_metrics$metric) |
+          grepl("Trichocerca", DVM_metrics$metric) |
+          grepl("Pompholyx", DVM_metrics$metric))
+ # filter(grepl("Cladocera",DVM_metrics$metric) |
+ #        grepl("Copepoda",DVM_metrics$metric) |
+ #        grepl("Rotifera", DVM_metrics$metric))
 
 #average noons for dvm and dhm dfs
 DHM_metrics$density_NopL <- rowMeans(DHM_metrics[,c(3,5)], na.rm=TRUE)
