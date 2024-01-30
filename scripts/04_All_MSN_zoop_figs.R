@@ -282,7 +282,7 @@ zoop_DHM$MeanLength_mm_rep.mean[zoop_DHM$MeanLength_mm_rep.mean==0] <- NA
 taxon <- c("cladocerans","copepods", "rotifers")
 names(taxon) <- unique(zoop_dens_stand$Taxon)
 
-#Figure S4
+#Figure S11
 ggplot(subset(zoop_DHM, Taxon %in% c("Cladocera", "Copepoda", "Rotifera")),
        aes(Hour,MeanLength_mm_rep.mean, color=as.factor(MSN))) + 
   geom_rect(aes(xmin=as.POSIXct("2022-10-15 11:30:00"),

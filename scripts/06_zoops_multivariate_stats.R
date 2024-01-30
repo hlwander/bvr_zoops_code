@@ -1012,7 +1012,7 @@ msn_drivers_long$NMDS1 <- ifelse(msn_drivers_long$groups==1, days$df_mean.ord$x[
                           ifelse(msn_drivers_long$groups==4, days$df_mean.ord$x[4],
                                                  days$df_mean.ord$y[5]))))
 
-#multipanel plot (Figure S2)
+#multipanel plot (Figure S3)
 driver_NMDS <- ggplot(data=msn_drivers_long, aes(NMDS1, value, color=groups)) + 
   geom_point() + facet_wrap(~variable, scales = "free_y") + scale_color_manual(
     "",values=c("#008585","#9BBAA0","#F2E2B0","#DEA868","#C7522B"), 
