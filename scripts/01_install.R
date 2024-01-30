@@ -47,7 +47,7 @@ median.zoop<-function(vector){
 #------------------------------------------------------------------#
 #download zoop data from EDI
 
-inUrl1  <-  "https://pasta-s.lternet.edu/package/data/eml/edi/1090/27/9eb6db370194bd3b2824726d89a008a6" 
+inUrl1  <-   "https://pasta.lternet.edu/package/data/eml/edi/197/3/9eb6db370194bd3b2824726d89a008a6" 
 infile1 <- tempfile()
 try(download.file(inUrl1,infile1,method="curl"))
 if (is.na(file.size(infile1))) download.file(inUrl1,infile1,method="auto")
