@@ -634,7 +634,8 @@ secchi[5,] <- c("BVR",50,"2021-07-08",1.8,0,0)
 #ctd
 inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/200/13/27ceda6bc7fdec2e7d79a6e4fe16ffdf" 
 infile1 <- tempfile()
-try(download.file(inUrl1,infile1, timeout = max(300, getOption("timeout"))))
+try(download.file(inUrl1,infile1,method="curl"))
+#try(download.file(inUrl1,infile1, timeout = max(300, getOption("timeout"))))
 
 ctd <-read.csv(infile1,header=T) |>
   dplyr::mutate(DateTime = as.Date(DateTime)) |>
@@ -1073,8 +1074,8 @@ migration_vs_disp <- ggplot(data=migration_drivers, aes(disp, value, color=group
         panel.grid.minor = element_blank(), legend.key.width =unit(0.7,"line")) 
 #ggsave("figures/migration_metrics_vs_dispersion.jpg", migration_vs_disp, width=3, height=3) 
 
-#migration vs env variables
-migration_vs_env <- ggplot(migration_drivers, aes(Air_temp, abs(value), color=groups)) +
+#abs value migration vs env variables
+migration_vs_env <- ggplot(migration_drivers, aes(Wind_speed, abs(value), color=groups)) +
     geom_point() + facet_wrap(~variable, scales = "free_y") + 
     ylab("Migration metric") + #xlab("Wind Speed (m/s)") +
     scale_color_manual("",values=c("#008585","#9BBAA0","#F2E2B0",
@@ -1093,5 +1094,6 @@ migration_vs_env <- ggplot(migration_drivers, aes(Air_temp, abs(value), color=gr
         legend.position = "top", 
         legend.spacing = unit(-0.5, 'cm'), panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), legend.key.width =unit(0.7,"line")) 
-ggsave("figures/migration_metrics_vs_air_temp.jpg", migration_vs_env, width=3, height=3)
+ggsave("figures/abs_migration_metrics_vs_wind.jpg", migration_vs_env, width=3, height=3)
+
 
