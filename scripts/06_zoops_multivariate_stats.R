@@ -911,11 +911,15 @@ scores <- data.frame((fit_env$vectors)$arrows * sqrt(fit_env$vectors$r),
                      pvals=(fit_env$vectors)$pvals)
 scores <- cbind(scores, env = rownames(scores))
 
-#supplmental table w/ r2 and p values for ms
-driver_correlation <- data.frame("variable" = scores$env,
+#supplemental table w/ r2 and p values for ms
+driver_NMDS_correlation <- data.frame("variable" = scores$env,
                                   "R2" = fit_env$vectors$r,
                                   "p-value" = fit_env$vectors$pvals)
-#write.csv(driver_correlation, "output/driver_correlation.csv", row.names=F)
+#write.csv(driver_NMDS_correlation, "output/driver_nmds_correlation.csv", row.names=F)
+
+#additional supplemental table with correlations between all vars
+driver_correlation <- data.frame(cor(zoops_plus_drivers[,c(23:35)]))
+#write.csv(driver_correlation, "output/driver_correlation.csv")
 
 #plot drivers w/ NMDS
 ord <- ordiplot(NMDS_temporal_avg_bray,display = c('sites','species'),
