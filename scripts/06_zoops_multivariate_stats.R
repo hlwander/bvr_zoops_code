@@ -820,6 +820,11 @@ msn_drivers <- data.frame("groups" = as.character(1:5), #epi is 0.1m, hypo is 10
                      ctd.final_avg$Temp_C_1[ctd.final_avg$Depth_m==10 & ctd.final_avg$msn==3],
                      ctd.final_avg$Temp_C_1[ctd.final_avg$Depth_m==10 & ctd.final_avg$msn==4],
                      ctd.final_avg$Temp_C_1[ctd.final_avg$Depth_m==10 & ctd.final_avg$msn==5]),
+     "epilimnetic_DO" = c(ctd.final_avg$DO_mgL_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==1],
+                                    ctd.final_avg$DO_mgL_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==2],
+                                    ctd.final_avg$DO_mgL_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==3],
+                                    ctd.final_avg$DO_mgL_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==4],
+                                    ctd.final_avg$DO_mgL_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==5]),
      "epilimnetic_sp_cond" = c(ctd.final_avg$SpCond_uScm_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==1],
                       ctd.final_avg$SpCond_uScm_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==2],
                       ctd.final_avg$SpCond_uScm_1[ctd.final_avg$Depth_m==0.1 & ctd.final_avg$msn==3],
@@ -861,6 +866,11 @@ msn_drivers <- data.frame("groups" = as.character(1:5), #epi is 0.1m, hypo is 10
                        mean(ctd_thermo_depth$therm_depth[ctd_thermo_depth$msn==3]),
                        mean(ctd_thermo_depth$therm_depth[ctd_thermo_depth$msn==4]),
                        mean(ctd_thermo_depth$therm_depth[ctd_thermo_depth$msn==5])),
+     "oxycline_depth" = c(mean(ctd_oxy_depth$oxy_depth[ctd_oxy_depth$msn==1]),
+                             mean(ctd_oxy_depth$oxy_depth[ctd_oxy_depth$msn==2]),
+                             mean(ctd_oxy_depth$oxy_depth[ctd_oxy_depth$msn==3]),
+                             mean(ctd_oxy_depth$oxy_depth[ctd_oxy_depth$msn==4]),
+                             mean(ctd_oxy_depth$oxy_depth[ctd_oxy_depth$msn==5])),
      "Wind_speed" = c(mean(met$WindSpeed[met$msn==1]),
                            mean(met$WindSpeed[met$msn==2]),
                            mean(met$WindSpeed[met$msn==3]),
@@ -904,7 +914,7 @@ msn_drivers <- data.frame("groups" = as.character(1:5), #epi is 0.1m, hypo is 10
 zoops_plus_drivers <- left_join(zoop_avg, msn_drivers)
 
 #fit environmental drivers onto ordination
-fit_env <- envfit(ord$sites, zoops_plus_drivers[,c(23:35)]) 
+fit_env <- envfit(ord$sites, zoops_plus_drivers[,c(23:37)]) 
 
 #pull out vectors - need to multiply by the sqrt of r2 to get magnitude!
 scores <- data.frame((fit_env$vectors)$arrows * sqrt(fit_env$vectors$r), 
@@ -918,7 +928,7 @@ driver_NMDS_correlation <- data.frame("variable" = scores$env,
 #write.csv(driver_NMDS_correlation, "output/driver_nmds_correlation.csv", row.names=F)
 
 #additional supplemental table with correlations between all vars
-driver_correlation <- data.frame(cor(zoops_plus_drivers[,c(23:35)]))
+driver_correlation <- data.frame(cor(zoops_plus_drivers[,c(23:37)], method = "spearman"))
 #write.csv(driver_correlation, "output/driver_correlation.csv")
 
 #plot drivers w/ NMDS
@@ -962,12 +972,14 @@ NMDS_day_env <- days$plot + geom_point() + theme_bw() + geom_path() +
   annotate(geom="text", x= 0, y= 0.3, label="wind speed", size=1.5) +
   annotate(geom="text", x= -0.25, y= 0.5, label="Secchi", size=1.5) +
   annotate(geom="text", x= -0.53, y= 0.5, label="thermocline depth", size=1.5) +
+  annotate(geom="text", x= -0.55, y= 0.6, label="oxycline depth", size=1.5) +
   annotate(geom="text", x= 0.73, y= -0.32, label="epilimnetic PAR", size=1.5) +
   annotate(geom="text", x= 0.25, y= -0.29, label="epilimnetic temp.", size=1.5) +
   annotate(geom="text", x= 0.71, y= -0.45, label="hypolimnetic chl.", size=1.5) +
   annotate(geom="text", x= 0.7, y= -0.6, label="hypolimnetic temp.", size=1.5) +
   annotate(geom="text", x= 0.6, y= -0.65, label="epilimnetic TN", size=1.5) +
   annotate(geom="text", x= 0.55, y= -0.7, label="epilimnetic TP", size=1.5) +
+  annotate(geom="text", x= -0.38, y= -0.26, label="epilimnetic DO", size=1.5) +
   annotate(geom="text", x= 0, y= -0.39, label="air temp.", size=1.5) 
   
   #3 vs. 1
@@ -979,6 +991,8 @@ NMDS_day_env <- days$plot + geom_point() + theme_bw() + geom_path() +
   #annotate(geom="text", x= -0.19, y= -0.33, label="wind speed", size=1.5) +
   #annotate(geom="text", x= -0.32, y= -0.23, label="Secchi", size=1.5) +
   #annotate(geom="text", x= -0.5, y= 0.17, label="thermocline depth", size=1.5) +
+  #annotate(geom="text", x= -0.43, y= 0.03, label="epilimnetic DO", size=1.5) +
+  #annotate(geom="text", x= -0.55, y= -0.19, label="oxycline depth", size=1.5) +
   #annotate(geom="text", x= 0.71, y= -0.03, label="epilimnetic PAR", size=1.5) +
   #annotate(geom="text", x= 0.17, y= 0.41, label="epilimnetic temp.", size=1.5) +
   #annotate(geom="text", x= 0.69, y= 0.23, label="hypolimnetic chl.", size=1.5) +
@@ -992,7 +1006,9 @@ NMDS_day_env <- days$plot + geom_point() + theme_bw() + geom_path() +
   #annotate(geom="text", x= 0.09, y= -0.67, label="epilimnetic chl.", size=1.5) +
   #annotate(geom="text", x= -0.02, y= -0.55, label="epilimnetic sp. cond.", size=1.5) +
   #annotate(geom="text", x= -0.1, y= -0.12, label="wind speed", size=1.5) +
-  #annotate(geom="text", x= -0.32, y= 0.17, label="Secchi", size=1.5) +
+  #annotate(geom="text", x= -0.32, y= 0.13, label="Secchi", size=1.5) +
+  #annotate(geom="text", x= -0.3, y= 0.22, label="epilimnetic DO", size=1.5) +
+  #annotate(geom="text", x= -0.55, y= 0.1, label="oxycline depth", size=1.5) +
   #annotate(geom="text", x= -0.51, y= -0.19, label="thermocline depth", size=1.5) +
   #annotate(geom="text", x= 0.74, y= -0.14, label="epilimnetic PAR", size=1.5) +
   #annotate(geom="text", x= 0.27, y= -0.23, label="epilimnetic temp.", size=1.5) +
