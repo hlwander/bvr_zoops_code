@@ -6,6 +6,9 @@ source("scripts/01_install.R")
 zoops2019<- read.csv('output/FCR_ZooplanktonSummary2019.csv',header = TRUE)
 zoops2020<- read.csv('output/FCR_ZooplanktonSummary2020.csv',header = TRUE)
 zoops2021<- read.csv('output/FCR_ZooplanktonSummary2021.csv',header = TRUE)
+#all_zoops <- read.csv('output/FCR_ZooplanktonSummary2015_biomassONLY.csv',header=TRUE) |> 
+#  select(!contains("Calanoida"))
+
 
 #merge all files
 all_zoops <- bind_rows(zoops2019, zoops2020, zoops2021)

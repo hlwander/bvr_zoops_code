@@ -55,6 +55,7 @@ CrustaceanBiomassConversions$Suborder[
 
 #For loop through all the years (or specify year here)
 year<-c(2019,2020,2021)
+#note cannot use this script to calculate density from JPD's data bc rotifers and nauplii are only counted in the first rep
 
 for(y in 1:length(year)){
 
@@ -423,6 +424,9 @@ alltaxa <- c("Cyclopoida","Daphnia","Calanoida","Ascomorpha","Keratella", "naupl
                      "Anuraeopsis","Holopedium","Gastropus", "Monostyla","Brachionus",
                      "Tylotrocha","Notholca","Cladocera", "Copepoda", "Rotifera")
 
+#alltaxa <- c("Cyclopoida","Daphnia","Calanoida","Bosmina",
+#             "Ceriodaphnia","Cladocera", "Copepoda")
+
 CorrespondingTaxaLevel <- c("Order","Genus","Order","Genus","Genus","Nauplius",
                             "Genus","Genus","Genus","Genus","Genus",
                             "Genus","Genus","Genus","Genus","Genus",
@@ -430,6 +434,9 @@ CorrespondingTaxaLevel <- c("Order","Genus","Order","Genus","Genus","Nauplius",
                             "Genus","Genus","Genus","Genus","Genus",
                             "Genus","Genus","Genus","Genus","Genus",
                             "Genus","Genus","Suborder", "Subclass","Phylum")
+
+#CorrespondingTaxaLevel <- c("Order","Genus","Order","Genus",
+#                            "Genus","Suborder", "Subclass")
 
 #CorrespondingTaxaLevel<-c("Family","Subclass","Order","Suborder","Order",
 #                          "Phylum","Genus","Genus","Subphylum","Family",
