@@ -18,9 +18,16 @@ ZoopTaxonomy$Species<-paste0(substring(ZoopTaxonomy$Genus,1,1),". ",ZoopTaxonomy
 #If there are any NA, then fill those back in
 ZoopTaxonomy$Species[SpeciesNA.rows]<-NA   
 
-#Read in the csv file with the occular lens conversions
+year <- 2015
+
+#Read in the csv file with the ocular lens conversions
+if(year== 2015){ #JPD used a different conversion factor I think
+  ZoopOccularLensConversions<-read.csv("conversions/Zooplankton-OccularLensConversions_jpd.csv", 
+                                       fill = TRUE,as.is=TRUE)
+} else (
 ZoopOccularLensConversions<-read.csv("conversions/Zooplankton-OccularLensConversions.csv", 
                                      fill = TRUE,as.is=TRUE)
+)
 
 #Read in csv file for size to biomass conversions for rotifers with all taxa ID'ed
 RotiferBiomassConversions<-read.csv("conversions/ZooplanktonLengthBiomassConversion-Rotifers.csv", 
